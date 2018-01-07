@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>glcode.js</file>
+        <file>three.js</file>
+        <file>map.js</file>
+        <file>ParserWorkerScript.qml</file>
+        <file>ControlEventSource.qml</file>
+    </qresource>
+    <qresource prefix="/worker">
+        <file>updatetile.js</file>
+    </qresource>
+    <qresource lang="js" prefix="/lib">
+        <file>sm.js</file>
+        <file>tilecover.js</file>
+        <file>utilities.js</file>
+        <file>OrbitControls.js</file>
+    </qresource>
+</RCC>
