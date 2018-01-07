@@ -14,6 +14,6 @@
         <file>sm.js</file>
         <file>tilecover.js</file>
         <file>utilities.js</file>
-        <file>OrbitControls.js</file>
+        <file alias="OrbitControls.js">OrbitControls.js</file>
     </qresource>
 </RCC>

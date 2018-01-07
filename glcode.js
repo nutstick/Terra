@@ -1,5 +1,5 @@
 Qt.include("three.js")
-Qt.include("lib/OrbitControls.js")
+Qt.include("/lib/OrbitControls.js")
 
 //var include = {
 //    init: false,
@@ -50,7 +50,7 @@ function updateTiles(){
 }
 
 
-function initializeGL(canvas) {
+function initializeGL(canvas, eventSource) {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
     camera.position.z = 5;
@@ -59,7 +59,9 @@ function initializeGL(canvas) {
     var camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
     camera.position.y = 12000;
     */
-    var controls = new THREE.OrbitControls( camera, renderer.domElement );
+    console.log(canvas, camera, eventSource)
+    console.log(THREE.OrbitControls)
+    var controls = new THREE.OrbitControls( camera, eventSource, canvas );
 
     raycaster = new THREE.Raycaster();
 

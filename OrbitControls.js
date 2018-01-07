@@ -6,6 +6,7 @@
  * @author erich666 / http://erichaines.com
  */
 /*global THREE, console */
+
 function OrbitConstraint ( object ) {
 
     this.object = object;
@@ -767,7 +768,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
     } */
 
-    /* function touchend( /* event */ ) {
+    /* function touchend() {
 
         if ( scope.enabled === false ) return;
 

@@ -1,7 +1,6 @@
 import QtQuick 2.4
 import QtCanvas3D 1.1
 import QtQuick.Window 2.2
-import "qrc:ControlEventSource"
 
 import "glcode.js" as GLCode
 
