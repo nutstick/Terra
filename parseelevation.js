@@ -157,11 +157,9 @@ WorkerScript.onMessage = function(message) {
     var pixels = message[0];
     var coords = message[1]; //terrain tile coord
     var tiles = message[2];  //requested imagery coords
-    var parserIndex = message[3];
     var z = coords[0];
     var x = coords[1];
     var y = coords[2];
-    //console.log(time+' started #'+parserIndex)
 
     var elevations = [];
 

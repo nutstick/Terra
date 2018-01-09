@@ -15,6 +15,8 @@ Qt.include("/lib/image.js");
 //    include.mapbox = true;
 //});
 
+var debug = true;
+
 var camera, scene, renderer, controls;
 var cube, plane;
 var raycaster;
@@ -28,14 +30,9 @@ var screenPosition;
 
 var basePlaneDimension = 65024;
 
-function getZoom(){
+function getZoom() {
     var pt = controls.target.distanceTo(controls.object.position);
-    return Math.min(
-        Math.max(
-            getBaseLog(0.5, pt/12000)+4,
-            0
-        )
-    ,22);
+    return Math.min(Math.max(getBaseLog(0.5, pt/12000)+4, 0) ,22);
 }
 
 function assembleUrl(img, coords) {
@@ -49,13 +46,13 @@ function assembleUrl(img, coords) {
     return 'https://'+server+'.tiles.mapbox.com/v4/'+tileset+'/'+slashify(coords)+res+'?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg'
 }
 
-function updateTiles(){
+function updateTiles() {
     var zoom = Math.floor(getZoom());
 
-    var ul = {x:-1,y:-1,z:-1};
-    var ur = {x:1,y:-1,z:-1};
-    var lr = {x:1,y:1,z:1};
-    var ll = {x:-1,y:1,z:1};
+    var ul = { x:-1, y:-1, z:-1 };
+    var ur = { x:1, y:-1, z:-1 };
+    var lr = { x:1, y:1, z:1 };
+    var ll = { x:-1, y:1, z:1 };
 
     var corners = [ul, ur, lr, ll, ul].map(function(corner){
         raycaster.setFromCamera(corner, camera);
@@ -67,7 +64,8 @@ function updateTiles(){
 
     updater.sendMessage([zoom, corners])
 
-    setHash()
+    // TODO location handle inside qml
+    // setHash()
 }
 
 // given a list of elevation and imagery tiles, download
@@ -77,30 +75,33 @@ function getTiles(data) {
 
     progress.opacity = 1;
 
-    // tiles = tiles.map(function(tile) { return slashify(tile); })
+    if (debug) {
+        canvas3d.tilesToGet += tiles.length;
+        updaterRequests += tiles.length;
 
+        tiles.forEach(function(tile) {
+            makeMesh([[], tile]);
+        });
+    } else {
+        tiles = tiles.map(function(tile) { return slashify(tile); });
 
-    canvas3d.tilesToGet += tiles.length;
-    updaterRequests += tiles.length
+        canvas3d.tilesToGet += tiles.length;
+        updaterRequests += tiles.length
 
-    tiles.forEach(function(tile) {
-        makeMesh([[], tile]);
-    })
+        tiles.forEach(function(tile) {
+            makeMesh([[], tile]);
+        })
 
-    // elevation.forEach(function(coords) {
+        elevation.forEach(function(coords) {
 
-        //download the elevation image
-        /* getPixels(assembleUrl(null, coords),
-
-            function(err, pixels) {
+            //download the elevation image
+            getPixels(assembleUrl(null, coords), function(err, pixels) {
                 // usually a water tile-- fill with 0 elevation
-                if (err) pixels = null
-                var parserIndex = 2*(coords[1]%2)+coords[2]%2
-                parserPool[parserIndex]
-                    .sendMessage([pixels, coords, tiles,parserIndex])
-            }
-        ) */
-    // })
+                if (err) pixels = null;
+                parser.sendMessage([pixels, coords, tiles]);
+            });
+        })
+    }
 }
 
 function onTileReady(coords, err, pixels) {
@@ -122,56 +123,77 @@ function makeMesh(d) {
     var vertices = 128;
     var segments = vertices-1;
 
-    console.log(x, y, z)
     // get image to drape
-    /* var texture = new THREE.TextureLoader()
-    .load(
-        // url
-        assembleUrl(true, [z,x,y]),
-        // onLoad function
-        function(resp){
-            console.log('pppp');
-            canvas3d.tilesToGet--;
-            finished++;
+    if (debug) {
+        vertices = 16;
+        console.log("p1")
+        var material = new THREE.MeshBasicMaterial({ color: new THREE.Color( 'skyblue' )});
 
-            scene.remove(placeholder);
-            plane.visible=true;
+        console.log("p2")
+        var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
-            if (canvas3d.tilesToGet===0) {
-                progress.opacity = 0;
-                console.log('STABLE')
-                updateTileVisibility()
+        console.log("p3")
+        var xOffset = (x+0.5)*tileSize - basePlaneDimension/2;
+        var yOffset = (y+0.5)*tileSize - basePlaneDimension/2;
+
+        console.log("p4")
+        geometry.translate(xOffset, yOffset, 0);
+
+        console.log("p5")
+        var plane = new THREE.Mesh(geometry, material);
+
+        plane.coords = slashify([z,x,y])
+        plane.zoom = z;
+        console.log("p6")
+        scene.add(plane)
+        console.log("p7")
+    } else {
+        var texture = new THREE.TextureLoader()
+        .load(
+            // url
+            assembleUrl(true, [z,x,y]),
+            // onLoad function
+            function(resp){
+                console.log('pppp');
+                canvas3d.tilesToGet--;
+                finished++;
+
+                scene.remove(placeholder);
+                plane.visible=true;
+
+                if (canvas3d.tilesToGet===0) {
+                    progress.opacity = 0;
+                    console.log('STABLE')
+                    updateTileVisibility()
+                }
+
+            },
+            // onProgress function
+            function() {},
+            // onError function
+            function(err) {
+                console.log(err)
             }
+        );
 
-        },
-        // onProgress function
-        function() {},
-        // onError function
-        function(err) {
-            console.log(err)
-        }
-    ); */
+        // set material
+        var material = new THREE.MeshBasicMaterial({ map: texture });
 
-    // set material
-    var material = new THREE.MeshBasicMaterial({ color: new THREE.Color( 'skyblue' )});
+        data = resolveSeams(data, neighborTiles,[z,x,y])
+        var geometry = new THREE.PlaneBufferGeometry(tileSize, tileSize, segments, segments);
 
-    // data = resolveSeams(data, neighborTiles,[z,x,y])
-    var geometry = new THREE.PlaneGeometry(tileSize, tileSize, segments, segments);
+        geometry.attributes.position.array = new Float32Array(data);
 
-    // geometry.attributes.position.array = new Float32Array(data);
-    var xOffset = (x+0.5)*tileSize - basePlaneDimension/2;
-    var yOffset = (y+0.5)*tileSize - basePlaneDimension/2;
-    geometry.translate(xOffset, yOffset, 0);
+        var placeholder = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({wireframe:true,color:0x999999}));
+        scene.add(placeholder);
 
-    // var placeholder = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({wireframe:true,color:0x999999}));
-    // scene.add(placeholder);
+        var plane = new THREE.Mesh(geometry, material);
 
-    var plane = new THREE.Mesh(geometry, material);
-
-    plane.coords = slashify([z,x,y])
-    plane.zoom = z;
-    scene.add(plane)
-    plane.visible=true
+        plane.coords = slashify([z,x,y])
+        plane.zoom = z;
+        scene.add(plane)
+        plane.visible=false
+    }
 };
 
 function updateTileVisibility() {
@@ -187,13 +209,9 @@ function updateTileVisibility() {
 
 function initializeGL(canvas, eventSource) {
     scene = new THREE.Scene();
-    /*
-    camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-    camera.position.z = 5;
-    */
 
     camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
-    camera.position.y = 12000;
+    camera.position.z = 12000;
 
     controls = new THREE.OrbitControls( camera, eventSource, canvas );
 
@@ -208,7 +226,7 @@ function initializeGL(canvas, eventSource) {
 
     plane = new THREE.Mesh(basePlane, mat);
     plane.rotation.x = -0.5*Math.PI;
-    plane.opacity=0
+    plane.opacity=0;
     scene.add(plane);
 
     // ----

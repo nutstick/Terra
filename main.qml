@@ -25,23 +25,20 @@ Window {
         }
     }
 
-    Item {
-        id: parserPool
-        property list<ParserWorkerScript> w: [
-            ParserWorkerScript {},
-            ParserWorkerScript {},
-            ParserWorkerScript {},
-            ParserWorkerScript {}
-        ]
+    WorkerScript {
+        id: parser
+        source: "worker/parseelevation.js"
+
+        onMessage: {
+            var time = Date.now();
+            canvas3d.parserRequests++
+            if(messageObject.makeMesh) GLCode.makeMesh(messageObject.makeMesh)
+            else console.log(messageObject)
+        }
     }
 
     Compass {
         id: compass
-    }
-
-    Text {
-        id: progress
-        text: qsTr("loading")
     }
 
     Canvas {
@@ -78,5 +75,11 @@ Window {
             focus: true
             id: eventSource
         }
+    }
+
+    Text {
+        id: progress
+
+        text: qsTr("loading")
     }
 }

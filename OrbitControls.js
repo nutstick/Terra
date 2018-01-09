@@ -497,6 +497,8 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             state = STATE.PAN;
 
+            console.log(x, y);
+
             panStart.set( x, y );
             moveMap();
         }
