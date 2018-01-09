@@ -8196,8 +8196,8 @@ THREE.Layers.prototype = {
 
 			if ( camera instanceof THREE.PerspectiveCamera ) {
 
-				this.ray.origin.setFromMatrixPosition( camera.matrixWorld );
-				this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( this.ray.origin ).normalize();
+                this.ray.origin.setFromMatrixPosition( camera.matrixWorld );
+                this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( this.ray.origin ).normalize();
 
 			} else if ( camera instanceof THREE.OrthographicCamera ) {
 

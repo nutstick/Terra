@@ -15,12 +15,12 @@ Window {
         source: "worker/updatetile.js"
 
         onMessage: {
-            console.log(messageObject)
             var queue = messageObject.getTiles[0].length;
 
             if (queue > 0) {
-                Map.getTiles(messageObject.getTiles);
-                Map.updateTileVisibility();
+                console.log('getTiles', JSON.stringify(messageObject.getTiles))
+                GLCode.getTiles(messageObject.getTiles);
+                GLCode.updateTileVisibility();
             }
         }
     }
@@ -35,10 +35,28 @@ Window {
         ]
     }
 
+    Compass {
+        id: compass
+    }
+
+    Text {
+        id: progress
+        text: qsTr("loading")
+    }
+
+    Canvas {
+        id: imageRenderer
+
+        width: 512
+        height: 512
+    }
+
     Canvas3D {
         id: canvas3d
 
         property int parserRequest: 0
+        property int tilesToGet: 0
+        property bool inspectElevation: false
 
         anchors.fill: parent
         focus: true

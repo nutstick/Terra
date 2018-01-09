@@ -77,12 +77,12 @@ function OrbitConstraint ( object ) {
 
     this.rotateLeft = function ( angle ) {
         thetaDelta -= angle;
-        updateCompass()
+        compass.update();
     };
 
     this.rotateUp = function ( angle ) {
         phiDelta -= angle;
-        updateCompass()
+        compass.update();
     };
 
     // pass in distance in world space to move left
@@ -412,12 +412,9 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
     // pass in x,y of change desired in pixel space,
     // right and down are positive
-    window.pan = function ( deltaX, deltaY ) {
-        console.log(this)
+    var pan = function ( deltaX, deltaY ) {
 
-        var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-
-        constraint.pan( deltaX, deltaY, element.clientWidth, element.clientHeight );
+        constraint.pan( deltaX, deltaY, canvas.width, canvas.height );
 
     }
     //pan(100,100000)
@@ -486,7 +483,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             rotateStart.set( x, y );
 
-        } else if ( event.button === scope.mouseButtons.ZOOM ) {
+        } else if ( button === scope.mouseButtons.ZOOM ) {
 
             if ( scope.enableZoom === false ) return;
 
@@ -494,7 +491,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             dollyStart.set( x, y );
 
-        } else if ( event.button === scope.mouseButtons.PAN ) {
+        } else if ( button === scope.mouseButtons.PAN ) {
 
             if ( scope.enablePan === false ) return;
 
@@ -594,7 +591,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
         // off-center zooming :D
         if (scope.object.position.y>=scope.maxDistance) return;
         var direction = -delta*0.001001001;
-        pan(direction*(x-window.innerWidth/2),direction*(y-window.innerHeight/2))
+        pan(direction*(x - canvas.width / 2), direction*(y - canvas.height / 2))
     }
 
     function onKeyDown( event ) {

@@ -44,9 +44,9 @@ Item {
     property alias cursorShape: inputArea.cursorShape
 
     signal mouseMove(int x, int y);
-    signal mouseDown(int x, int y, int buttons);
+    signal mouseDown(int x, int y, int buttons, int modifiers);
     signal mouseUp(int x, int y);
-    signal mouseWheel(int x, int y);
+    signal mouseWheel(int x, int y, int wheelX, int wheelY);
     signal mouseIn();
     signal mouseOut();
     signal touchStart();

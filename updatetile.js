@@ -1,6 +1,7 @@
 /**
  * TileCover
  **/
+
 function getTiles(geom, limits) {
     var i, tile,
         coords = geom.coordinates,
@@ -9,11 +10,11 @@ function getTiles(geom, limits) {
         tiles = [];
 
     if (geom.type === 'Point') {
-        return [tilebelt.pointToTile(coords[0], coords[1], maxZoom)];
+        return [pointToTile(coords[0], coords[1], maxZoom)];
 
     } else if (geom.type === 'MultiPoint') {
         for (i = 0; i < coords.length; i++) {
-            tile = tilebelt.pointToTile(coords[i][0], coords[i][1], maxZoom);
+            tile = pointToTile(coords[i][0], coords[i][1], maxZoom);
             tileHash[toID(tile[0], tile[1], tile[2])] = true;
         }
     } else if (geom.type === 'LineString') {
@@ -134,8 +135,8 @@ function lineCover(tileHash, coords, maxZoom, ring) {
     var prevX, prevY;
 
     for (var i = 0; i < coords.length - 1; i++) {
-        var start = tilebelt.pointToTileFraction(coords[i][0], coords[i][1], maxZoom),
-            stop = tilebelt.pointToTileFraction(coords[i + 1][0], coords[i + 1][1], maxZoom),
+        var start = pointToTileFraction(coords[i][0], coords[i][1], maxZoom),
+            stop = pointToTileFraction(coords[i + 1][0], coords[i + 1][1], maxZoom),
             x0 = start[0],
             y0 = start[1],
             x1 = stop[0],

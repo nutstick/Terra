@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
-import "map.js" as Map
+import "glcode.js" as GLCode
 
 WorkerScript {
     source: "/worker/parseelevation.js"
@@ -8,7 +8,7 @@ WorkerScript {
     onMessage: {
         var time = Date.now();
         canvas3d.parserRequests++
-        if(messageObject.makeMesh) Map.makeMesh(messageObject.makeMesh)
+        if(messageObject.makeMesh) GLCode.makeMesh(messageObject.makeMesh)
         else console.log(messageObject)
     }
 }
