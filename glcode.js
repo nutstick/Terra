@@ -125,28 +125,50 @@ function makeMesh(d) {
 
     // get image to drape
     if (debug) {
-        vertices = 16;
-        console.log("p1")
-        var material = new THREE.MeshBasicMaterial({ color: new THREE.Color( 'skyblue' )});
+        var texture = new THREE.TextureLoader()
+        .load(
+            // url
+            assembleUrl(true, [z,x,y]),
+            // onLoad function
+            function(resp){
+                canvas3d.tilesToGet--;
+                finished++;
 
-        console.log("p2")
+                scene.remove(placeholder);
+                plane.visible=true;
+
+                if (canvas3d.tilesToGet===0) {
+                    progress.opacity = 0;
+                    console.log('STABLE')
+                    updateTileVisibility()
+                }
+
+            },
+            // onProgress function
+            function() {},
+            // onError function
+            function(err) {
+                console.log(err)
+            }
+        );
+
+        var material = new THREE.MeshBasicMaterial({ map: texture});
+
         var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
-        console.log("p3")
         var xOffset = (x+0.5)*tileSize - basePlaneDimension/2;
         var yOffset = (y+0.5)*tileSize - basePlaneDimension/2;
 
-        console.log("p4")
-        geometry.translate(xOffset, yOffset, 0);
+        geometry.translate(xOffset, 0, yOffset);
 
-        console.log("p5")
         var plane = new THREE.Mesh(geometry, material);
+
+        console.log(geometry)
 
         plane.coords = slashify([z,x,y])
         plane.zoom = z;
-        console.log("p6")
         scene.add(plane)
-        console.log("p7")
+        plane.visible=false
     } else {
         var texture = new THREE.TextureLoader()
         .load(
@@ -154,7 +176,6 @@ function makeMesh(d) {
             assembleUrl(true, [z,x,y]),
             // onLoad function
             function(resp){
-                console.log('pppp');
                 canvas3d.tilesToGet--;
                 finished++;
 
@@ -234,7 +255,6 @@ function initializeGL(canvas, eventSource) {
                                                    shading: THREE.SmoothShading });
     var cubeGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
     cube = new THREE.Mesh(cubeGeometry, material);
-    cube.rotation.set(0.785, 0.785, 0.0);
     scene.add(cube);
 
     // ---
