@@ -7,6 +7,11 @@
         <file>ParserWorkerScript.qml</file>
         <file>ControlEventSource.qml</file>
         <file>Compass.qml</file>
+        <file>MapFrameGraph.qml</file>
+        <file>WireframeMaterial.qml</file>
+        <file>WireframeEffect.qml</file>
+        <file>BasePlane.qml</file>
+        <file>OrbitControls.qml</file>
     </qresource>
     <qresource prefix="/worker">
         <file>updatetile.js</file>
@@ -18,5 +23,10 @@
         <file alias="utilities.js">utilities.js</file>
         <file alias="OrbitControls.js">OrbitControls.js</file>
         <file>image.js</file>
+    </qresource>
+    <qresource prefix="/shaders">
+        <file>robustwireframe.vert</file>
+        <file>robustwireframe.geom</file>
+        <file>robustwireframe.frag</file>
     </qresource>
 </RCC>
