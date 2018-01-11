@@ -53,7 +53,7 @@ public:
     void setEnableDamping(bool enableDamping);
     void setDampingFactor(float dampingFactor);
 
-    void frameTriggered(float dt);
+    void frameTriggered();
     void reset();
     void straighten();
     void moveTo(QVector3D coords, float currentHeight);
@@ -80,7 +80,8 @@ private slots:
     void onMouseMove(Qt3DInput::QMouseEvent *mouse);
     void onMouseUp(Qt3DInput::QMouseEvent *mouse);
     void onMouseWheel(Qt3DInput::QWheelEvent *wheel);
-    void onKeyDown();
+    void onKeyDown(Qt3DInput::QKeyEvent *event);
+    void onKeyUp(Qt3DInput::QKeyEvent *event);
 
     void onPositionChanged(Qt3DInput::QMouseEvent *mouse);
 
@@ -97,6 +98,8 @@ private:
     void dollyIn(float dollyScale);
     void dollyOut(float dollyScale);
 
+    bool update();
+
     float getAutoRotationAngle();
 
     float getZoomScale(delta);
@@ -106,16 +109,11 @@ private:
     QQuaternion quatInverse;
     QVector3D lastPosition;
     QQuaternion lastQuaternion;
-    bool update();
 
     //! Camera that is being controlled
     Qt3DRender::QCamera* mCamera;
     //! used for computation of translation when dragging mouse
     QRect mViewport;
-    //! Last mouse position recorded
-    QPoint mMousePos;
-    //! Mouse position used in the previous frame
-    QPoint mLastMousePos;
 
     QVector3D defaultTarget;
     QVector3D positionTarget;
@@ -145,12 +143,23 @@ private:
     bool enableZoom;
     float zoomSpeed;
     bool enableRotate;
-    float zoomRotate;
+    float rotateSpeed;
     bool enablePan;
     float keyPanSpeed;
+    QTimer* keyDown;
     bool autoRotate;
     float autoRotateSpeed;
     bool enableKeys;
+
+    QVector2D rotateStart;
+    QVector2D rotateEnd;
+    QVector2D rotateDelta;
+    QVector2D panStart;
+    QVector2D panEnd;
+    QVector2D panDelta;
+    QVector2D dollyStart;
+    QVector2D dollyEnd;
+    QVector2D dollyDelta;
 
     enum State
     {
@@ -185,31 +194,33 @@ private:
 
     Qt3DInput::QMouseHandler* mMouseHandler;
 
+    Qt3DInput::QKeyboardHandler* mKeyboardHandler;
+
     //! Allows us to define a set of actions that we wish to use
     //! (it is a component that can be attached to 3D scene)
-    Qt3DInput::QLogicalDevice* mLogicalDevice;
+//    Qt3DInput::QLogicalDevice* mLogicalDevice;
 
-    Qt3DInput::QAction* mLeftMouseButtonAction;
-    Qt3DInput::QActionInput* mLeftMouseButtonInput;
-    Qt3DInput::QAction* mMiddleMouseButtonAction;
-    Qt3DInput::QActionInput* mMiddleMouseButtonInput;
-    Qt3DInput::QAction* mRightMouseButtonAction;
-    Qt3DInput::QActionInput* mRightMouseButtonInput;
+//    Qt3DInput::QAction* mLeftMouseButtonAction;
+//    Qt3DInput::QActionInput* mLeftMouseButtonInput;
+//    Qt3DInput::QAction* mMiddleMouseButtonAction;
+//    Qt3DInput::QActionInput* mMiddleMouseButtonInput;
+//    Qt3DInput::QAction* mRightMouseButtonAction;
+//    Qt3DInput::QActionInput* mRightMouseButtonInput;
 
-    Qt3DInput::QAction* mShiftAction;
-    Qt3DInput::QActionInput* mShiftInput;
-    Qt3DInput::QAction* mControlAction;
-    Qt3DInput::QActionInput* mControlInput;
+//    Qt3DInput::QAction* mShiftAction;
+//    Qt3DInput::QActionInput* mShiftInput;
+//    Qt3DInput::QAction* mControlAction;
+//    Qt3DInput::QActionInput* mControlInput;
 
-    Qt3DInput::QAxis* mWheelAxis;
-    Qt3DInput::QAnalogAxisInput* mMouseWheelInput;
+//    Qt3DInput::QAxis* mWheelAxis;
+//    Qt3DInput::QAnalogAxisInput* mMouseWheelInput;
 
-    Qt3DInput::QAxis* mTxAxis;
-    Qt3DInput::QAxis* mTyAxis;
-    Qt3DInput::QButtonAxisInput* mKeyboardTxPosInput;
-    Qt3DInput::QButtonAxisInput* mKeyboardTyPosInput;
-    Qt3DInput::QButtonAxisInput* mKeyboardTxNegInput;
-    Qt3DInput::QButtonAxisInput* mKeyboardTyNegInput;
+//    Qt3DInput::QAxis* mTxAxis;
+//    Qt3DInput::QAxis* mTyAxis;
+//    Qt3DInput::QButtonAxisInput* mKeyboardTxPosInput;
+//    Qt3DInput::QButtonAxisInput* mKeyboardTyPosInput;
+//    Qt3DInput::QButtonAxisInput* mKeyboardTxNegInput;
+//    Qt3DInput::QButtonAxisInput* mKeyboardTyNegInput;
 };
 
 #endif // ORBITCONTROLS_H

@@ -1,6 +1,8 @@
 #include "orbitcontrols.h"
 
 #include <Qt3dRender/QCameraLens>
+#include <Qt3DInput/QMouseEvent>
+#include <Qt3DInput/QWheelEvent>
 
 CameraController::CameraController(Qt3DCore::QNode *parent = nullptr)
     : Qt3DCore::QEntity(parent)
@@ -15,18 +17,7 @@ CameraController::CameraController(Qt3DCore::QNode *parent = nullptr)
     , mEnableDamping(true)
     , mDampingFactor(0.75)
     , mLastMove(QTime::currentTime())
-    , needUpdate(false)
-
-    , enableZoom(true)
-    , zoomSpeed(50)
-    , enableRotate(true)
-    , zoomRotate(50)
-    , enablePan(true)
-    , keyPanSpeed(5.0)
-    , autoRotate(false)
-    , autoRotateSpeed(2.0)
-    , enableKeys(true)
-
+    , mNeedsUpdate(NULL)
     , theta(0)
     , phi(0)
     , phiDelta(0)
@@ -34,30 +25,53 @@ CameraController::CameraController(Qt3DCore::QNode *parent = nullptr)
     , scale(1)
     , panOffset(QVector3D)
     , zoomChanged(false)
+
+    , enableZoom(true)
+    , zoomSpeed(50)
+    , enableRotate(true)
+    , rotateSpeed(1.0)
+    , enablePan(true)
+    , keyPanSpeed(5.0)
+    , keyDown(false)
+    , autoRotate(false)
+    , autoRotateSpeed(2.0)
+    , enableKeys(true)
+
+    , rotateStart(QVector2D)
+    , rotateEnd(QVector2D)
+    , rotateDelta(QVector2D)
+    , panStart(QVector2D)
+    , panEnd(QVector2D)
+    , panDelta(QVector2D)
+    , dollyStart(QVector2D)
+    , dollyEnd(QVector2D)
+    , dollyDelta(QVector2D)
+
     , state(CameraController::State::None)
 
     , mMouseDevice(new Qt3DInput::QMouseDevice())
     , mKeyboardDevice(new Qt3DInput::QKeyboardDevice())
-    , mMouseHandler(new Qt3DInput::QMouseHandler)
-    , mLogicalDevice(new Qt3DInput::QLogicalDevice())
+    , mMouseHandler(new Qt3DInput::QMouseHandler())
+    , mKeyboardHandler(new Qt3DInput::QKeyboardHandler())
+//    , mLogicalDevice(new Qt3DInput::QLogicalDevice())
 
-    , mLeftMouseButtonAction(new Qt3DInput::QAction())
-    , mLeftMouseButtonInput(new Qt3DInput::QActionInput())
-    , mMiddleMouseButtonAction(new Qt3DInput::QAction())
-    , mMiddleMouseButtonInput(new Qt3DInput::QActionInput())
-    , mRightMouseButtonAction(new Qt3DInput::QAction())
-    , mRightMouseButtonInput(new Qt3DInput::QActionInput())
+//    , mLeftMouseButtonAction(new Qt3DInput::QAction())
+//    , mLeftMouseButtonInput(new Qt3DInput::QActionInput())
+//    , mMiddleMouseButtonAction(new Qt3DInput::QAction())
+//    , mMiddleMouseButtonInput(new Qt3DInput::QActionInput())
+//    , mRightMouseButtonAction(new Qt3DInput::QAction())
+//    , mRightMouseButtonInput(new Qt3DInput::QActionInput())
 
-    , mShiftAction(new Qt3DInput::QAction())
-    , mShiftInput(new Qt3DInput::QActionInput())
-    , mWheelAxis(new Qt3DInput::QAxis())
-    , mMouseWheelInput(new Qt3DInput::QAnalogAxisInput())
-    , mTxAxis(new Qt3DInput::QAxis())
-    , mTyAxis(new Qt3DInput::QAxis())
-    , mKeyboardTxPosInput(new Qt3DInput::QButtonAxisInput())
-    , mKeyboardTyPosInput(new Qt3DInput::QButtonAxisInput())
-    , mKeyboardTxNegInput(new Qt3DInput::QButtonAxisInput())
-    , mKeyboardTyNegInput(new Qt3DInput::QButtonAxisInput())
+//    , mShiftAction(new Qt3DInput::QAction())
+//    , mShiftInput(new Qt3DInput::QActionInput())
+//    , mWheelAxis(new Qt3DInput::QAxis())
+//    , mMouseWheelInput(new Qt3DInput::QAnalogAxisInput())
+//    , mTxAxis(new Qt3DInput::QAxis())
+//    , mTyAxis(new Qt3DInput::QAxis())
+//    , mKeyboardTxPosInput(new Qt3DInput::QButtonAxisInput())
+//    , mKeyboardTyPosInput(new Qt3DInput::QButtonAxisInput())
+//    , mKeyboardTxNegInput(new Qt3DInput::QButtonAxisInput())
+//    , mKeyboardTyNegInput(new Qt3DInput::QButtonAxisInput())
 {
     // not using QAxis + QAnalogAxisInput for mouse X,Y because
     // it is only in action when a mouse button is pressed.
@@ -69,62 +83,67 @@ CameraController::CameraController(Qt3DCore::QNode *parent = nullptr)
     addComponent(mMouseHandler);
 
     // left mouse button
-    mLeftMouseButtonInput->setButtons(QVector<int>() << Qt::LeftButton);
-    mLeftMouseButtonInput->setSourceDevice(mMouseDevice);
-    mLeftMouseButtonAction->addInput(mLeftMouseButtonInput);
+    // mLeftMouseButtonInput->setButtons(QVector<int>() << Qt::LeftButton);
+    // mLeftMouseButtonInput->setSourceDevice(mMouseDevice);
+    // mLeftMouseButtonAction->addInput(mLeftMouseButtonInput);
 
     // middle mouse button
-    mMiddleMouseButtonInput->setButtons(QVector<int>() << Qt::MiddleButton);
-    mMiddleMouseButtonInput->setSourceDevice(mMouseDevice);
-    mMiddleMouseButtonAction->addInput(mMiddleMouseButtonInput);
+    // mMiddleMouseButtonInput->setButtons(QVector<int>() << Qt::MiddleButton);
+    // mMiddleMouseButtonInput->setSourceDevice(mMouseDevice);
+    // mMiddleMouseButtonAction->addInput(mMiddleMouseButtonInput);
 
     // right mouse button
-    mRightMouseButtonInput->setButtons(QVector<int>() << Qt::RightButton);
-    mRightMouseButtonInput->setSourceDevice(mMouseDevice);
-    mRightMouseButtonAction->addInput(mRightMouseButtonInput);
+    // mRightMouseButtonInput->setButtons(QVector<int>() << Qt::RightButton);
+    // mRightMouseButtonInput->setSourceDevice(mMouseDevice);
+    // mRightMouseButtonAction->addInput(mRightMouseButtonInput);
+
+    mKeyboardHandler->setSourceDevice(mKeyboardDevice);;
+    connect(mKeyboardHandler, &Qt3DInput::QKeyboardHandler::pressed, this &CameraController::onKeyDown);
+    connect(mKeyboardHandler, &Qt3DInput::QKeyboardHandler::released, this &CameraController::onKeyUp);
+    addComponent(mKeyboardHandler);
 
     // Keyboard shift
-    mShiftInput->setButtons(QVector<int>() << Qt::Key_Shift);
-    mShiftInput->setSourceDevice(mKeyboardDevice);
-    mShiftAction->addInput(mShiftInput);
+    // mShiftInput->setButtons(QVector<int>() << Qt::Key_Shift);
+    // mShiftInput->setSourceDevice(mKeyboardDevice);
+    // mShiftAction->addInput(mShiftInput);
 
     // Keyboard control
-    mControlInput->setButtons(QVector<int>() << Qt::Key_Control);
-    mControlInput->setSourceDevice(mKeyboardDevice);
-    mControlAction->addInput(mControlInput);
+    // mControlInput->setButtons(QVector<int>() << Qt::Key_Control);
+    // mControlInput->setSourceDevice(mKeyboardDevice);
+    // mControlAction->addInput(mControlInput);
 
     // Keyboard Pos Tx
-    mKeyboardTxPosInput->setButtons(QVector<int>() << Qt::Key_Right);
-    mKeyboardTxPosInput->setScale(1.0f);
-    mKeyboardTxPosInput->setSourceDevice(mKeyboardDevice);
-    mTxAxis->addInput(mKeyboardTxPosInput);
+    // mKeyboardTxPosInput->setButtons(QVector<int>() << Qt::Key_Right);
+    // mKeyboardTxPosInput->setScale(1.0f);
+    // mKeyboardTxPosInput->setSourceDevice(mKeyboardDevice);
+    // mTxAxis->addInput(mKeyboardTxPosInput);
 
     // Keyboard Pos Ty
-    mKeyboardTyPosInput->setButtons(QVector<int>() << Qt::Key_Up);
-    mKeyboardTyPosInput->setScale(1.0f);
-    mKeyboardTyPosInput->setSourceDevice(mKeyboardDevice);
-    mTyAxis->addInput(mKeyboardTyPosInput);
+    // mKeyboardTyPosInput->setButtons(QVector<int>() << Qt::Key_Up);
+    // mKeyboardTyPosInput->setScale(1.0f);
+    // mKeyboardTyPosInput->setSourceDevice(mKeyboardDevice);
+    // mTyAxis->addInput(mKeyboardTyPosInput);
 
     // Keyboard Neg Tx
-    mKeyboardTxNegInput->setButtons(QVector<int>() << Qt::Key_Left);
-    mKeyboardTxNegInput->setScale(-1.0f);
-    mKeyboardTxNegInput->setSourceDevice(mKeyboardDevice);
-    mTxAxis->addInput(mKeyboardTxNegInput);
+    // mKeyboardTxNegInput->setButtons(QVector<int>() << Qt::Key_Left);
+    // mKeyboardTxNegInput->setScale(-1.0f);
+    // mKeyboardTxNegInput->setSourceDevice(mKeyboardDevice);
+    // mTxAxis->addInput(mKeyboardTxNegInput);
 
     // Keyboard Neg Ty
-    mKeyboardTyNegInput->setButtons(QVector<int>() << Qt::Key_Down);
-    mKeyboardTyNegInput->setScale(-1.0f);
-    mKeyboardTyNegInput->setSourceDevice(mKeyboardDevice);
-    mTyAxis->addInput(mKeyboardTyNegInput);
+    // mKeyboardTyNegInput->setButtons(QVector<int>() << Qt::Key_Down);
+    // mKeyboardTyNegInput->setScale(-1.0f);
+    // mKeyboardTyNegInput->setSourceDevice(mKeyboardDevice);
+    // mTyAxis->addInput(mKeyboardTyNegInput);
 
-    mLogicalDevice->addAction(mLeftMouseButtonAction);
-    mLogicalDevice->addAction(mMiddleMouseButtonAction);
-    mLogicalDevice->addAction(mRightMouseButtonAction);
-    mLogicalDevice->addAction(mShiftAction);
-    mLogicalDevice->addAction(mControlAction);
-    mLogicalDevice->addAxis(mWheelAxis);
-    mLogicalDevice->addAxis(mTxAxis);
-    mLogicalDevice->addAxis(mTyAxis);
+    // mLogicalDevice->addAction(mLeftMouseButtonAction);
+    // mLogicalDevice->addAction(mMiddleMouseButtonAction);
+    // mLogicalDevice->addAction(mRightMouseButtonAction);
+    // mLogicalDevice->addAction(mShiftAction);
+    // mLogicalDevice->addAction(mControlAction);
+    // mLogicalDevice->addAxis(mWheelAxis);
+    // mLogicalDevice->addAxis(mTxAxis);
+    // mLogicalDevice->addAxis(mTyAxis);
 
     // Disable the logical device when the entity is disabled
     connect(this, &Qt3DCore::QEntity::enabledChanged, mLogicalDevice, &Qt3DInput::QLogicalDevice::setEnabled);
@@ -225,14 +244,10 @@ CameraController::setDampingFactor(float dampingFactor)
     emit dampingFactorChanged();
 }
 
-void CameraController::frameTriggered(float dt)
+void CameraController::frameTriggered()
 {
     if (mCamera == nullptr)
       return;
-
-    int dx = mMousePos.x() - mLastMousePos.x();
-    int dy = mMousePos.y() - mLastMousePos.y();
-    mLastMousePos = mMousePos;
 
     if (this->autoRotate && this->state === CameraController::State::None) {
         rotateLeft(getAutoRotationAngle());
@@ -242,6 +257,163 @@ void CameraController::frameTriggered(float dt)
         // WHAT
         // this.dispatchEvent( changeEvent );
     }
+}
+
+void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
+{
+    if (!enabled) return;
+    if (mouse->button() == Qt::RightButton && mouse->modifiers() & Qt3DInput::QMouseEvent::ControlModifier) {
+        if (!enableRotate) return;
+
+        state = CameraController::State::Rotate;
+
+        rotateStart = QVector2D(mouse->x(), mouse->y());
+    } else if (mouse->button() == Qt::MiddleButton) {
+        if (!enableZoom) return;
+
+        state = CameraController::State::Dolly;
+
+        dollyStart = QVector2D(mouse->x(), mouse->y());
+    } else if (mouse->button() == Qt::LeftButton) {
+        if (!enablePan) return;
+
+        state = CameraController::State::Pan;
+
+        panStart = QVector2D(mouse->x(), mouse->y());
+
+        // TODO:
+        // moveMap();
+    }
+
+    if (state == CameraController::State::None) {
+        connect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
+        connect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
+    }
+}
+
+void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
+{
+    if (!enabled) return;
+
+    if (state == CameraController::State::Rotate) {
+        if (!enableRotate) return;
+
+        rotateEnd = QVector2D(mouse->x(), mouse->y());
+        rotateDelta = rotateEnd - rotateStart;
+
+        // rotating across whole screen goes 360 degrees around
+        rotateLeft(2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed);
+
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
+        rotateUp(2 * M_PI * rotateDelta.y() / mViewport.height() * rotateSpeed);
+
+        rotateStart = rotateEnd;
+    } else if (state == CameraController::State::Dolly) {
+        if (!enableZoom) return;
+
+        dollyEnd = QVector2D(mouse->x(), mouse->y());
+        dollyDelta = dollyEnd - dollyStart;
+
+        if (dollyDelta.y > 0) {
+            dollyIn(getZoomScale(dollyDelta.y));
+        } else if (dollyDelta.y < 0) {
+            dollyOut(getZoomScale(-dollyDelta.y));
+        }
+
+        dollyStart = dollyEnd;
+    } else if (state == CameraController::State::Pan) {
+        if (!enablePan) return;
+
+        panEnd = QVector2D(mouse->x(), mouse->y());
+        panDelta = panEnd - panStart;
+
+        pan(panDelta.x(), panDelta.y());
+
+        panStart = panEnd;
+    }
+
+    if (state != CameraController::State::None) frameTriggered();
+}
+
+void CameraController::onMouseUp(Qt3DInput::QMouseEvent *mouse)
+{
+    if (!enabled) return;
+
+    disconnect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
+    disconnect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
+
+    state = CameraController::State::None;
+
+    // stopMap();
+}
+
+void CameraController::onMouseWheel(Qt3DInput::QWheelEvent *wheel)
+{
+    qDebug() << "TODO Mouse Wheel";
+    /*float delta = wheel->
+
+    dollyOut(getZoomScale(delta));
+
+    frame();
+
+    // off-center zooming :D
+    if (mCamera->position().y >= mMaxDistance) return;
+    float direction = -delta * 0.001001001;
+    pan(direction*(event.clientX-window.innerWidth/2),direction*(event.clientY-window.innerHeight/2))*/
+}
+
+void CameraController::onKeyDown(Qt3DInput::QKeyEvent *event)
+{
+    if (keyDown || !enabled || !enableKeys || !enablePan) return;
+
+    keyDown = new QTimer();
+    keyDown->setInterval(10);
+    connect(keyDown, &QTimer::timeout, this, [this, event] {
+        switch (event->key()) {
+        case Qt::UpArrow:
+            pan(0, keyPanSpeed);
+            frameTriggered();
+            break;
+        case Qt::DownArrow:
+            pan(0, -keyPanSpeed);
+            break;
+        case Qt::LeftArrow:
+            pan(keyPanSpeed, 0);
+            break;
+        case Qt::RightArrow:
+            pan(-keyPanSpeed, 0);
+            break;
+        }
+    });
+}
+
+void CameraController::onKeyUp(Qt3DInput::QKeyEvent *event)
+{
+    connect(keyDown, &QTimer::timeout, this,
+}
+
+void CameraController::reset()
+{
+    state = CameraController::State::None;
+    mTarget = this->defaultTarget;
+    mCamera->setPosition(this->defaultPosition);
+    // mCamera->zoom = defaultZoom;
+    // this.dispatchEvent( changeEvent );
+    frameTriggered();
+}
+
+void CameraController::straighten()
+{
+    camera->setPosition(QVector3D(mTarget.x, camera->position().y(), mTarget.y);
+}
+
+void CameraController::moveTo(QVector3D coords, float currentHeight)
+{
+    mTarget = coords;
+    camera->setPosition(new Vector3D(coords.x(), currentHeight, coords.z()));
+    QTimer::singleShot(10, this, [this]() {
+        emit updated());
+    });
 }
 
 void CameraController::rotateLeft(float angle)
@@ -349,130 +521,6 @@ void CameraController::dollyOut(float dollyScale)
     default:
         qWarning() << "WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.";
     }
-}
-
-void CameraController::update()
-{
-    QVector3D position = mCamera->position();
-    offset = position - target;
-    // offset.applyQuaternion( quat );
-    offset *= quat.toRotationMatrix();
-
-    theta = qAtan2(offset.x, offset.z);
-    phi = qAtan2(qSqrt(offset.x * offset.x + offset.z * offset.z), offset.y);
-
-    theta += thetaDelta;
-    phi += phiDelta;
-
-    // restrict theta to be between desired limits
-    theta = qMax(mMinAzimuthAngle, qMin(mMaxAzimuthAngle, theta));
-
-    // restrict phi to be between desired limits
-    phi = qMax(mMinPolarAngle, qMin(mMaxPolarAngle, phi));
-
-    // restrict phi to be betwee EPS and PI-EPS
-    phi = qMax(EPS, qMin(M_PI - EPS, phi));
-
-    float radius = offset.length() * scale;
-
-    // restrict radius to be between desired limits
-    radius = qMax(mMinDistance, qMin(mMaxDistance, radius));
-
-    // move target to panned location
-    target += panOffset;
-
-    offset.x = radius * qSin( phi ) * qSin( theta );
-    offset.y = radius * qCos( phi );
-    offset.z = radius * qSin( phi ) * qCos( theta );
-
-    // rotate offset back to "camera-up-vector-is-up" space
-    // offset.applyQuaternion( quatInverse );
-    offset *= quatInverse.toRotationMatrix();
-
-    position = target + offset;
-
-    // this.object.lookAt( this.target );
-    // mCamera->
-
-    if ( mEnableDamping == true ) {
-        thetaDelta *= (1 - mDampingFactor);
-        phiDelta *= (1 - mDampingFactor);
-    } else {
-        thetaDelta = 0;
-        phiDelta = 0;
-    }
-
-    scale = 1;
-    panOffset.setX(0);
-    panOffset.setY(0);
-    panOffset.setZ(0);
-
-    // update condition is:
-    // min(camera displacement, camera rotation in radians)^2 > EPS
-    // using small-angle approximation cos(x/2) = 1 - x^2 / 8
-    float distance = lastPosition.distanceToPoint( mCamera->position() );
-    if ( distance * distance > EPS ||
-         8 * (1 - QQuaternion::dotProduct(lastQuaternion, mCamera->transform()->rotation())) > EPS ||
-         zoomChanged) {
-
-        lastPosition.copy(camera->position());
-        lastQuaternion.copy(mCamera->transform()->rotation());
-        zoomChanged = false;
-
-        mLastMove = QTime::currentTime();
-
-        if (!mNeedsUpdate) {
-            /*
-            scope.needsUpdate = timer.setInterval(function(time){
-                if (Date.now()-scope.lastMove < 150) return
-                else {
-                    updateTiles()
-                    timer.clearInterval(scope.needsUpdate)
-                    scope.needsUpdate = false
-                }
-             })
-             */
-            timer = new QTimer(this);
-            mNeedsUpdate = std::make_shared<QMetaObject::Connection>();
-            *mNeedsUpdate = QObject::connect(timer, &QTimer::timeout, this, [this]() {
-                if (QTime::currentTime() - this->mLastMove < 150) return;
-                else {
-                    emit updated();
-                    disconnect(mNeedsUpdate);
-                    this->mNeedsUpdate = NULL;
-                }
-            });
-        }
-
-        return true;
-
-    }
-
-    return false;
-}
-
-void CameraController::reset()
-{
-    state = CameraController::State::None;
-    mTarget = this->defaultTarget;
-    mCamera->setPosition(this->defaultPosition);
-    // mCamera->zoom = defaultZoom;
-    // this.dispatchEvent( changeEvent );
-    update();
-}
-
-void CameraController::straighten()
-{
-    camera->setPosition(QVector3D(mTarget.x, camera->position().y(), mTarget.y);
-}
-
-void CameraController::moveTo(QVector3D coords, float currentHeight)
-{
-    mTarget = coords;
-    camera->setPosition(new Vector3D(coords.x(), currentHeight, coords.z()));
-    QTimer::singleShot(10, this, [this]() {
-        emit updated());
-    });
 }
 
 float CameraController::getAutoRotationAngle()
