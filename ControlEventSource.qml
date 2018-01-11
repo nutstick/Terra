@@ -121,7 +121,6 @@ Item {
         }
 
         onPressed: {
-            console.log(JSON.stringify(mouse))
             ctrlEventSource.mouseDown(mouse.x, mouse.y, mouse.buttons, mouse.modifiers);
         }
 

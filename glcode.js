@@ -125,8 +125,6 @@ function makeMesh(d) {
 
     // get image to drape
     if (debug) {
-        vertices = 16;
-
         var texture = new THREE.TextureLoader()
         .load(
             // url
@@ -141,8 +139,8 @@ function makeMesh(d) {
 
                 if (canvas3d.tilesToGet===0) {
                     progress.opacity = 0;
-                    console.log('STABLE');
-                    updateTileVisibility();
+                    console.log('STABLE')
+                    updateTileVisibility()
                 }
 
             },
@@ -150,11 +148,11 @@ function makeMesh(d) {
             function() {},
             // onError function
             function(err) {
-                console.error(err);
+                console.log(err)
             }
         );
 
-        var material = new THREE.MeshBasicMaterial({ map: texture });
+        var material = new THREE.MeshBasicMaterial({ map: texture});
 
         var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
@@ -180,6 +178,7 @@ function makeMesh(d) {
         plane.coords = slashify([z,x,y])
         plane.zoom = z;
         scene.add(plane)
+        plane.visible=false
     } else {
         var texture = new THREE.TextureLoader()
         .load(
