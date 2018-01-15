@@ -87,8 +87,8 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     // it is only in action when a mouse button is pressed.
     mMouseHandler->setSourceDevice(mMouseDevice);
     connect(mMouseHandler, &Qt3DInput::QMouseHandler::pressed, this, &CameraController::onMouseDown);
-    connect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
-    connect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
+    // connect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
+    // connect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
     connect(mMouseHandler, &Qt3DInput::QMouseHandler::wheel, this, &CameraController::onMouseWheel);
     addComponent(mMouseHandler);
 
@@ -297,7 +297,7 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
         // moveMap();
     }
 
-    if (state == CameraController::State::None) {
+    if (state != CameraController::State::None) {
         connect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
         connect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
     }
@@ -361,7 +361,7 @@ void CameraController::onMouseUp(Qt3DInput::QMouseEvent *mouse)
 
 void CameraController::onMouseWheel(Qt3DInput::QWheelEvent *wheel)
 {
-    qDebug() << "TODO Mouse Wheel";
+    // qDebug() << "TODO Mouse Wheel";
     /*float delta = wheel->
 
     dollyOut(getZoomScale(delta));
@@ -458,10 +458,14 @@ void CameraController::rotateUp(float angle)
 void CameraController::panLeft(float distance)
 {
     QVector3D _v = QVector3D();
-    float* te = mCamera->transform()->matrix().data();
-    _v.setX(*te);
-    _v.setY(*(te+1));
-    _v.setZ(*(te+2));
+//    float* te = mCamera->transform()->matrix().data();
+//    qDebug() << mCamera->transform()->matrix();
+//    _v.setX(*te);
+//    _v.setY(*(te+1));
+//    _v.setZ(*(te+2));
+    _v.setX(0);
+    _v.setY(0);
+    _v.setZ(1);
     _v *= (-distance);
 
     panOffset += _v;
@@ -470,10 +474,13 @@ void CameraController::panLeft(float distance)
 void CameraController::panUp(float distance)
 {
     QVector3D _v = QVector3D();
-    float* te = mCamera->transform()->matrix().data();
-    _v.setX(*(te+4));
-    _v.setY(/*(te+5)*/0);
-    _v.setZ(*(te+6));
+//    float* te = mCamera->transform()->matrix().data();
+//    _v.setX(*(te+4));
+//    _v.setY(*(te+5));
+//    _v.setZ(*(te+6));
+    _v.setX(1);
+    _v.setY(0);
+    _v.setZ(0);
     _v *= distance;
 
     panOffset += _v;
@@ -571,6 +578,7 @@ bool CameraController::update()
     radius = qMax(mMinDistance, qMin(mMaxDistance, radius));
 
     mTarget += panOffset;
+    qDebug() << "TARGET" << mTarget;
 
     offset.setX(radius * qSin(phi) * qSin(theta));
     offset.setY(radius * qCos(phi));
@@ -578,20 +586,13 @@ bool CameraController::update()
 
     offset = quatInverse.rotatedVector(offset);
 
-    // 255: this.object.lookAt( this.target );
-    Qt3DCore::QTransform* transform;
-    Q_FOREACH (Qt3DCore::QComponent *component, mCamera->components())
-    {
-        transform = qobject_cast<Qt3DCore::QTransform *>(component);
-        if (transform) {
-            break;
-        }
-    }
+    // set Position
+    mCamera->setPosition(mTarget + offset);
+    // look at target
+    mCamera->setViewCenter(mTarget);
+    Qt3DCore::QTransform* transform = mCamera->transform();
 
-    Q_ASSERT(transform);
-
-    transform->matrix().lookAt(mCamera->position(), mTarget, mCamera->upVector());
-
+    // transform->matrix().lookAt(mCamera->position(), mTarget, mCamera->upVector());
     if (mEnableDamping == true) {
         thetaDelta *= (1 - mDampingFactor);
         phiDelta *= (1 - mDampingFactor);

@@ -18,7 +18,7 @@ Entity {
         id: wireframeMaterial
         effect: WireframeEffect {}
         ambient: Qt.rgba( 0.2, 0.0, 0.0, 0.0 )
-        diffuse: Qt.rgba( 0.8, 0.0, 0.0, 0.0 )
+        diffuse: Qt.rgba( 0.8, 0.0, 0.0, 1.0 )
     }
 
 //    property Transform transform: Transform {
@@ -26,12 +26,12 @@ Entity {
 //    }
 
     Transform {
-        id: torusTransform
-        translation: Qt.vector3d(0, -5, 0)
+        id: planeTransform
+        translation: Qt.vector3d(0, 0, 0)
         // scale3D: Qt.vector3d(1.5, 1, 0.5)
         // rotation: fromAxisAndAngle(Qt.vector3d(1, 0, 0), 45)
         // rotationX: -0.5*Math.PI
     }
 
-    components: [ planeMesh, wireframeMaterial, torusTransform ]
+    components: [ planeMesh, wireframeMaterial, planeTransform ]
 }

@@ -14,6 +14,7 @@ import com.map.cameracontroller 1.0
 import "glcode.js" as GLCode
 
 Item {
+    id: root
     width: 640
     height: 360
     visible: true
@@ -73,7 +74,7 @@ Item {
             CameraController {
                 id: controller
                 camera: camera
-                viewport:
+                viewport: Qt.rect(0, 0, root.width, root.height)
             }
 
             Camera {
@@ -83,8 +84,8 @@ Item {
                 aspectRatio: width / height
                 nearPlane: 1/99
                 farPlane: 100000000000000
-                position: Qt.vector3d(0, 0, 12000);
-                upVector: Qt.vector3d( 0.0, 1.0, 0.0 )
+                position: Qt.vector3d( 0.0, 12000.0, 0.0 );
+                upVector: Qt.vector3d( 1.0, 0.0, 0.0 )
                 viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
 //                fieldOfView: 45
 //                aspectRatio: 16/9
@@ -114,31 +115,29 @@ Item {
             }
 
             /* Plane */
-//            BasePlane {
-//                id: basePlane
-//            }
+            BasePlane {
+                id: basePlane
+            }
 
             PhongMaterial {
                 id: material
             }
 
-            TorusMesh {
-                id: torusMesh
-                radius: 500
-                minorRadius: 100
-                rings: 100
-                slices: 20
+            PlaneMesh {
+                id: planeMesh
+                width: 500
+                height: 500
             }
 
             Transform {
-                id: torusTransform
+                id: planeTransform
                 // scale3D: Qt.vector3d(1.5, 1, 0.5)
                 // rotation: fromAxisAndAngle(Qt.vector3d(1, 0, 0), 45)
             }
 
             Entity {
                 id: torusEntity
-                components: [ torusMesh, material, torusTransform ]
+                components: [ planeMesh, material, planeTransform ]
             }
         }
     }
