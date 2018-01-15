@@ -1,10 +1,11 @@
-#ifndef ORBITCONTROLS_H
-#define ORBITCONTROLS_H
+#ifndef CAMERACONTROLLER_H
+#define CAMERACONTROLLER_H
 
 #include <Qt3DCore>
 #include <Qt3DInput>
 #include <Qt3DRender>
-#incldue <QMetaObject>
+#include <QMetaObject>
+#include <jstimer.h>
 
 class CameraController : public Qt3DCore::QEntity
 {
@@ -83,9 +84,10 @@ private slots:
     void onKeyDown(Qt3DInput::QKeyEvent *event);
     void onKeyUp(Qt3DInput::QKeyEvent *event);
 
-    void onPositionChanged(Qt3DInput::QMouseEvent *mouse);
-
 private:
+    void keyDownInterval();
+    void needUpdateInterval();
+
     void rotateLeft(float angle);
     void rotateUp(float angle);
 
@@ -102,23 +104,15 @@ private:
 
     float getAutoRotationAngle();
 
-    float getZoomScale(delta);
+    float getZoomScale(float delta);
 
-    QVector3D offset;
-    QQuaternion quat;
-    QQuaternion quatInverse;
-    QVector3D lastPosition;
-    QQuaternion lastQuaternion;
+    JSTimer* timer;
 
     //! Camera that is being controlled
     Qt3DRender::QCamera* mCamera;
     //! used for computation of translation when dragging mouse
     QRect mViewport;
-
-    QVector3D defaultTarget;
-    QVector3D positionTarget;
-    float defaultZoom;
-
+    //! Camera target point
     QVector3D mTarget;
 
     float mMinDistance;
@@ -137,8 +131,20 @@ private:
     float mDampingFactor;
 
     QTime mLastMove;
-    QMetaObject::Connection mNeedsUpdate;
-    QTimer* timer;
+
+    int mNeedsUpdate;
+    QTimer* needUpdateTimer;
+
+    QVector3D defaultTarget;
+    QVector3D defaultPosition;
+    float defaultZoom;
+
+    QVector3D offset;
+    QQuaternion quat;
+    QQuaternion quatInverse;
+    QVector3D lastPosition;
+    QQuaternion lastQuaternion;
+
 
     bool enableZoom;
     float zoomSpeed;
@@ -146,7 +152,10 @@ private:
     float rotateSpeed;
     bool enablePan;
     float keyPanSpeed;
-    QTimer* keyDown;
+
+    int keyDown;
+    QTimer* keyDownTimer;
+
     bool autoRotate;
     float autoRotateSpeed;
     bool enableKeys;
@@ -173,7 +182,7 @@ private:
     };
     State state;
 
-    static float EPS = 0.000001;
+    float EPS = 0.000001;
 
     // internal
     float theta;
@@ -184,8 +193,6 @@ private:
     float scale;
     QVector3D panOffset;
     bool zoomChanged;
-
-    CameraData cd;
 
     //! Delegates mouse events to the attached MouseHandler objects
     Qt3DInput::QMouseDevice* mMouseDevice;
@@ -223,4 +230,4 @@ private:
 //    Qt3DInput::QButtonAxisInput* mKeyboardTyNegInput;
 };
 
-#endif // ORBITCONTROLS_H
+#endif // CAMERACONTROLLER_H

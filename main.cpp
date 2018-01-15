@@ -5,9 +5,12 @@
 // #include <QQmlApplicationEngine>
 
 #include "jstimer.h"
+#include "cameracontroller.h"
 
 int main(int argc, char *argv[])
 {
+    qmlRegisterType<CameraController>("com.map.cameracontroller", 1, 0, "CameraController");
+
 #if defined(Q_OS_WIN)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif

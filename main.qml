@@ -9,6 +9,8 @@ import Qt3D.Input 2.0
 import Qt3D.Logic 2.0
 import Qt3D.Extras 2.0
 
+import com.map.cameracontroller 1.0
+
 import "glcode.js" as GLCode
 
 Item {
@@ -66,6 +68,12 @@ Item {
                 onTriggered: {
                     sceneRoot.animate()
                 }
+            }
+
+            CameraController {
+                id: controller
+                camera: camera
+                viewport:
             }
 
             Camera {
