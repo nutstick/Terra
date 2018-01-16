@@ -18,7 +18,6 @@ Window {
             var queue = messageObject.getTiles[0].length;
 
             if (queue > 0) {
-                console.log('getTiles', JSON.stringify(messageObject.getTiles))
                 GLCode.getTiles(messageObject.getTiles);
                 GLCode.updateTileVisibility();
             }
@@ -37,17 +36,6 @@ Window {
         }
     }
 
-    Compass {
-        id: compass
-    }
-
-    Canvas {
-        id: imageRenderer
-
-        width: 512
-        height: 512
-    }
-
     Canvas3D {
         id: canvas3d
 
@@ -58,8 +46,20 @@ Window {
         anchors.fill: parent
         focus: true
 
+        states: [
+            State {
+                name: "View"
+                PropertyChanges { target: stateText; text: qsTr("View mode") }
+            },
+            State {
+                name: "Edit"
+                PropertyChanges { target: stateText; text: qsTr("Edit mode") }
+            }
+        ]
+
         onInitializeGL: {
             GLCode.initializeGL(canvas3d, eventSource);
+            state = 'View'
         }
 
         onPaintGL: {
@@ -77,8 +77,30 @@ Window {
         }
     }
 
+    Compass {
+        id: compass
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+    }
+
+    Text {
+        id: stateText
+        anchors.top: parent.top
+        anchors.right: parent.right
+        color: "white"
+        style: Text.Outline
+        styleColor: "black"
+        font.bold: true
+
+        text: canvas3d.state == 'View' ? 'View Mode' : 'Edit Mode'
+    }
+
     Text {
         id: progress
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: parent.horizontalCenter
+        color: "white"
 
         text: qsTr("loading")
     }
