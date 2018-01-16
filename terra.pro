@@ -14,8 +14,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp \
     jstimer.cpp \
-    terraindatagenerator.cpp \
-    chunknode.cpp
+    terraindatagenerator.cpp
 
 RESOURCES += qml.qrc
 
@@ -32,5 +31,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     jstimer.h \
-    terraindatagenerator.h \
-    chunknode.h
+    terraindatagenerator.h
