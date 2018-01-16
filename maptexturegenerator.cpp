@@ -1,5 +1,9 @@
 #include "maptexturegenerator.h"
 
+#include <QImage>
+#include <QImageReader>
+#include <QEventLoop>
+
 MapTextureGenerator::MapTextureGenerator(const Map &map)
     : map(map)
     , lastJobId(0)
@@ -36,7 +40,7 @@ int MapTextureGenerator::render(const int x, const int y, const int z)
     return jobData.jobId;
 }
 
-int MapTextureGenerator::cancelJob(int jobId)
+void MapTextureGenerator::cancelJob(int jobId)
 {
     Q_FOREACH(const JobData& jd, jobs)
     {

@@ -4,6 +4,7 @@
 #include <Qt3DCore/QTransform>
 #include <Qt3DRender/QGeometryRenderer>
 #include <Qt3DExtras/QPlaneGeometry>
+#include <QtMath>
 
 #include "map.h"
 
@@ -57,9 +58,9 @@ Qt3DCore::QEntity *FlatTerrainChunkLoader::createEntity(Qt3DCore::QEntity *paren
     transform = new Qt3DCore::QTransform();
     entity->addComponent(transform);
 
-    int size = basePlaneDimesion / qPow(2, tile.z());
-    int xOffset = (x + 0.5) * size - basePlaneDimesion / 2;
-    int yOffset = (y + 0.5) * size - basePlaneDimesion / 2;
+    int size = basePlaneDimesion / qPow(2, tile->z());
+    int xOffset = (tile->x() + 0.5) * size - basePlaneDimesion / 2;
+    int yOffset = (tile->y() + 0.5) * size - basePlaneDimesion / 2;
 
     transform->setScale(size);
     transform->setTranslation(QVector3D(xOffset, 0, yOffset));

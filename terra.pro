@@ -15,7 +15,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
     jstimer.cpp \
     cameracontroller.cpp \
-    chunkedentity.cpp \
     tile.cpp \
     chunkloader.cpp \
     terrainchunkloader.cpp \
@@ -23,7 +22,8 @@ SOURCES += main.cpp \
     maptexturegenerator.cpp \
     maptextureimage.cpp \
     terraingenerator.cpp \
-    flatterraingenerator.cpp
+    flatterraingenerator.cpp \
+    chunklist.cpp
 
 RESOURCES += qml.qrc
 
@@ -41,7 +41,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     jstimer.h \
     cameracontroller.h \
-    chunkedentity.h \
     tile.h \
     chunkloader.h \
     terrainchunkloader.h \
@@ -49,4 +48,5 @@ HEADERS += \
     maptexturegenerator.h \
     maptextureimage.h \
     terraingenerator.h \
-    flatterraingenerator.h
+    flatterraingenerator.h \
+    chunklist.h

@@ -73,7 +73,7 @@ MapTextureImage::~MapTextureImage()
 
 Qt3DRender::QTextureImageDataGeneratorPtr MapTextureImage::dataGenerator() const
 {
-  return Qt3DRender::QTextureImageDataGeneratorPtr(new MapTextureImageDataGenerator(tile, debugText, img));
+  return Qt3DRender::QTextureImageDataGeneratorPtr(new MapTextureImageDataGenerator(x, y, z, img));
 }
 
 void MapTextureImage::onTileReady(int jobId, const QImage &img)

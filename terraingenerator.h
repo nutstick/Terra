@@ -3,6 +3,8 @@
 
 #include "chunkloader.h"
 
+#include <QString>
+
 class Map;
 
 class TerrainGenerator : public ChunkLoaderFactory

@@ -21,7 +21,7 @@ void TerrainChunkLoader::loadTexture()
 void TerrainChunkLoader::createTextureComponent(Qt3DCore::QEntity *entity)
 {
     Qt3DRender::QTexture2D* texture = new Qt3DRender::QTexture2D(entity);
-    MapTextureImage* image = new MapTextureImage(mTextureImage, mTile, mTileDebugText);
+    MapTextureImage* image = new MapTextureImage(mTextureImage, tile->x(), tile->y(), tile->z());
     texture->addTextureImage(image);
     texture->setMinificationFilter(Qt3DRender::QTexture2D::Linear);
     texture->setMagnificationFilter(Qt3DRender::QTexture2D::Linear);
