@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtCanvas3D 1.1
 import QtQuick.Window 2.2
+import QtQuick.Controls 1.4
 
 import "glcode.js" as GLCode
 
@@ -49,11 +50,9 @@ Window {
         states: [
             State {
                 name: "View"
-                PropertyChanges { target: stateText; text: qsTr("View mode") }
             },
             State {
                 name: "Edit"
-                PropertyChanges { target: stateText; text: qsTr("Edit mode") }
             }
         ]
 
@@ -84,14 +83,12 @@ Window {
         anchors.left: parent.left
     }
 
-    Text {
-        id: stateText
+    Button {
+        id: modeButton
         anchors.top: parent.top
         anchors.right: parent.right
-        color: "white"
-        style: Text.Outline
-        styleColor: "black"
-        font.bold: true
+
+        onClicked: canvas3d.state = canvas3d.state == 'View' ? 'Edit' : 'View'
 
         text: canvas3d.state == 'View' ? 'View Mode' : 'Edit Mode'
     }
