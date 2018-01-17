@@ -27,12 +27,35 @@ var updaterRequests = 0;
 var finished = 0;
 //compass functionality
 var screenPosition;
+var markers = [];
 
 var basePlaneDimension = 65024;
 
 function getZoom() {
     var pt = controls.target.distanceTo(controls.object.position);
     return Math.min(Math.max(getBaseLog(0.5, pt/12000)+4, 0) ,22);
+}
+
+function clicked(position) {
+
+    var picker = new THREE.Raycaster();
+
+    picker.setFromCamera(position, camera);
+
+    var markerPosition = raycaster.intersectObject(plane)[0].point;
+
+    var material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+
+    var geometry = new THREE.SphereGeometry( 5000   , 32, 32 );
+
+    console.log(markerPosition.x, markerPosition.y)
+
+    geometry.translate(markerPosition.x, markerPosition.y, markerPosition.z);
+
+    var marker = new THREE.Mesh(geometry, material);
+    markers.push(marker);
+    scene.add(marker);
+
 }
 
 function assembleUrl(img, coords) {
@@ -282,6 +305,19 @@ function resizeGL(canvas) {
 }
 
 function paintGL(canvas) {
+    var scaleFactor = 4;
+
+    for (var i = 0; i < markers.length; i++) {
+
+        console.log(markers[i])
+
+        var scaleVector = new THREE.Vector3();
+        var scale = scaleVector.subVectors(markers[i].position, camera.position).length() / scaleFactor;
+        console.log(scale)
+        markers[i].scale.set(scale, scale, 1);
+    }
+
+
     // controls.update();
     renderer.render(scene, camera);
 }

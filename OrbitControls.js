@@ -389,7 +389,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     var dollyEnd = new THREE.Vector2();
     var dollyDelta = new THREE.Vector2();
 
-    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5 };
+    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKED : 6 };
 
     var state = STATE.NONE;
 
@@ -495,9 +495,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             if ( scope.enablePan === false ) return;
 
-            state = STATE.PAN;
-
-            console.log(x, y);
+            state = STATE.CLICKED;
 
             panStart.set( x, y );
             moveMap();
@@ -518,6 +516,10 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     function onMouseMove(x, y) {
 
         if ( scope.enabled === false ) return;
+
+        if ( state === STATE.CLICKED ) {
+            state = STATE.PAN;
+        }
 
         if ( state === STATE.ROTATE ) {
 
@@ -570,6 +572,10 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     function onMouseUp( /* event */ ) {
 
         if ( scope.enabled === false ) return;
+
+        if (state === STATE.CLICKED) {
+            clicked(panStart);
+        }
 
         eventSource.mouseMove.disconnect(onMouseMove)
         eventSource.mouseUp.disconnect(onMouseUp)
