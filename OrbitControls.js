@@ -574,7 +574,10 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
         if ( scope.enabled === false ) return;
 
         if (state === STATE.CLICKED) {
-            clicked(panStart);
+            var mouse = new THREE.Vector2;
+            mouse.x = ( panStart.x / canvas.width ) * 2 - 1;
+            mouse.y = - ( panStart.y / canvas.height ) * 2 + 1;
+            clicked( mouse );
         }
 
         eventSource.mouseMove.disconnect(onMouseMove)

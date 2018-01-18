@@ -36,25 +36,30 @@ function getZoom() {
     return Math.min(Math.max(getBaseLog(0.5, pt/12000)+4, 0) ,22);
 }
 
-function clicked(position) {
+function clicked( position ) {
 
     var picker = new THREE.Raycaster();
 
     picker.setFromCamera(position, camera);
 
-    var markerPosition = raycaster.intersectObject(plane)[0].point;
+    var markerPosition = picker.intersectObject(plane)[0].point;
 
-    var material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    var material = new THREE.MeshBasicMaterial({ color: 0xfff000 });
 
-    var geometry = new THREE.SphereGeometry( 5000   , 32, 32 );
+    var geometry = new THREE.CylinderGeometry( 5, 0, 20, 20, 32 );
 
-    console.log(markerPosition.x, markerPosition.y)
-
-    geometry.translate(markerPosition.x, markerPosition.y, markerPosition.z);
+    console.log(markerPosition.x, markerPosition.y, markerPosition.z)
 
     var marker = new THREE.Mesh(geometry, material);
+
+    marker.position.copy(markerPosition);
+
+    var lastIndex = markers.length;
+
     markers.push(marker);
     scene.add(marker);
+
+    return lastIndex;
 
 }
 
@@ -158,7 +163,7 @@ function makeMesh(d) {
                 finished++;
 
                 scene.remove(placeholder);
-                plane.visible=true;
+                tile.visible=true;
 
                 if (canvas3d.tilesToGet===0) {
                     progress.opacity = 0;
@@ -196,12 +201,12 @@ function makeMesh(d) {
 
         geometry.translate(xOffset, 0, yOffset);
 
-        var plane = new THREE.Mesh(geometry, material);
+        var tile = new THREE.Mesh(geometry, material);
 
-        plane.coords = slashify([z,x,y])
-        plane.zoom = z;
-        scene.add(plane)
-        plane.visible=false
+        tile.coords = slashify([z,x,y])
+        tile.zoom = z;
+        scene.add(tile)
+        tile.visible=false
     } else {
         var texture = new THREE.TextureLoader()
         .load(
@@ -284,13 +289,15 @@ function initializeGL(canvas, eventSource) {
     scene.add(plane);
 
     // ----
-    var material = new THREE.MeshBasicMaterial({ color: 0x80c342,
-                                                   shading: THREE.SmoothShading });
-    var cubeGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
-    cube = new THREE.Mesh(cubeGeometry, material);
-    scene.add(cube);
+//    var material = new THREE.MeshBasicMaterial({ color: 0x80c342,
+//                                                   shading: THREE.SmoothShading });
+//    var cubeGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+//    cube = new THREE.Mesh(cubeGeometry, material);
+//    scene.add(cube);
 
     // ---
+
+//    clicked(new THREE.Vector3(0, 0, 0));
 
     renderer = new THREE.Canvas3DRenderer({ canvas: canvas, antialias: true, devicePixelRatio: canvas.devicePixelRatio });
     renderer.setSize(canvas.width, canvas.height);
@@ -305,18 +312,16 @@ function resizeGL(canvas) {
 }
 
 function paintGL(canvas) {
-    var scaleFactor = 4;
+    if (markers.length > 0) {
 
-    for (var i = 0; i < markers.length; i++) {
-
-        console.log(markers[i])
-
+        var scaleFactor = 120;
         var scaleVector = new THREE.Vector3();
-        var scale = scaleVector.subVectors(markers[i].position, camera.position).length() / scaleFactor;
-        console.log(scale)
-        markers[i].scale.set(scale, scale, 1);
-    }
+        var scale = camera.position.y / scaleFactor;
 
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].scale.set(scale, scale, scale);
+        }
+    }
 
     // controls.update();
     renderer.render(scene, camera);
