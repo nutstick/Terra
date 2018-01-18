@@ -38,6 +38,8 @@ function OrbitConstraint ( object ) {
     this.enableDamping = true;
     this.dampingFactor = 0.75;
 
+    this.maxClickTimeInterval = 500;
+
 
     // track moving
     this.lastMove = Date.now();
@@ -366,6 +368,9 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     // Set to false to disable use of the keys
     this.enableKeys = true;
 
+    // Set to false to disable marker modifiered
+    this.enableMoveMarker = true;
+
     // The four arrow keys
     this.keys = { LEFT: Qt.LeftArrow, UP: Qt.UpArrow, RIGHT: Qt.RightArrow, BOTTOM: Qt.DownArrow };//{ LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
 
@@ -389,9 +394,14 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     var dollyEnd = new THREE.Vector2();
     var dollyDelta = new THREE.Vector2();
 
-    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKED : 6 };
+    var lastClick;
+    var lastMouseDown;
+
+    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKORPAN : 6, MARKERH : 7 };
 
     var state = STATE.NONE;
+
+    var currentMarker = null;
 
 
     // set start position
@@ -471,6 +481,15 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
         return Math.pow( 0.999, delta );
     }
 
+    function screenNormalize(x, y) {
+
+        return new THREE.Vector2(
+            ( x / scope.canvas.width ) * 2 - 1,
+            - ( y / scope.canvas.height ) * 2 + 1
+        );
+
+    }
+
     function onMouseDown(x, y, button, modifiers) {
 
         if ( scope.enabled === false ) return;
@@ -493,12 +512,26 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
         } else if ( button === scope.mouseButtons.PAN ) {
 
-            if ( scope.enablePan === false ) return;
-
-            state = STATE.CLICKED;
-
             panStart.set( x, y );
-            moveMap();
+
+            var now = Date.now();
+            console.log(lastClick, now, now - lastClick)
+            if ( lastClick && now - lastClick < constraint.maxClickTimeInterval && scope.enableMoveMarker === true ) {
+
+                currentMarker = addMarker( screenNormalize( x, y ) );
+
+                state = STATE.MARKERH;
+
+            } else if ( scope.enablePan === true ) {
+
+                state = STATE.PAN;
+
+                moveMap();
+
+            }
+
+            lastClick = now;
+
         }
 
         if ( state !== STATE.NONE ) {
@@ -516,10 +549,6 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     function onMouseMove(x, y) {
 
         if ( scope.enabled === false ) return;
-
-        if ( state === STATE.CLICKED ) {
-            state = STATE.PAN;
-        }
 
         if ( state === STATE.ROTATE ) {
 
@@ -563,22 +592,26 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
             pan( panDelta.x, panDelta.y );
 
             panStart.copy( panEnd );
+
+        } else if ( state === STATE.MARKERH ) {
+
+            if ( scope.enableMoveMarker === false ) return;
+            panEnd.set( x, y );
+            panDelta.subVectors( panEnd, panStart );
+
+            currentMarker.setOffsetY( - panDelta.y * scope.object.position.y / scope.canvas.height );
+
+            panStart.copy( panEnd );
+
         }
 
         if ( state !== STATE.NONE ) scope.update();
 
     }
 
-    function onMouseUp( /* event */ ) {
+    function onMouseUp(x, y) {
 
         if ( scope.enabled === false ) return;
-
-        if (state === STATE.CLICKED) {
-            var mouse = new THREE.Vector2;
-            mouse.x = ( panStart.x / canvas.width ) * 2 - 1;
-            mouse.y = - ( panStart.y / canvas.height ) * 2 + 1;
-            clicked( mouse );
-        }
 
         eventSource.mouseMove.disconnect(onMouseMove)
         eventSource.mouseUp.disconnect(onMouseUp)

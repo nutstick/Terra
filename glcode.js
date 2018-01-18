@@ -36,7 +36,7 @@ function getZoom() {
     return Math.min(Math.max(getBaseLog(0.5, pt/12000)+4, 0) ,22);
 }
 
-function clicked( position ) {
+function addMarker( position ) {
 
     var picker = new THREE.Raycaster();
 
@@ -44,22 +44,51 @@ function clicked( position ) {
 
     var markerPosition = picker.intersectObject(plane)[0].point;
 
-    var material = new THREE.MeshBasicMaterial({ color: 0xfff000 });
+    var markerGeometry = new THREE.CylinderGeometry( 3, 3, 8, 8, 1 );
 
-    var geometry = new THREE.CylinderGeometry( 5, 0, 20, 20, 32 );
+    for (var i = 0; i < markerGeometry.vertices.length; i++) {
+        markerGeometry.vertices[i].y += 8;
+    }
 
-    console.log(markerPosition.x, markerPosition.y, markerPosition.z)
+    var lineGeometry = new THREE.Geometry();
 
-    var marker = new THREE.Mesh(geometry, material);
+    lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+    lineGeometry.vertices.push(new THREE.Vector3(0, 8, 0));
 
-    marker.position.copy(markerPosition);
+    var marker = {
+        head: new THREE.Mesh(
+            markerGeometry,
+            new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
+        ),
+        vLine: new THREE.LineSegments(
+            lineGeometry,
+            new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3, transparent: true, opacity: 0.8 })
+        )
+    }
 
-    var lastIndex = markers.length;
+    marker.setOffsetY = function(delta) {
+
+        this.head.position.y += delta;
+        this.vLine.geometry.vertices[1].y = this.head.position.y;
+
+    }
+
+    marker.setScale = function(scale) {
+
+        this.head.scale.set(scale, scale, scale);
+
+        this.vLine.scale.set(scale, scale, scale);
+
+    }
+
+    marker.head.position.copy(markerPosition);
+    marker.vLine.position.copy(markerPosition);
 
     markers.push(marker);
-    scene.add(marker);
+    scene.add(marker.head);
+    scene.add(marker.vLine);
 
-    return lastIndex;
+    return marker;
 
 }
 
@@ -319,7 +348,7 @@ function paintGL(canvas) {
         var scale = camera.position.y / scaleFactor;
 
         for (var i = 0; i < markers.length; i++) {
-            markers[i].scale.set(scale, scale, scale);
+            markers[i].setScale(scale);
         }
     }
 
