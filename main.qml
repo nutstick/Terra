@@ -20,43 +20,9 @@ Item {
     height: 360
     visible: true
 
-    WorkerScript {
-        id: updater
-        source: "worker/updatetile.js"
-
-        onMessage: {
-            var queue = messageObject.getTiles[0].length;
-
-            if (queue > 0) {
-                console.log('getTiles', JSON.stringify(messageObject.getTiles))
-                GLCode.getTiles(messageObject.getTiles);
-                GLCode.updateTileVisibility();
-            }
-        }
-    }
-
-    WorkerScript {
-        id: parser
-        source: "worker/parseelevation.js"
-
-        onMessage: {
-            var time = Date.now();
-            canvas3d.parserRequests++
-            if(messageObject.makeMesh) GLCode.makeMesh(messageObject.makeMesh)
-            else console.log(messageObject)
-        }
-    }
-
     Compass {
         id: compass
     }
-
-    /* Canvas {
-        id: imageRenderer
-
-        width: 512
-        height: 512
-    } */
 
     Scene3D {
         anchors.fill: parent
