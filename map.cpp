@@ -3,7 +3,8 @@
 #include "flatterraingenerator.h"
 #include "tile.h"
 #include "chunklist.h"
-#include <Qt3DRender/QCamera>
+#include "cameracontroller.h"
+#include <QVector3D>
 
 static float screenSpaceError(float epsilon, float distance, float screenSize, float fov)
 {
@@ -31,13 +32,15 @@ static float screenSpaceError(float epsilon, float distance, float screenSize, f
     return phi;
 }
 
-static float screenSpaceError(Tile* tile, const Qt3DRender::QCamera* camera)
+static float screenSpaceError(Tile* tile, const CameraController* cameraController)
 {
-    float dist = node->bbox.distanceFromPoint(camera->position());
+    float dist = tile->center3d().distanceToPoint(cameraController->camera()->position());
 
     // TODO: what to do when distance == 0 ?
+    QRect rect = cameraController->viewport();
+    int screenSizePx = qMax(rect.width(), rect.height());  // TODO: is this correct?
 
-    float sse = screenSpaceError(tile->error, dist, state.screenSizePx, camera->fieldOfView());
+    float sse = screenSpaceError(tile->error, dist, screenSizePx, cameraController->camera()->fieldOfView());
     return sse;
 }
 
@@ -46,14 +49,15 @@ static float screenSpaceError(Tile* tile, const Qt3DRender::QCamera* camera)
 
 //! coarse box vs frustum test for culling.
 //! corners of oriented box are transformed to clip space and new axis-aligned box is created for intersection test
-static bool isInFrustum(const AABB& bbox, const QMatrix4x4& viewProjectionMatrix)
+static bool isInFrustum(const QRect& rect, const QMatrix4x4& viewProjectionMatrix)
 {
     float xmin, ymin, zmin, xmax, ymax, zmax;
     for (int i = 0; i < 8; ++i)
     {
-        QVector4D p(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
-                    ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
-                    ((i >> 2) & 1) ? bbox.zMin : bbox.zMax, 1);
+        qDebug() << rect.top()<< rect.bottom();
+        QVector4D p(((i >> 0) & 1) ? rect.bottom() : rect.top(),
+                    ((i >> 1) & 1) ? 0 : 0,
+                    ((i >> 2) & 1) ? rect.right() : rect.left(), 1);
         QVector4D pc = viewProjectionMatrix * p;
         pc /= pc.w();
         float x = pc.x(), y = pc.y(), z = pc.z();
@@ -74,7 +78,9 @@ static bool isInFrustum(const AABB& bbox, const QMatrix4x4& viewProjectionMatrix
             if (z > zmax) zmax = z;
         }
     }
-    return AABB(-1, -1, -1, 1, 1, 1).intersects(AABB(xmin, ymin, zmin, xmax, ymax, zmax));
+
+    return QRect(-1, -1, 2, 2).intersects(QRect(QPoint(xmin, zmin), QPoint(xmax, zmax)));
+    // AABB(-1, -1, -1, 1, 1, 1).intersects(AABB(xmin, ymin, zmin, xmax, ymax, zmax));
 }
 
 Map::Map(Qt3DCore::QNode *parent)
@@ -101,10 +107,29 @@ Map::~Map()
     delete mMapTextureGenerator;
 }
 
+void Map::setCameraController(CameraController *cameraController)
+{
+    mCameraController = cameraController;
+    emit cameraControllerChanged();
+}
+
+void Map::setTau(const float tau)
+{
+    if (mTau == tau) return;
+    mTau = tau;
+    emit tauChanged();
+}
+
+void Map::setMaxLevel(const int maxLevel)
+{
+    if (mMaxLevel == maxLevel) return;
+    mMaxLevel = maxLevel;
+    emit maxLevelChanged();
+}
 
 void Map::update()
 {
-    Q_ASSERT(mCamera);
+    Q_ASSERT(mCameraController);
 
     QSet<Tile*> activeBefore = QSet<Tile*>::fromList(activeTiles);
     activeTiles.clear();
@@ -149,7 +174,7 @@ void Map::update()
 void Map::update(Tile *tile)
 {
     // TODO: fix and re-enable frustum culling
-    if (0 && !isInFrustum(tile->rect(), mCamera->viewMatrix()))
+    if (0 && !isInFrustum(tile->rect(), mCameraController->camera()->projectionMatrix() * mCameraController->camera()->viewMatrix()))
     {
         ++frustumCulled;
         return;
@@ -170,7 +195,7 @@ void Map::update(Tile *tile)
 
     //qDebug() << node->x << "|" << node->y << "|" << node->z << "  " << tau << "  " << screenSpaceError(node, state);
 
-    if (screenSpaceError(tile, mCamera) <= tau())
+    if (screenSpaceError(tile, mCameraController) <= tau())
     {
         // acceptable error for the current chunk - let's render it
 
@@ -254,4 +279,49 @@ void Map::onNodeLoaded(Tile *tile)
 
     // now we need an update!
     // needsUpdate = true;
+}
+
+LoaderThread::LoaderThread(ChunkList *list, QMutex &mutex, QWaitCondition &waitCondition)
+    : loadList(list)
+    , mutex(mutex)
+    , waitCondition(waitCondition)
+    , stopping(false)
+{
+}
+
+void LoaderThread::run()
+{
+    while (1)
+    {
+        ChunkListEntry* entry = nullptr;
+        mutex.lock();
+        if (loadList->isEmpty())
+            waitCondition.wait(&mutex);
+
+        // we can get woken up also when we need to stop
+        if (stopping)
+        {
+            mutex.unlock();
+            break;
+        }
+
+        Q_ASSERT(!loadList->isEmpty());
+        entry = loadList->takeFirst();
+        mutex.unlock();
+
+        qDebug() << "[THR] loading! " << entry->chunk->x() << " | " << entry->chunk->y() << " | " << entry->chunk->z();
+
+        entry->chunk->loader->load();
+
+        qDebug() << "[THR] done!";
+
+        emit nodeLoaded(entry->chunk);
+
+        if (stopping)
+        {
+            // this chunk we just processed will not be processed anymore because we are shutting down everything
+            // so at least put it back into the loader queue so that we can clean up the chunk
+            loadList->insertFirst(entry);
+        }
+    }
 }

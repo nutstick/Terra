@@ -11,6 +11,8 @@ class Map;
 
 class MapTextureGenerator : public QObject
 {
+    Q_OBJECT
+
 public:
     MapTextureGenerator(const Map& map);
     ~MapTextureGenerator();

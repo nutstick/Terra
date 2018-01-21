@@ -16,7 +16,7 @@ public:
         Dem,
     };
 
-    virtual ~TerrainGenerator();
+    virtual ~TerrainGenerator() {};
 
     void setMap(Map* map) { mMap = map; }
 

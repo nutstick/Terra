@@ -1,6 +1,9 @@
 #include "tile.h"
 
 #include <Qt3DCore/QEntity>
+#include <QRect>
+#include <QtMath>
+#include <QVector3D>
 
 Tile::Tile()
     : mX(0)
@@ -62,6 +65,27 @@ void Tile::setZ(const int z)
     if (mZ == z)
         return;
     mZ = z;
+}
+
+QPoint Tile::center() const
+{
+    float size = basePlaneDimesion / qPow(2, mZ);
+    int xOffset = (mX + 0.5) * size - basePlaneDimesion / 2;
+    int yOffset = (mY + 0.5) * size - basePlaneDimesion / 2;
+    return QPoint(xOffset, yOffset);
+}
+
+QVector3D Tile::center3d() const
+{
+    QPoint c = center();
+    return QVector3D(c.x(), 0, c.y());
+}
+
+QRect Tile::rect() const
+{
+    float size = basePlaneDimesion / qPow(2, mZ);
+    QPoint c = center();
+    return QRect(c - QPoint(size / 2, size / 2), QSize(size, size));
 }
 
 bool Tile::allChildChunksResident() const

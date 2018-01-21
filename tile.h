@@ -9,6 +9,9 @@ namespace Qt3DCore
 {
   class QEntity;
 }
+class QRect;
+class QPoint;
+class QVector3D;
 
 class Tile : public QObject
 {
@@ -23,6 +26,12 @@ public:
     void setX(const int x);
     void setY(const int y);
     void setZ(const int z);
+
+    static const int basePlaneDimesion = 65024;
+
+    QPoint center() const;
+    QVector3D center3d() const;
+    QRect rect() const;
 
     bool allChildChunksResident() const;
 

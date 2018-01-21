@@ -13,16 +13,13 @@ class Tile;
 class ChunkLoaderFactory;
 class ChunkList;
 class LoaderThread;
-
-namespace Qt3DRender {
-    class QCamera;
-}
+class CameraController;
 
 class Map : public Qt3DCore::QEntity
 {
     Q_OBJECT
 
-    Q_PROPERTY(Qt3DRender::QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
+    Q_PROPERTY(CameraController *cameraController READ cameraController WRITE setCameraController NOTIFY cameraControllerChanged)
     Q_PROPERTY(float tau READ tau WRITE setTau NOTIFY tauChanged)
     Q_PROPERTY(int maxLevel READ maxLevel WRITE setMaxLevel NOTIFY maxLevelChanged)
 
@@ -35,18 +32,18 @@ public:
     //! make sure that the chunk will be loaded soon (if not loaded yet) and not unloaded anytime soon (if loaded already)
     void requestResidency(Tile* tile);
 
-    Qt3DRender::QCamera *camera() const { return mCamera; }
+    CameraController *cameraController() const { return mCameraController; }
     float tau() const { return mTau; }
     int maxLevel() const { return mMaxLevel; }
     MapTextureGenerator* mapTextureGenerator() const { return mMapTextureGenerator; }
     TerrainGenerator* terrainGenerator() const { return mTerrainGenerator; }
 
-    void setCamera(const Qt3DRender::QCamera *camera);
+    void setCameraController(CameraController *cameraController);
     void setTau(const float tau);
     void setMaxLevel(const int maxLevel);
 
 signals:
-    void cameraChanged();
+    void cameraControllerChanged();
     void tauChanged();
     void maxLevelChanged();
 
@@ -57,7 +54,7 @@ private slots:
   void onNodeLoaded(Tile* tile);
 
 private:
-    Qt3DRender::QCamera* mCamera;
+    CameraController* mCameraController;
 
     MapTextureGenerator* mMapTextureGenerator;
     TerrainGenerator* mTerrainGenerator;
