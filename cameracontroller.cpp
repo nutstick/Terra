@@ -3,6 +3,7 @@
 #include <Qt3dRender/QCameraLens>
 #include <Qt3DInput/QMouseEvent>
 #include <Qt3DInput/QWheelEvent>
+#include "map.h"
 
 float distanceToSquared(QVector3D x, QVector3D y)
 {
@@ -163,6 +164,15 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     // From constraint function update()
 }
 
+void CameraController::setMap(Map *map)
+{
+    if (mMap == map)
+        return;
+    mMap = map;
+
+    emit mapChanged();
+}
+
 void CameraController::setCamera(Qt3DRender::QCamera *camera)
 {
     if (mCamera == camera)
@@ -172,6 +182,7 @@ void CameraController::setCamera(Qt3DRender::QCamera *camera)
     quat = QQuaternion::fromDirection(mCamera->upVector(), QVector3D(0, 1, 0));
     quatInverse = quat.inverted();
     defaultPosition = camera->position();
+
     // TODO: set defaultZoom
     //
 
@@ -362,16 +373,16 @@ void CameraController::onMouseUp(Qt3DInput::QMouseEvent *mouse)
 void CameraController::onMouseWheel(Qt3DInput::QWheelEvent *wheel)
 {
     // qDebug() << "TODO Mouse Wheel";
-    /*float delta = wheel->
+    float delta = wheel->angleDelta().y();
 
     dollyOut(getZoomScale(delta));
 
-    frame();
+    frameTriggered();
 
     // off-center zooming :D
-    if (mCamera->position().y >= mMaxDistance) return;
+    if (mCamera->position().y() >= mMaxDistance) return;
     float direction = -delta * 0.001001001;
-    pan(direction*(event.clientX-window.innerWidth/2),direction*(event.clientY-window.innerHeight/2))*/
+    pan(direction * (wheel->x() - mViewport.width() / 2), direction * (wheel->y() - mViewport.height() / 2));
 }
 
 void CameraController::keyDownInterval()
@@ -578,7 +589,6 @@ bool CameraController::update()
     radius = qMax(mMinDistance, qMin(mMaxDistance, radius));
 
     mTarget += panOffset;
-    qDebug() << "TARGET" << mTarget;
 
     offset.setX(radius * qSin(phi) * qSin(theta));
     offset.setY(radius * qCos(phi));
@@ -606,6 +616,7 @@ bool CameraController::update()
     panOffset.setY(0);
     panOffset.setZ(0);
 
+    qDebug() << "OM" << distanceToSquared(lastPosition, mCamera->position());
     if (distanceToSquared(lastPosition, mCamera->position()) > EPS ||
             8 * (1 - QQuaternion::dotProduct(lastQuaternion, transform->rotation())) > EPS ||
                  zoomChanged) {
@@ -629,9 +640,14 @@ bool CameraController::update()
 
 void CameraController::needUpdateInterval()
 {
+    qDebug() << "p";
     if (mLastMove.elapsed() < 150) return;
     else {
-        // updateTiles
+        qDebug() << "p2";
+        if (mMap) {
+            mMap->update();
+        }
+
         mNeedsUpdate = false;
         disconnect(needUpdateTimer, &QTimer::timeout, this, &CameraController::needUpdateInterval);
     }

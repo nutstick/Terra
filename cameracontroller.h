@@ -7,9 +7,12 @@
 #include <QMetaObject>
 #include <jstimer.h>
 
+class Map;
+
 class CameraController : public Qt3DCore::QEntity
 {
     Q_OBJECT
+    Q_PROPERTY(Map *map READ map WRITE setMap NOTIFY mapChanged)
     Q_PROPERTY(Qt3DRender::QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     Q_PROPERTY(QRect viewport READ viewport WRITE setViewport NOTIFY viewportChanged)
     Q_PROPERTY(QVector3D target READ target WRITE setTarget NOTIFY targetChanged)
@@ -26,6 +29,7 @@ class CameraController : public Qt3DCore::QEntity
 public:
     CameraController(Qt3DCore::QNode *parent = nullptr);
 
+    Map *map() const { return mMap; }
     Qt3DRender::QCamera *camera() const { return mCamera; }
     QRect viewport() const { return mViewport; }
     QVector3D target() const { return mTarget; }
@@ -40,6 +44,7 @@ public:
     bool enableDamping() const { return mEnableDamping; }
     float dampingFactor() const { return mDampingFactor; }
 
+    void setMap(Map* map);
     void setCamera(Qt3DRender::QCamera *camera);
     void setViewport(const QRect& viewport);
     void setTarget(QVector3D target);
@@ -60,6 +65,7 @@ public:
     void moveTo(QVector3D coords, float currentHeight);
 
 signals:
+    void mapChanged();
     void cameraChanged();
     void viewportChanged();
     void targetChanged();
@@ -108,6 +114,8 @@ private:
 
     JSTimer* timer;
 
+    //! Map
+    Map* mMap;
     //! Camera that is being controlled
     Qt3DRender::QCamera* mCamera;
     //! used for computation of translation when dragging mouse

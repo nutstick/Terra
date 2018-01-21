@@ -9,7 +9,8 @@ import Qt3D.Input 2.0
 import Qt3D.Logic 2.0
 import Qt3D.Extras 2.0
 
-import com.map.cameracontroller 1.0
+import com.terra.cameracontroller 1.0
+import com.terra.map 1.0
 
 import "glcode.js" as GLCode
 
@@ -66,13 +67,13 @@ Item {
             property bool ready: false
 
             FrameAction {
-                onTriggered: {
-                    sceneRoot.animate()
-                }
+                onTriggered:
+                    map.update();
             }
 
             CameraController {
                 id: controller
+                map: map
                 camera: camera
                 viewport: Qt.rect(0, 0, root.width, root.height)
             }
@@ -105,72 +106,16 @@ Item {
             ]
 
             Component.onCompleted: {
-                ready = true;
             }
 
-            function animate() {
-                if (!ready)
-                    return;
-                // updateCamera();
-            }
-
-            /* Plane */
-            BasePlane {
-                id: basePlane
-            }
-
-            PhongMaterial {
-                id: material
-            }
-
-            PlaneMesh {
-                id: planeMesh
-                width: 500
-                height: 500
-            }
-
-            Transform {
-                id: planeTransform
-                // scale3D: Qt.vector3d(1.5, 1, 0.5)
-                // rotation: fromAxisAndAngle(Qt.vector3d(1, 0, 0), 45)
-            }
-
-            Entity {
-                id: torusEntity
-                components: [ planeMesh, material, planeTransform ]
+            Map {
+                id: map
+                cameraController: controller
+                tau: 0.0001
+                maxLevel: 22
             }
         }
     }
-    /*
-    Canvas3D {
-        id: canvas3d
-
-        property int parserRequest: 0
-        property int tilesToGet: 0
-        property bool inspectElevation: false
-
-        anchors.fill: parent
-        focus: true
-
-        onInitializeGL: {
-            GLCode.initializeGL(canvas3d, eventSource);
-        }
-
-        onPaintGL: {
-            GLCode.paintGL(canvas3d);
-        }
-
-        onResizeGL: {
-            GLCode.resizeGL(canvas3d);
-        }
-
-        ControlEventSource {
-            anchors.fill: parent
-            focus: true
-            id: eventSource
-        }
-    }
-    */
 
     Text {
         id: progress

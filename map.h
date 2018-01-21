@@ -27,7 +27,7 @@ public:
     Map(Qt3DCore::QNode *parent = nullptr);
     ~Map();
 
-    void update();
+    Q_INVOKABLE void update();
 
     //! make sure that the chunk will be loaded soon (if not loaded yet) and not unloaded anytime soon (if loaded already)
     void requestResidency(Tile* tile);

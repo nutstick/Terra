@@ -3,6 +3,7 @@
 #include <QImage>
 #include <QImageReader>
 #include <QEventLoop>
+#include <QPainter>
 
 MapTextureGenerator::MapTextureGenerator(const Map &map)
     : map(map)
@@ -58,6 +59,7 @@ void MapTextureGenerator::cancelJob(int jobId)
 
 QImage MapTextureGenerator::renderSynchronously(const int x, const int y, const int z)
 {
+    qDebug() << "MapText renderSync";
     QNetworkAccessManager* nam = new QNetworkAccessManager;
     QEventLoop loop;
 
@@ -86,6 +88,14 @@ QImage MapTextureGenerator::renderSynchronously(const int x, const int y, const 
             img = render.read();
         }
     }
+
+    // extra tile information for debugging
+    QPainter p(&img);
+    p.setPen(Qt::white);
+    p.drawRect(0,0,img.width()-1, img.height()-1);
+    QString debugText("%1/%2/%3");
+    p.drawText(img.rect(), debugText.arg(x).arg(y).arg(z), QTextOption(Qt::AlignCenter));
+    p.end();
 
     return img;
 }

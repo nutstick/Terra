@@ -87,7 +87,11 @@ Map::Map(Qt3DCore::QNode *parent)
     : Qt3DCore::QEntity(parent)
     , mTerrainGenerator(new FlatTerrainGenerator)
 {
-    rootTile = new Tile(0, 0, 0, /*TODO*/ 0.1);
+    mTerrainGenerator->setMap(this);
+    rootTile = new Tile(0, 0, 0, /*TODO*/ 0.1f);
+
+    chunkLoaderQueue = new ChunkList;
+    replacementQueue = new ChunkList;
 
     loaderThread = new LoaderThread(chunkLoaderQueue, loaderMutex, loaderWaitCondition);
     connect(loaderThread, &LoaderThread::nodeLoaded, this, &Map::onNodeLoaded);
@@ -193,9 +197,8 @@ void Map::update(Tile *tile)
         return;
     }
 
-    //qDebug() << node->x << "|" << node->y << "|" << node->z << "  " << tau << "  " << screenSpaceError(node, state);
-
-    if (screenSpaceError(tile, mCameraController) <= tau())
+    qDebug() << tile->x() << "|" << tile->y() << "|" << tile->z() << "  " << mTau << "  " << screenSpaceError(tile, mCameraController);
+    if (screenSpaceError(tile, mCameraController) <= mTau)
     {
         // acceptable error for the current chunk - let's render it
 
