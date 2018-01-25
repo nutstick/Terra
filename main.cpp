@@ -1,4 +1,4 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQuickView>
 #include <QQmlContext>
 #include <QQmlApplicationEngine>
@@ -11,7 +11,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
+
+    app.setStyleSheet("Component#markersDelegate { border-bottom: 1px solid grey; }");
 
     JSTimer timer;
 

@@ -36,6 +36,18 @@ function getZoom() {
     return Math.min(Math.max(getBaseLog(0.5, pt/12000)+4, 0) ,22);
 }
 
+function mouseDownOnMarkers( picker ) {
+
+    var intersect = picker.intersectObjects(markers, true);
+
+    for (var i = 0; i < intersect.length; i++) {
+        return intersect[i].object;
+    }
+
+    return null;
+
+}
+
 function addMarker( position ) {
 
     var picker = new THREE.Raycaster();
@@ -55,38 +67,107 @@ function addMarker( position ) {
     lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
     lineGeometry.vertices.push(new THREE.Vector3(0, 8, 0));
 
-    var marker = {
-        head: new THREE.Mesh(
-            markerGeometry,
-            new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
-        ),
-        vLine: new THREE.LineSegments(
-            lineGeometry,
-            new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3, transparent: true, opacity: 0.8 })
-        )
+    var arrowGeometry = new THREE.CylinderGeometry( 4, 0, 6, 6, 1 );
+
+    for (var i = 0; i < arrowGeometry.vertices.length; i++) {
+        arrowGeometry.vertices[i].y += 3;
     }
+
+    var marker = new THREE.Group();
+    marker.name = 'marker';
+
+    marker.head = new THREE.Mesh(
+        markerGeometry,
+        new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
+    );
+    marker.head.name = 'head';
+    marker.vLine = new THREE.LineSegments(
+        lineGeometry,
+        new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
+    );
+    marker.vLine.name = 'vLine';
+    marker.arrow = new THREE.Mesh(
+        arrowGeometry,
+        new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true })
+    );
+    marker.arrow.name = 'arrow';
+
+    if (markers.length !== 0) {
+        var cLineGeometry = new THREE.Geometry();
+
+        cLineGeometry.vertices.push(new THREE.Vector3().copy(markers[markers.length - 1].head.position));
+        cLineGeometry.vertices.push(new THREE.Vector3().copy(markerPosition));
+
+        marker.cLine = new THREE.LineSegments(
+            cLineGeometry,
+            new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
+        );
+        marker.cLine.name = 'cLine';
+
+        marker.add( marker.cLine );
+    }
+
+    marker.add( marker.head );
+    marker.add( marker.vLine );
+    marker.add( marker.arrow );
 
     marker.setOffsetY = function(delta) {
 
         this.head.position.y += delta;
         this.vLine.geometry.vertices[1].y = this.head.position.y;
+        this.vLine.geometry.verticesNeedUpdate = true
+
+        if (this.cLine) {
+            this.cLine.geometry.vertices[1].y = this.head.position.y;
+            this.cLine.geometry.verticesNeedUpdate = true
+        }
+
+        if (this.index < markers.length - 1) {
+            markers[this.index + 1].cLine.geometry.vertices[0].y =  this.head.position.y;
+            markers[this.index + 1].cLine.geometry.verticesNeedUpdate = true
+        }
 
     }
 
     marker.setScale = function(scale) {
 
         this.head.scale.set(scale, scale, scale);
+        this.arrow.scale.set(scale, scale, scale);
 
-        this.vLine.scale.set(scale, scale, scale);
+    }
+
+    marker.setPositionFromMouse = function(position) {
+
+        var picker = new THREE.Raycaster();
+        picker.setFromCamera(position, camera);
+
+        var markerPosition = picker.intersectObject(plane)[0].point;
+
+        this.head.position.x = markerPosition.x;
+        this.head.position.z = markerPosition.z;
+        this.vLine.position.copy(markerPosition);
+        this.arrow.position.copy(markerPosition);
+
+
+        if (this.cLine) {
+            this.cLine.geometry.vertices[1].copy(this.head.position);
+            this.cLine.geometry.verticesNeedUpdate = true
+        }
+
+        if (this.index < markers.length - 1) {
+            markers[this.index + 1].cLine.geometry.vertices[0].copy(this.head.position);
+            markers[this.index + 1].cLine.geometry.verticesNeedUpdate = true
+        }
 
     }
 
     marker.head.position.copy(markerPosition);
     marker.vLine.position.copy(markerPosition);
+    marker.arrow.position.copy(markerPosition);
+    marker.index = markers.length;
 
     markers.push(marker);
-    scene.add(marker.head);
-    scene.add(marker.vLine);
+    scene.add(marker);
 
     return marker;
 
@@ -350,6 +431,7 @@ function paintGL(canvas) {
         for (var i = 0; i < markers.length; i++) {
             markers[i].setScale(scale);
         }
+
     }
 
     // controls.update();

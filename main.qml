@@ -6,6 +6,7 @@ import QtQuick.Controls 1.4
 import "glcode.js" as GLCode
 
 Window {
+    id: window
     title: qsTr("terra")
     width: 640
     height: 360
@@ -85,12 +86,15 @@ Window {
 
     Button {
         id: modeButton
+        x: 0
         anchors.top: parent.top
         anchors.right: parent.right
 
         onClicked: canvas3d.state = canvas3d.state == 'View' ? 'Edit' : 'View'
 
         text: canvas3d.state == 'View' ? 'View Mode' : 'Edit Mode'
+        anchors.rightMargin: 544
+        anchors.topMargin: 0
     }
 
     Text {
@@ -100,5 +104,17 @@ Window {
         color: "white"
 
         text: qsTr("loading")
+    }
+
+    PlannerView {
+        property real dHeight: 200
+        y: 160
+        width: Math.min(parent.width * 0.8, 400)
+        height: Math.max(56, dHeight)
+        anchors.horizontalCenterOffset: 0
+        anchors.bottomMargin: 0
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+
     }
 }

@@ -203,6 +203,7 @@ function OrbitConstraint ( object ) {
 
         // so camera.up is the orbit axis
         var quat = new THREE.Quaternion().setFromUnitVectors( object.up, new THREE.Vector3( 0, 1, 0 ) );
+        console.log(JSON.stringify(object.up))
         var quatInverse = quat.clone().inverse();
 
         var lastPosition = new THREE.Vector3();
@@ -397,7 +398,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     var lastClick;
     var lastMouseDown;
 
-    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKORPAN : 6, MARKERH : 7 };
+    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKORPAN : 6, MARKERH : 7, MARKERP : 8 };
 
     var state = STATE.NONE;
 
@@ -512,11 +513,26 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
         } else if ( button === scope.mouseButtons.PAN ) {
 
+            var picker = new THREE.Raycaster();
+            picker.setFromCamera( screenNormalize(x, y), scope.object );
+            var selectedObject = mouseDownOnMarkers(picker);
+
             panStart.set( x, y );
 
             var now = Date.now();
-            console.log(lastClick, now, now - lastClick)
-            if ( lastClick && now - lastClick < constraint.maxClickTimeInterval && scope.enableMoveMarker === true ) {
+            if ( selectedObject && selectedObject.name === 'head' ) {
+
+                currentMarker = selectedObject.parent;
+
+                state = STATE.MARKERH;
+
+            } else if ( selectedObject && selectedObject.name === 'arrow' ) {
+
+                currentMarker = selectedObject.parent;
+
+                state = STATE.MARKERP;
+
+            } else if ( lastClick && now - lastClick < constraint.maxClickTimeInterval && scope.enableMoveMarker === true ) {
 
                 currentMarker = addMarker( screenNormalize( x, y ) );
 
@@ -603,6 +619,11 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             panStart.copy( panEnd );
 
+        } else if ( state === STATE.MARKERP ) {
+
+            if ( scope.enableMoveMarker === false ) return;
+
+            currentMarker.setPositionFromMouse(screenNormalize( x, y ));
         }
 
         if ( state !== STATE.NONE ) scope.update();
