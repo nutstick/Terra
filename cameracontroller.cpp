@@ -5,7 +5,7 @@
 #include <Qt3DInput/QWheelEvent>
 #include "map.h"
 
-float distanceToSquared(QVector3D x, QVector3D y)
+qreal distanceToSquared(QVector3D x, QVector3D y)
 {
     return (x.x() - y.x()) * (x.x() - y.x()) + (x.y() - y.y()) * (x.y() - y.y())
             + (x.z() - y.z()) * (x.z() - y.z());
@@ -173,15 +173,17 @@ void CameraController::setMap(Map *map)
     emit mapChanged();
 }
 
-void CameraController::setCamera(Qt3DRender::QCamera *camera)
+void CameraController::setCamera(QCamera *camera)
 {
     if (mCamera == camera)
         return;
     mCamera = camera;
 
-    quat = QQuaternion::fromDirection(mCamera->upVector(), QVector3D(0, 1, 0));
+    quat = QQuaternion::rotationTo(mCamera->upVector(), QVector3D(0, 0, -1.0));
     quatInverse = quat.inverted();
     defaultPosition = camera->position();
+
+    frameTriggered();
 
     // TODO: set defaultZoom
     //
@@ -207,49 +209,49 @@ void CameraController::setTarget(QVector3D target)
     emit targetChanged();
 }
 
-void CameraController::setMinDistance(float minDistance)
+void CameraController::setMinDistance(qreal minDistance)
 {
     mMinDistance = minDistance;
     emit minDistanceChanged();
 }
 
-void CameraController::setMaxDistance(float maxDistance)
+void CameraController::setMaxDistance(qreal maxDistance)
 {
     mMaxDistance = maxDistance;
     emit maxDistanceChanged();
 }
 
-void CameraController::setMinZoom(float minZoom)
+void CameraController::setMinZoom(qreal minZoom)
 {
     mMinZoom = minZoom;
     emit minZoomChanged();
 }
 
-void CameraController::setMaxZoom(float maxZoom)
+void CameraController::setMaxZoom(qreal maxZoom)
 {
     mMaxZoom = maxZoom;
     emit maxZoomChanged();
 }
 
-void CameraController::setMinPolarAngle(float minPolarAngle)
+void CameraController::setMinPolarAngle(qreal minPolarAngle)
 {
     mMinPolarAngle = minPolarAngle;
     emit minPolarAngleChanged();
 }
 
-void CameraController::setMaxPolarAngle(float maxPolarAngle)
+void CameraController::setMaxPolarAngle(qreal maxPolarAngle)
 {
     mMaxPolarAngle = maxPolarAngle;
     emit maxPolarAngleChanged();
 }
 
-void CameraController::setMinAzimuthAngle(float minAzimuthAngle)
+void CameraController::setMinAzimuthAngle(qreal minAzimuthAngle)
 {
     mMinAzimuthAngle = minAzimuthAngle;
     emit minAzimuthAngleChanged();
 }
 
-void CameraController::setMaxAzimuthAngle(float maxAzimuthAngle)
+void CameraController::setMaxAzimuthAngle(qreal maxAzimuthAngle)
 {
     mMaxAzimuthAngle = maxAzimuthAngle;
     emit maxAzimuthAngleChanged();
@@ -261,7 +263,7 @@ void CameraController::setEnableDamping(bool enableDamping)
     emit enableDampingChanged();
 }
 
-void CameraController::setDampingFactor(float dampingFactor)
+void CameraController::setDampingFactor(qreal dampingFactor)
 {
     mDampingFactor = dampingFactor;
     emit dampingFactorChanged();
@@ -324,6 +326,7 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         rotateEnd = QVector2D(mouse->x(), mouse->y());
         rotateDelta = rotateEnd - rotateStart;
 
+        qDebug() << "P";
         // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed);
 
@@ -372,8 +375,7 @@ void CameraController::onMouseUp(Qt3DInput::QMouseEvent *mouse)
 
 void CameraController::onMouseWheel(Qt3DInput::QWheelEvent *wheel)
 {
-    // qDebug() << "TODO Mouse Wheel";
-    float delta = wheel->angleDelta().y();
+    qreal delta = wheel->angleDelta().y();
 
     dollyOut(getZoomScale(delta));
 
@@ -381,7 +383,7 @@ void CameraController::onMouseWheel(Qt3DInput::QWheelEvent *wheel)
 
     // off-center zooming :D
     if (mCamera->position().y() >= mMaxDistance) return;
-    float direction = -delta * 0.001001001;
+    qreal direction = -delta * 0.001001001;
     pan(direction * (wheel->x() - mViewport.width() / 2), direction * (wheel->y() - mViewport.height() / 2));
 }
 
@@ -441,7 +443,7 @@ void CameraController::straighten()
     mCamera->setPosition(QVector3D(mTarget.x(), mCamera->position().y(), mTarget.y()));
 }
 
-void CameraController::moveTo(QVector3D coords, float currentHeight)
+void CameraController::moveTo(QVector3D coords, qreal currentHeight)
 {
     mTarget = coords;
     mCamera->setPosition(QVector3D(coords.x(), currentHeight, coords.z()));
@@ -450,7 +452,7 @@ void CameraController::moveTo(QVector3D coords, float currentHeight)
     });
 }
 
-void CameraController::rotateLeft(float angle)
+void CameraController::rotateLeft(qreal angle)
 {
     thetaDelta -= angle;
 
@@ -458,7 +460,7 @@ void CameraController::rotateLeft(float angle)
     // compass.update();
 }
 
-void CameraController::rotateUp(float angle)
+void CameraController::rotateUp(qreal angle)
 {
     phiDelta -= angle;
 
@@ -466,49 +468,42 @@ void CameraController::rotateUp(float angle)
     // compass.update();
 }
 
-void CameraController::panLeft(float distance)
+void CameraController::panLeft(qreal distance)
 {
     QVector3D _v = QVector3D();
-//    float* te = mCamera->transform()->matrix().data();
-//    qDebug() << mCamera->transform()->matrix();
-//    _v.setX(*te);
-//    _v.setY(*(te+1));
-//    _v.setZ(*(te+2));
-    _v.setX(0);
-    _v.setY(0);
-    _v.setZ(1);
+    float* te = mCamera->transform()->matrix().data();
+    _v.setX(*te);
+    _v.setY(/**(te+1)*/0);
+    _v.setZ(*(te+2));
     _v *= (-distance);
 
     panOffset += _v;
 }
 
-void CameraController::panUp(float distance)
+void CameraController::panUp(qreal distance)
 {
     QVector3D _v = QVector3D();
-//    float* te = mCamera->transform()->matrix().data();
-//    _v.setX(*(te+4));
-//    _v.setY(*(te+5));
-//    _v.setZ(*(te+6));
-    _v.setX(1);
-    _v.setY(0);
-    _v.setZ(0);
-    _v *= distance;
+    float* te = mCamera->transform()->matrix().data();
+    _v.setX(*(te+4));
+    _v.setY(/**(te+5)*/0);
+    _v.setZ(*(te+6));
+    _v *= (-distance);
 
     panOffset += _v;
 }
 
-void CameraController::pan(float deltaX, float deltaY)
+void CameraController::pan(qreal deltaX, qreal deltaY)
 {
     pan(deltaX, deltaY, mViewport.width(), mViewport.height());
 }
 
-void CameraController::pan(float deltaX, float deltaY, float screenWidth, float screenHeight)
+void CameraController::pan(qreal deltaX, qreal deltaY, qreal screenWidth, qreal screenHeight)
 {
     if (mCamera->lens()->projectionType() == Qt3DRender::QCameraLens::PerspectiveProjection) {
         // perspective
         QVector3D position = mCamera->position();
         QVector3D offset = position - mTarget;
-        float targetDistance = offset.length();
+        qreal targetDistance = offset.length();
 
         // half of the fov is center to top of screen
         targetDistance *= qTan((mCamera->fieldOfView() / 2) * M_PI / 180.0);
@@ -524,7 +519,7 @@ void CameraController::pan(float deltaX, float deltaY, float screenWidth, float 
     }
 }
 
-void CameraController::dollyIn(float dollyScale)
+void CameraController::dollyIn(qreal dollyScale)
 {
     switch (mCamera->lens()->projectionType()) {
     case Qt3DRender::QCameraLens::PerspectiveProjection:
@@ -542,7 +537,7 @@ void CameraController::dollyIn(float dollyScale)
     }
 }
 
-void CameraController::dollyOut(float dollyScale)
+void CameraController::dollyOut(qreal dollyScale)
 {
     switch (mCamera->lens()->projectionType()) {
     case Qt3DRender::QCameraLens::PerspectiveProjection:
@@ -566,11 +561,14 @@ bool CameraController::update()
 
     offset = position - mTarget;
 
+    qDebug() << "BEFORE" << offset << mTarget << position;
     offset = quat.rotatedVector(offset);
 
     theta = qAtan2(offset.x(), offset.z());
 
     phi = qAtan2(qSqrt(offset.x() * offset.x() + offset.z() * offset.z()), offset.y());
+
+    qDebug() << offset << phi;
 
     theta += thetaDelta;
     phi += phiDelta;
@@ -582,9 +580,9 @@ bool CameraController::update()
     phi = qMax(mMinPolarAngle, qMin(mMaxPolarAngle, phi));
 
     // restrict phi to be betwee EPS and PI-EPS
-    phi = qMax(EPS, qMin((float)M_PI - EPS, phi));
+    // phi = qMax(EPS, qMin(M_PI - EPS, phi));
 
-    float radius = offset.length() * scale;
+    qreal radius = offset.length() * scale;
 
     radius = qMax(mMinDistance, qMin(mMaxDistance, radius));
 
@@ -592,12 +590,15 @@ bool CameraController::update()
 
     offset.setX(radius * qSin(phi) * qSin(theta));
     offset.setY(radius * qCos(phi));
-    offset.setZ(radius * qSin(phi) * qSin(theta));
+    offset.setZ(radius * qSin(phi) * qCos(theta));
 
     offset = quatInverse.rotatedVector(offset);
 
     // set Position
+    qDebug() << "F" << offset;
     mCamera->setPosition(mTarget + offset);
+    qDebug() << mTarget << mTarget + offset << mCamera->position();
+    qDebug() << "THETA" << theta << phi << phiDelta;
     // look at target
     mCamera->setViewCenter(mTarget);
     Qt3DCore::QTransform* transform = mCamera->transform();
@@ -616,7 +617,6 @@ bool CameraController::update()
     panOffset.setY(0);
     panOffset.setZ(0);
 
-    qDebug() << "OM" << distanceToSquared(lastPosition, mCamera->position());
     if (distanceToSquared(lastPosition, mCamera->position()) > EPS ||
             8 * (1 - QQuaternion::dotProduct(lastQuaternion, transform->rotation())) > EPS ||
                  zoomChanged) {
@@ -640,10 +640,8 @@ bool CameraController::update()
 
 void CameraController::needUpdateInterval()
 {
-    qDebug() << "p";
     if (mLastMove.elapsed() < 150) return;
     else {
-        qDebug() << "p2";
         if (mMap) {
             mMap->update();
         }
@@ -653,12 +651,12 @@ void CameraController::needUpdateInterval()
     }
 }
 
-float CameraController::getAutoRotationAngle()
+qreal CameraController::getAutoRotationAngle()
 {
     return 2 * M_PI / 60 / 60 * autoRotateSpeed;
 }
 
-float CameraController::getZoomScale(float delta)
+qreal CameraController::getZoomScale(qreal delta)
 {
     return qPow( 0.999, delta );
 }

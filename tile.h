@@ -27,8 +27,6 @@ public:
     void setY(const int y);
     void setZ(const int z);
 
-    static const int basePlaneDimesion = 65024;
-
     QPoint center() const;
     QVector3D center3d() const;
     QRect rect() const;

@@ -3,9 +3,9 @@
 
 #include <Qt3DCore>
 #include <Qt3DInput>
-#include <Qt3DRender>
 #include <QMetaObject>
 #include <jstimer.h>
+#include "qcamera.h"
 
 class Map;
 
@@ -13,56 +13,56 @@ class CameraController : public Qt3DCore::QEntity
 {
     Q_OBJECT
     Q_PROPERTY(Map *map READ map WRITE setMap NOTIFY mapChanged)
-    Q_PROPERTY(Qt3DRender::QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
+    Q_PROPERTY(QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     Q_PROPERTY(QRect viewport READ viewport WRITE setViewport NOTIFY viewportChanged)
     Q_PROPERTY(QVector3D target READ target WRITE setTarget NOTIFY targetChanged)
-    Q_PROPERTY(float minDistance READ minDistance WRITE setMinDistance NOTIFY minDistanceChanged)
-    Q_PROPERTY(float maxDistance READ maxDistance WRITE setMaxDistance NOTIFY maxDistanceChanged)
+    Q_PROPERTY(qreal minDistance READ minDistance WRITE setMinDistance NOTIFY minDistanceChanged)
+    Q_PROPERTY(qreal maxDistance READ maxDistance WRITE setMaxDistance NOTIFY maxDistanceChanged)
     Q_PROPERTY(int minZoom READ minZoom WRITE setMinZoom NOTIFY minZoomChanged)
     Q_PROPERTY(int maxZoom READ maxZoom WRITE setMaxZoom NOTIFY maxZoomChanged)
-    Q_PROPERTY(float minPolarAngle READ minPolarAngle WRITE setMinPolarAngle NOTIFY minPolarAngleChanged)
-    Q_PROPERTY(float maxPolarAngle READ maxPolarAngle WRITE setMaxPolarAngle NOTIFY maxPolarAngleChanged)
-    Q_PROPERTY(float minAzimuthAngle READ minAzimuthAngle WRITE setMinAzimuthAngle NOTIFY minAzimuthAngleChanged)
-    Q_PROPERTY(float maxAzimuthAngle READ maxAzimuthAngle WRITE setMaxAzimuthAngle NOTIFY maxAzimuthAngleChanged)
+    Q_PROPERTY(qreal minPolarAngle READ minPolarAngle WRITE setMinPolarAngle NOTIFY minPolarAngleChanged)
+    Q_PROPERTY(qreal maxPolarAngle READ maxPolarAngle WRITE setMaxPolarAngle NOTIFY maxPolarAngleChanged)
+    Q_PROPERTY(qreal minAzimuthAngle READ minAzimuthAngle WRITE setMinAzimuthAngle NOTIFY minAzimuthAngleChanged)
+    Q_PROPERTY(qreal maxAzimuthAngle READ maxAzimuthAngle WRITE setMaxAzimuthAngle NOTIFY maxAzimuthAngleChanged)
     Q_PROPERTY(bool enableDamping READ enableDamping WRITE setEnableDamping NOTIFY enableDampingChanged)
-    Q_PROPERTY(float dampingFactor READ dampingFactor WRITE setDampingFactor NOTIFY dampingFactorChanged)
+    Q_PROPERTY(qreal dampingFactor READ dampingFactor WRITE setDampingFactor NOTIFY dampingFactorChanged)
 public:
     CameraController(Qt3DCore::QNode *parent = nullptr);
 
     Map *map() const { return mMap; }
-    Qt3DRender::QCamera *camera() const { return mCamera; }
+    QCamera *camera() const { return mCamera; }
     QRect viewport() const { return mViewport; }
     QVector3D target() const { return mTarget; }
-    float minDistance() const { return mMinDistance; }
-    float maxDistance() const { return mMaxDistance; }
+    qreal minDistance() const { return mMinDistance; }
+    qreal maxDistance() const { return mMaxDistance; }
     int minZoom() const { return mMinZoom; }
     int maxZoom() const { return mMaxZoom; }
-    float minPolarAngle() const { return mMinPolarAngle; }
-    float maxPolarAngle() const { return mMaxPolarAngle; }
-    float minAzimuthAngle() const { return mMinAzimuthAngle; }
-    float maxAzimuthAngle() const { return mMaxAzimuthAngle; }
+    qreal minPolarAngle() const { return mMinPolarAngle; }
+    qreal maxPolarAngle() const { return mMaxPolarAngle; }
+    qreal minAzimuthAngle() const { return mMinAzimuthAngle; }
+    qreal maxAzimuthAngle() const { return mMaxAzimuthAngle; }
     bool enableDamping() const { return mEnableDamping; }
-    float dampingFactor() const { return mDampingFactor; }
+    qreal dampingFactor() const { return mDampingFactor; }
 
     void setMap(Map* map);
-    void setCamera(Qt3DRender::QCamera *camera);
+    void setCamera(QCamera *camera);
     void setViewport(const QRect& viewport);
     void setTarget(QVector3D target);
-    void setMinDistance(float minDistance);
-    void setMaxDistance(float maxDistance);
-    void setMinZoom(float minZoom);
-    void setMaxZoom(float maxZoom);
-    void setMinPolarAngle(float minPolarAngle);
-    void setMaxPolarAngle(float maxPolarAngle);
-    void setMinAzimuthAngle(float minAzimuthAngle);
-    void setMaxAzimuthAngle(float maxAzimuthAngle);
+    void setMinDistance(qreal minDistance);
+    void setMaxDistance(qreal maxDistance);
+    void setMinZoom(qreal minZoom);
+    void setMaxZoom(qreal maxZoom);
+    void setMinPolarAngle(qreal minPolarAngle);
+    void setMaxPolarAngle(qreal maxPolarAngle);
+    void setMinAzimuthAngle(qreal minAzimuthAngle);
+    void setMaxAzimuthAngle(qreal maxAzimuthAngle);
     void setEnableDamping(bool enableDamping);
-    void setDampingFactor(float dampingFactor);
+    void setDampingFactor(qreal dampingFactor);
 
     void frameTriggered();
     void reset();
     void straighten();
-    void moveTo(QVector3D coords, float currentHeight);
+    void moveTo(QVector3D coords, qreal currentHeight);
 
 signals:
     void mapChanged();
@@ -94,49 +94,49 @@ private:
     void keyDownInterval();
     void needUpdateInterval();
 
-    void rotateLeft(float angle);
-    void rotateUp(float angle);
+    void rotateLeft(qreal angle);
+    void rotateUp(qreal angle);
 
-    void panLeft(float distance);
-    void panUp(float ditance);
+    void panLeft(qreal distance);
+    void panUp(qreal ditance);
 
-    void pan(float deltaX, float deltaY);
-    void pan(float deltaX, float deltaY, float screenWidth, float screenHeight);
+    void pan(qreal deltaX, qreal deltaY);
+    void pan(qreal deltaX, qreal deltaY, qreal screenWidth, qreal screenHeight);
 
-    void dollyIn(float dollyScale);
-    void dollyOut(float dollyScale);
+    void dollyIn(qreal dollyScale);
+    void dollyOut(qreal dollyScale);
 
     bool update();
 
-    float getAutoRotationAngle();
+    qreal getAutoRotationAngle();
 
-    float getZoomScale(float delta);
+    qreal getZoomScale(qreal delta);
 
     JSTimer* timer;
 
     //! Map
     Map* mMap;
     //! Camera that is being controlled
-    Qt3DRender::QCamera* mCamera;
+    QCamera* mCamera;
     //! used for computation of translation when dragging mouse
     QRect mViewport;
     //! Camera target point
     QVector3D mTarget;
 
-    float mMinDistance;
-    float mMaxDistance;
+    qreal mMinDistance;
+    qreal mMaxDistance;
 
     int mMinZoom;
     int mMaxZoom;
 
-    float mMinPolarAngle;
-    float mMaxPolarAngle;
+    qreal mMinPolarAngle;
+    qreal mMaxPolarAngle;
 
-    float mMinAzimuthAngle;
-    float mMaxAzimuthAngle;
+    qreal mMinAzimuthAngle;
+    qreal mMaxAzimuthAngle;
 
     bool mEnableDamping;
-    float mDampingFactor;
+    qreal mDampingFactor;
 
     QTime mLastMove;
 
@@ -145,7 +145,7 @@ private:
 
     QVector3D defaultTarget;
     QVector3D defaultPosition;
-    float defaultZoom;
+    qreal defaultZoom;
 
     QVector3D offset;
     QQuaternion quat;
@@ -155,17 +155,17 @@ private:
 
 
     bool enableZoom;
-    float zoomSpeed;
+    qreal zoomSpeed;
     bool enableRotate;
-    float rotateSpeed;
+    qreal rotateSpeed;
     bool enablePan;
-    float keyPanSpeed;
+    qreal keyPanSpeed;
 
     int keyDown;
     QTimer* keyDownTimer;
 
     bool autoRotate;
-    float autoRotateSpeed;
+    qreal autoRotateSpeed;
     bool enableKeys;
 
     QVector2D rotateStart;
@@ -190,15 +190,15 @@ private:
     };
     State state;
 
-    float EPS = 0.000001;
+    qreal EPS = 0.000001;
 
     // internal
-    float theta;
-    float phi;
+    qreal theta;
+    qreal phi;
 
-    float phiDelta;
-    float thetaDelta;
-    float scale;
+    qreal phiDelta;
+    qreal thetaDelta;
+    qreal scale;
     QVector3D panOffset;
     bool zoomChanged;
 

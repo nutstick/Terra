@@ -59,7 +59,6 @@ void MapTextureGenerator::cancelJob(int jobId)
 
 QImage MapTextureGenerator::renderSynchronously(const int x, const int y, const int z)
 {
-    qDebug() << "MapText renderSync";
     QNetworkAccessManager* nam = new QNetworkAccessManager;
     QEventLoop loop;
 
@@ -83,7 +82,7 @@ QImage MapTextureGenerator::renderSynchronously(const int x, const int y, const 
         }
         else
         {
-            qDebug() << "Downloaded image" << reply->url().toString();
+            // qDebug() << "Downloaded image" << reply->url().toString();
             QImageReader render(reply);
             img = render.read();
         }
@@ -117,7 +116,7 @@ void MapTextureGenerator::onRenderingFinished(QNetworkReply* reply)
         }
         else
         {
-            qDebug() << "Downloaded image" << reply->url().toString();
+            // qDebug() << "Downloaded image" << reply->url().toString();
             QImageReader render(reply);
             img = render.read();
         }

@@ -6,11 +6,13 @@
 
 #include "jstimer.h"
 #include "cameracontroller.h"
+#include "qcamera.h"
 #include "map.h"
 
 int main(int argc, char *argv[])
 {
     qmlRegisterType<CameraController>("com.terra.cameracontroller", 1, 0, "CameraController");
+    qmlRegisterType<QCamera>("com.terra.camera", 1, 0, "MyCamera");
     qmlRegisterType<Map>("com.terra.map", 1, 0, "Map");
 
 #if defined(Q_OS_WIN)

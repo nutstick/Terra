@@ -5,6 +5,8 @@
 #include <QtMath>
 #include <QVector3D>
 
+static float basePlaneDimesion = 65024.0f;
+
 Tile::Tile()
     : mX(0)
     , mY(0)
@@ -79,8 +81,8 @@ void Tile::setZ(const int z)
 QPoint Tile::center() const
 {
     float size = basePlaneDimesion / qPow(2, mZ);
-    int xOffset = (mX + 0.5) * size - basePlaneDimesion / 2;
-    int yOffset = (mY + 0.5) * size - basePlaneDimesion / 2;
+    float xOffset = (mX + 0.5) * size - basePlaneDimesion / 2;
+    float yOffset = (mY + 0.5) * size - basePlaneDimesion / 2;
     return QPoint(xOffset, yOffset);
 }
 

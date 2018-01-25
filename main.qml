@@ -4,12 +4,13 @@ import QtQuick.Window 2.2
 import QtQuick.Scene3D 2.0
 
 import Qt3D.Core 2.0
-import Qt3D.Render 2.0
 import Qt3D.Input 2.0
 import Qt3D.Logic 2.0
+import Qt3D.Render 2.0
 import Qt3D.Extras 2.0
 
 import com.terra.cameracontroller 1.0
+import com.terra.camera 1.0
 import com.terra.map 1.0
 
 import "glcode.js" as GLCode
@@ -52,15 +53,8 @@ Item {
                 nearPlane: 1/99
                 farPlane: 100000000000000
                 position: Qt.vector3d( 0.0, 12000.0, 0.0 );
-                upVector: Qt.vector3d( 1.0, 0.0, 0.0 )
+                upVector: Qt.vector3d( 0.0, 0.0, -1.0 )
                 viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
-//                fieldOfView: 45
-//                aspectRatio: 16/9
-//                nearPlane : 0.1
-//                farPlane : 1000.0
-//                position: Qt.vector3d( 0.0, 40.0, -40.0 )
-//                upVector: Qt.vector3d( 0.0, 1.0, 0.0 )
-//                viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
             }
 
             components: [
@@ -77,7 +71,7 @@ Item {
             Map {
                 id: map
                 cameraController: controller
-                tau: 0.0001
+                tau: 0.0008
                 maxLevel: 22
             }
         }

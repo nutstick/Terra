@@ -56,8 +56,8 @@ static bool isInFrustum(const QRect& rect, const QMatrix4x4& viewProjectionMatri
     {
         qDebug() << rect.top()<< rect.bottom();
         QVector4D p(((i >> 0) & 1) ? rect.bottom() : rect.top(),
-                    ((i >> 1) & 1) ? 0 : 0,
-                    ((i >> 2) & 1) ? rect.right() : rect.left(), 1);
+                    ((i >> 1) & 1) ? rect.right() : rect.left(),
+                    ((i >> 2) & 1) ? 0 : 0, 1);
         QVector4D pc = viewProjectionMatrix * p;
         pc /= pc.w();
         float x = pc.x(), y = pc.y(), z = pc.z();
@@ -79,7 +79,7 @@ static bool isInFrustum(const QRect& rect, const QMatrix4x4& viewProjectionMatri
         }
     }
 
-    return QRect(-1, -1, 2, 2).intersects(QRect(QPoint(xmin, zmin), QPoint(xmax, zmax)));
+    return QRect(-1, -1, 2, 2).intersects(QRect(QPoint(xmin, ymin), QPoint(xmax, ymax)));
     // AABB(-1, -1, -1, 1, 1, 1).intersects(AABB(xmin, ymin, zmin, xmax, ymax, zmax));
 }
 
@@ -172,7 +172,7 @@ void Map::update()
 
 //    needsUpdate = false;  // just updated
 
-    qDebug() << "update: active " << activeTiles.count() << " enabled " << enabled << " disabled " << disabled << " | culled " << frustumCulled << " | loading " << chunkLoaderQueue->count() << " loaded " << replacementQueue->count() << " | unloaded " << unloaded;
+//    qDebug() << "update: active " << activeTiles.count() << " enabled " << enabled << " disabled " << disabled << " | culled " << frustumCulled << " | loading " << chunkLoaderQueue->count() << " loaded " << replacementQueue->count() << " | unloaded " << unloaded;
 }
 
 void Map::update(Tile *tile)
@@ -197,7 +197,7 @@ void Map::update(Tile *tile)
         return;
     }
 
-    qDebug() << tile->x() << "|" << tile->y() << "|" << tile->z() << "  " << mTau << "  " << screenSpaceError(tile, mCameraController);
+    // qDebug() << tile->x() << "|" << tile->y() << "|" << tile->z() << "  " << mTau << "  " << screenSpaceError(tile, mCameraController);
     if (screenSpaceError(tile, mCameraController) <= mTau)
     {
         // acceptable error for the current chunk - let's render it

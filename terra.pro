@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     maptextureimage.cpp \
     terraingenerator.cpp \
     flatterraingenerator.cpp \
-    chunklist.cpp
+    chunklist.cpp \
+    qcamera.cpp
 
 RESOURCES += qml.qrc
 
@@ -49,4 +50,5 @@ HEADERS += \
     maptextureimage.h \
     terraingenerator.h \
     flatterraingenerator.h \
-    chunklist.h
+    chunklist.h \
+    qcamera.h
