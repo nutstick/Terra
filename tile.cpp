@@ -4,11 +4,11 @@
 #include <QRect>
 #include <QtMath>
 #include <QVector3D>
+#include "map.h"
 
-static float basePlaneDimesion = 65024.0f;
-
-Tile::Tile()
-    : mX(0)
+Tile::Tile(Map *map)
+    : mMap(map)
+    , mX(0)
     , mY(0)
     , mZ(0)
     , error(0.1) // TODO:
@@ -17,8 +17,9 @@ Tile::Tile()
 {
 }
 
-Tile::Tile(int x, int y, int z, float error, Tile* parent)
-    : mX(x)
+Tile::Tile(Map *map, int x, int y, int z, float error, Tile *parent)
+    : mMap(map)
+    , mX(x)
     , mY(y)
     , mZ(z)
     , error(error)
@@ -80,9 +81,9 @@ void Tile::setZ(const int z)
 
 QPoint Tile::center() const
 {
-    float size = basePlaneDimesion / qPow(2, mZ);
-    float xOffset = (mX + 0.5) * size - basePlaneDimesion / 2;
-    float yOffset = (mY + 0.5) * size - basePlaneDimesion / 2;
+    float size = mMap->basePlaneDimesion() / qPow(2, mZ);
+    float xOffset = (mX + 0.5) * size - mMap->basePlaneDimesion() / 2;
+    float yOffset = (mY + 0.5) * size - mMap->basePlaneDimesion() / 2;
     return QPoint(xOffset, yOffset);
 }
 
@@ -94,7 +95,7 @@ QVector3D Tile::center3d() const
 
 QRect Tile::rect() const
 {
-    float size = basePlaneDimesion / qPow(2, mZ);
+    float size = mMap->basePlaneDimesion() / qPow(2, mZ);
     QPoint c = center();
     return QRect(c - QPoint(size / 2, size / 2), QSize(size, size));
 }
@@ -118,16 +119,16 @@ void Tile::ensureAllChildrenExist()
     float childError = error / 2;
 
     if (!children[0])
-        children[0] = new Tile(mX*2+0, mY*2+1, mZ+1, childError, this);
+        children[0] = new Tile(mMap, mX*2+0, mY*2+1, mZ+1, childError, this);
 
     if (!children[1])
-        children[1] = new Tile(mX*2+0, mY*2+0, mZ+1, childError, this);
+        children[1] = new Tile(mMap, mX*2+0, mY*2+0, mZ+1, childError, this);
 
     if (!children[2])
-        children[2] = new Tile(mX*2+1, mY*2+1, mZ+1, childError, this);
+        children[2] = new Tile(mMap, mX*2+1, mY*2+1, mZ+1, childError, this);
 
     if (!children[3])
-        children[3] = new Tile(mX*2+1, mY*2+0, mZ+1, childError, this);
+        children[3] = new Tile(mMap, mX*2+1, mY*2+0, mZ+1, childError, this);
 }
 
 void Tile::setLoading(ChunkLoader *chunkLoader, ChunkListEntry *entry)

@@ -21,6 +21,7 @@ class Map : public Qt3DCore::QEntity
 
     Q_PROPERTY(CameraController *cameraController READ cameraController WRITE setCameraController NOTIFY cameraControllerChanged)
     Q_PROPERTY(float tau READ tau WRITE setTau NOTIFY tauChanged)
+    Q_PROPERTY(float basePlaneDimesion READ basePlaneDimesion WRITE setBasePlaneDimesion NOTIFY basePlaneDimesionChanged)
     Q_PROPERTY(int maxLevel READ maxLevel WRITE setMaxLevel NOTIFY maxLevelChanged)
 
 public:
@@ -34,17 +35,20 @@ public:
 
     CameraController *cameraController() const { return mCameraController; }
     float tau() const { return mTau; }
+    float basePlaneDimesion() const { return mBasePlaneDimesion; }
     int maxLevel() const { return mMaxLevel; }
     MapTextureGenerator* mapTextureGenerator() const { return mMapTextureGenerator; }
     TerrainGenerator* terrainGenerator() const { return mTerrainGenerator; }
 
     void setCameraController(CameraController *cameraController);
     void setTau(const float tau);
+    void setBasePlaneDimesion(const float basePlaneDimesion);
     void setMaxLevel(const int maxLevel);
 
 signals:
     void cameraControllerChanged();
     void tauChanged();
+    void basePlaneDimesionChanged();
     void maxLevelChanged();
 
 private:
@@ -62,6 +66,8 @@ private:
     Tile* rootTile;
     //! max. allowed screen space error
     float mTau;
+    //! base plane dimesion
+    float mBasePlaneDimesion;
     //! maximum allowed depth of quad tree
     int mMaxLevel;
     //! queue of chunks to be loaded

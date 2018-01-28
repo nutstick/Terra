@@ -5,7 +5,8 @@
 #include <Qt3DInput>
 #include <QMetaObject>
 #include <jstimer.h>
-#include "qcamera.h"
+#include <Qt3DRender/QCamera>
+//#include "mycamera.h"
 
 class Map;
 
@@ -13,7 +14,7 @@ class CameraController : public Qt3DCore::QEntity
 {
     Q_OBJECT
     Q_PROPERTY(Map *map READ map WRITE setMap NOTIFY mapChanged)
-    Q_PROPERTY(QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
+    Q_PROPERTY(Qt3DRender::QCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     Q_PROPERTY(QRect viewport READ viewport WRITE setViewport NOTIFY viewportChanged)
     Q_PROPERTY(QVector3D target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(qreal minDistance READ minDistance WRITE setMinDistance NOTIFY minDistanceChanged)
@@ -26,11 +27,12 @@ class CameraController : public Qt3DCore::QEntity
     Q_PROPERTY(qreal maxAzimuthAngle READ maxAzimuthAngle WRITE setMaxAzimuthAngle NOTIFY maxAzimuthAngleChanged)
     Q_PROPERTY(bool enableDamping READ enableDamping WRITE setEnableDamping NOTIFY enableDampingChanged)
     Q_PROPERTY(qreal dampingFactor READ dampingFactor WRITE setDampingFactor NOTIFY dampingFactorChanged)
+    Q_PROPERTY(qreal maxClickTimeInterval READ maxClickTimeInterval WRITE setMaxClickTimeInterval NOTIFY maxClickTimeIntervalChanged)
 public:
     CameraController(Qt3DCore::QNode *parent = nullptr);
 
     Map *map() const { return mMap; }
-    QCamera *camera() const { return mCamera; }
+    Qt3DRender::QCamera *camera() const { return mCamera; }
     QRect viewport() const { return mViewport; }
     QVector3D target() const { return mTarget; }
     qreal minDistance() const { return mMinDistance; }
@@ -43,9 +45,10 @@ public:
     qreal maxAzimuthAngle() const { return mMaxAzimuthAngle; }
     bool enableDamping() const { return mEnableDamping; }
     qreal dampingFactor() const { return mDampingFactor; }
+    qreal maxClickTimeInterval() const { return mMaxClickTimeInterval; }
 
     void setMap(Map* map);
-    void setCamera(QCamera *camera);
+    void setCamera(Qt3DRender::QCamera *camera);
     void setViewport(const QRect& viewport);
     void setTarget(QVector3D target);
     void setMinDistance(qreal minDistance);
@@ -117,7 +120,7 @@ private:
     //! Map
     Map* mMap;
     //! Camera that is being controlled
-    QCamera* mCamera;
+    Qt3DRender::QCamera* mCamera;
     //! used for computation of translation when dragging mouse
     QRect mViewport;
     //! Camera target point
@@ -138,7 +141,11 @@ private:
     bool mEnableDamping;
     qreal mDampingFactor;
 
+    qreal mMaxClickTimeInterval;
+    bool mEnableMoveMarker;
+
     QTime mLastMove;
+    QTime mLastClick;
 
     int mNeedsUpdate;
     QTimer* needUpdateTimer;
@@ -187,6 +194,8 @@ private:
         TouchRotate,
         TouchDolly,
         TouchPan,
+        MoveMarkerXY,
+        MoveMarkerHeight,
     };
     State state;
 

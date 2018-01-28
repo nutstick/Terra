@@ -5,6 +5,9 @@
 #include <Qt3DInput/QWheelEvent>
 #include "map.h"
 
+#include <Qt3DRender/QCamera>
+//#include "mycamera.h"
+
 qreal distanceToSquared(QVector3D x, QVector3D y)
 {
     return (x.x() - y.x()) * (x.x() - y.x()) + (x.y() - y.y()) * (x.y() - y.y())
@@ -173,7 +176,7 @@ void CameraController::setMap(Map *map)
     emit mapChanged();
 }
 
-void CameraController::setCamera(QCamera *camera)
+void CameraController::setCamera(Qt3DRender::QCamera *camera)
 {
     if (mCamera == camera)
         return;
@@ -300,14 +303,25 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         dollyStart = QVector2D(mouse->x(), mouse->y());
     } else if (mouse->button() == Qt::LeftButton) {
-        if (!enablePan) return;
-
-        state = CameraController::State::Pan;
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
+        if ( mLastClick.elapsed() < mMaxClickTimeInterval && mEnableMoveMarker === true ) {
+
+            currentMarker = addMarker( screenNormalize( x, y ) );
+
+            state = CameraController::State::MoveMarkerHeight;
+
+        } else if ( enablePan == true ) {
+
+            state = CameraController::State::Pan;
+
+        }
+
         // TODO:
         // moveMap();
+
+        mLastClick.start();
     }
 
     if (state != CameraController::State::None) {
@@ -326,7 +340,7 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         rotateEnd = QVector2D(mouse->x(), mouse->y());
         rotateDelta = rotateEnd - rotateStart;
 
-        qDebug() << "P";
+        qDebug() << "P" << 2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed;
         // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed);
 

@@ -21,8 +21,6 @@ public:
 
 private:
     Qt3DExtras::QPlaneGeometry *mTileGeometry;
-
-    float const basePlaneDimesion = 65024.0;
 };
 
 
@@ -58,9 +56,9 @@ Qt3DCore::QEntity *FlatTerrainChunkLoader::createEntity(Qt3DCore::QEntity *paren
     transform = new Qt3DCore::QTransform();
     entity->addComponent(transform);
 
-    float size = basePlaneDimesion / qPow(2, tile->z());
-    float xOffset = (tile->x() + 0.5) * size - basePlaneDimesion / 2;
-    float yOffset = (tile->y() + 0.5) * size - basePlaneDimesion / 2;
+    float size = mMap->basePlaneDimesion() / qPow(2, tile->z());
+    float xOffset = (tile->x() + 0.5) * size - mMap->basePlaneDimesion() / 2;
+    float yOffset = (tile->y() + 0.5) * size - mMap->basePlaneDimesion() / 2;
 
     transform->setScale(size);
     transform->setTranslation(QVector3D(xOffset, 0, yOffset));

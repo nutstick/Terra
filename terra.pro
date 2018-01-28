@@ -24,7 +24,9 @@ SOURCES += main.cpp \
     terraingenerator.cpp \
     flatterraingenerator.cpp \
     chunklist.cpp \
-    qcamera.cpp
+    mycamera.cpp \
+    entity.cpp \
+    areaentity.cpp
 
 RESOURCES += qml.qrc
 
@@ -51,4 +53,6 @@ HEADERS += \
     terraingenerator.h \
     flatterraingenerator.h \
     chunklist.h \
-    qcamera.h
+    mycamera.h \
+    entity.h \
+    areaentity.h

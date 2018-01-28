@@ -41,12 +41,12 @@ Item {
             CameraController {
                 id: controller
                 map: map
-                camera: camera
+                camera: camera2
                 viewport: Qt.rect(0, 0, root.width, root.height)
             }
 
-            Camera {
-                id: camera
+            MyCamera {
+                id: camera2
                 projectionType: CameraLens.PerspectiveProjection
                 fieldOfView: 70
                 aspectRatio: width / height
@@ -57,10 +57,22 @@ Item {
                 viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
             }
 
+//            Camera {
+//                id: camera
+//                projectionType: CameraLens.PerspectiveProjection
+//                fieldOfView: 70
+//                aspectRatio: width / height
+//                nearPlane: 1/99
+//                farPlane: 100000000000000
+//                position: Qt.vector3d( 0.0, 12000.0, 0.0 );
+//                upVector: Qt.vector3d( 0.0, 0.0, -1.0 )
+//                viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
+//            }
+
             components: [
                 MapFrameGraph {
                     id: framegraph
-                    camera: camera
+                    camera: camera2
                 },
                 InputSettings {}
             ]
@@ -71,7 +83,8 @@ Item {
             Map {
                 id: map
                 cameraController: controller
-                tau: 0.0008
+                tau: 0.00008
+                basePlaneDimesion: 650240.0
                 maxLevel: 22
             }
         }

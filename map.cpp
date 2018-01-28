@@ -6,6 +6,9 @@
 #include "cameracontroller.h"
 #include <QVector3D>
 
+//#include <Qt3DRender/QCamera>
+#include "mycamera.h"
+
 static float screenSpaceError(float epsilon, float distance, float screenSize, float fov)
 {
     /* This routine approximately calculates how an error (epsilon) of an object in world coordinates
@@ -88,7 +91,7 @@ Map::Map(Qt3DCore::QNode *parent)
     , mTerrainGenerator(new FlatTerrainGenerator)
 {
     mTerrainGenerator->setMap(this);
-    rootTile = new Tile(0, 0, 0, /*TODO*/ 0.1f);
+    rootTile = new Tile(this, 0, 0, 0, /*TODO*/ 0.1f);
 
     chunkLoaderQueue = new ChunkList;
     replacementQueue = new ChunkList;
@@ -122,6 +125,13 @@ void Map::setTau(const float tau)
     if (mTau == tau) return;
     mTau = tau;
     emit tauChanged();
+}
+
+void Map::setBasePlaneDimesion(const float basePlaneDimesion)
+{
+    if (mBasePlaneDimesion == basePlaneDimesion) return;
+    mBasePlaneDimesion = basePlaneDimesion;
+    emit basePlaneDimesionChanged();
 }
 
 void Map::setMaxLevel(const int maxLevel)
