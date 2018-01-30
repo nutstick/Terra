@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <Qt3DCore/QEntity>
+#include <Qt3DRender/QLayer>
 #include <QList>
 #include <QMutex>
 #include <QWaitCondition>
@@ -23,6 +24,7 @@ class Map : public Qt3DCore::QEntity
     Q_PROPERTY(float tau READ tau WRITE setTau NOTIFY tauChanged)
     Q_PROPERTY(float basePlaneDimesion READ basePlaneDimesion WRITE setBasePlaneDimesion NOTIFY basePlaneDimesionChanged)
     Q_PROPERTY(int maxLevel READ maxLevel WRITE setMaxLevel NOTIFY maxLevelChanged)
+    Q_PROPERTY(Qt3DRender::QLayer* layer READ layer WRITE setLayer NOTIFY layerChanged)
 
 public:
     Map(Qt3DCore::QNode *parent = nullptr);
@@ -39,17 +41,20 @@ public:
     int maxLevel() const { return mMaxLevel; }
     MapTextureGenerator* mapTextureGenerator() const { return mMapTextureGenerator; }
     TerrainGenerator* terrainGenerator() const { return mTerrainGenerator; }
+    Qt3DRender::QLayer* layer() const { return mLayer; }
 
     void setCameraController(CameraController *cameraController);
     void setTau(const float tau);
     void setBasePlaneDimesion(const float basePlaneDimesion);
     void setMaxLevel(const int maxLevel);
+    void setLayer(Qt3DRender::QLayer *layer);
 
 signals:
     void cameraControllerChanged();
     void tauChanged();
     void basePlaneDimesionChanged();
     void maxLevelChanged();
+    void layerChanged();
 
 private:
     void update(Tile* tile);
@@ -74,6 +79,8 @@ private:
     ChunkList* chunkLoaderQueue;
     //! queue of chunk to be eventually replaced
     ChunkList* replacementQueue;
+    //! Layer
+    Qt3DRender::QLayer* mLayer;
 
     QList<Tile*> activeTiles;
     int frustumCulled;

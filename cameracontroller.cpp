@@ -39,9 +39,9 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     , thetaDelta(0)
     , scale(1)
     , panOffset(QVector3D())
+    , enableZoom(true)
     , zoomChanged(false)
 
-    , enableZoom(true)
     , zoomSpeed(50)
     , enableRotate(true)
     , rotateSpeed(1.0)
@@ -272,6 +272,14 @@ void CameraController::setDampingFactor(qreal dampingFactor)
     emit dampingFactorChanged();
 }
 
+void CameraController::setMaxClickTimeInterval(qreal maxClickTimeInterval)
+{
+    if (maxClickTimeInterval == mMaxClickTimeInterval) return;
+
+    mMaxClickTimeInterval = maxClickTimeInterval;
+    emit maxClickTimeIntervalChanged();
+}
+
 void CameraController::frameTriggered()
 {
     if (mCamera == nullptr)
@@ -306,9 +314,9 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
-        if ( mLastClick.elapsed() < mMaxClickTimeInterval && mEnableMoveMarker === true ) {
+        if ( mLastClick.elapsed() < mMaxClickTimeInterval && mEnableMoveMarker == true ) {
 
-            currentMarker = addMarker( screenNormalize( x, y ) );
+//            currentMarker = addMarker( screenNormalize( x, y ) );
 
             state = CameraController::State::MoveMarkerHeight;
 
@@ -575,14 +583,11 @@ bool CameraController::update()
 
     offset = position - mTarget;
 
-    qDebug() << "BEFORE" << offset << mTarget << position;
     offset = quat.rotatedVector(offset);
 
     theta = qAtan2(offset.x(), offset.z());
 
     phi = qAtan2(qSqrt(offset.x() * offset.x() + offset.z() * offset.z()), offset.y());
-
-    qDebug() << offset << phi;
 
     theta += thetaDelta;
     phi += phiDelta;
@@ -609,10 +614,7 @@ bool CameraController::update()
     offset = quatInverse.rotatedVector(offset);
 
     // set Position
-    qDebug() << "F" << offset;
     mCamera->setPosition(mTarget + offset);
-    qDebug() << mTarget << mTarget + offset << mCamera->position();
-    qDebug() << "THETA" << theta << phi << phiDelta;
     // look at target
     mCamera->setViewCenter(mTarget);
     Qt3DCore::QTransform* transform = mCamera->transform();

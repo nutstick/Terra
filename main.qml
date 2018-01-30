@@ -41,12 +41,13 @@ Item {
             CameraController {
                 id: controller
                 map: map
-                camera: camera2
+                camera: camera
                 viewport: Qt.rect(0, 0, root.width, root.height)
+                maxDistance: 120000
             }
 
             MyCamera {
-                id: camera2
+                id: camera
                 projectionType: CameraLens.PerspectiveProjection
                 fieldOfView: 70
                 aspectRatio: width / height
@@ -70,9 +71,11 @@ Item {
 //            }
 
             components: [
-                MapFrameGraph {
-                    id: framegraph
-                    camera: camera2
+                RenderSettings {
+                    id: renderSettings
+                    activeFrameGraph: MapForwardRenderer {
+                        camera: camera
+                    }
                 },
                 InputSettings {}
             ]
@@ -86,6 +89,14 @@ Item {
                 tau: 0.00008
                 basePlaneDimesion: 650240.0
                 maxLevel: 22
+                layer: renderSettings.activeFrameGraph.mapLayer
+            }
+
+            Marker {
+                id: marker
+                position: Qt.vector3d( 0.0, 1000.0, 0.0 )
+                layer: renderSettings.activeFrameGraph.entityLayer
+                camera: camera
             }
         }
     }

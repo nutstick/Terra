@@ -89,6 +89,7 @@ static bool isInFrustum(const QRect& rect, const QMatrix4x4& viewProjectionMatri
 Map::Map(Qt3DCore::QNode *parent)
     : Qt3DCore::QEntity(parent)
     , mTerrainGenerator(new FlatTerrainGenerator)
+    , mLayer(new Qt3DRender::QLayer(this))
 {
     mTerrainGenerator->setMap(this);
     rootTile = new Tile(this, 0, 0, 0, /*TODO*/ 0.1f);
@@ -99,6 +100,8 @@ Map::Map(Qt3DCore::QNode *parent)
     loaderThread = new LoaderThread(chunkLoaderQueue, loaderMutex, loaderWaitCondition);
     connect(loaderThread, &LoaderThread::nodeLoaded, this, &Map::onNodeLoaded);
     loaderThread->start();
+
+    addComponent(mLayer);
 }
 
 Map::~Map()
@@ -139,6 +142,16 @@ void Map::setMaxLevel(const int maxLevel)
     if (mMaxLevel == maxLevel) return;
     mMaxLevel = maxLevel;
     emit maxLevelChanged();
+}
+
+void Map::setLayer(Qt3DRender::QLayer *layer)
+{
+    Q_ASSERT(layer);
+
+    removeComponent(mLayer);
+    addComponent(layer);
+
+    mLayer = layer;
 }
 
 void Map::update()

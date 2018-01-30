@@ -10,8 +10,8 @@ class AreaEntity : public Entity
 public:
     AreaEntity(Qt3DCore::QNode *parent);
 
-private:
-    QList<Marker> mMarkers;
+//private:
+//    QList<Marker> mMarkers;
 };
 
 #endif // AREAENTITY_H

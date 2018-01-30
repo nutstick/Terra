@@ -61,6 +61,7 @@ public:
     void setMaxAzimuthAngle(qreal maxAzimuthAngle);
     void setEnableDamping(bool enableDamping);
     void setDampingFactor(qreal dampingFactor);
+    void setMaxClickTimeInterval(qreal maxClickTimeInterval);
 
     void frameTriggered();
     void reset();
@@ -82,6 +83,7 @@ signals:
     void maxAzimuthAngleChanged();
     void enableDampingChanged();
     void dampingFactorChanged();
+    void maxClickTimeIntervalChanged();
 
     void updated();
 

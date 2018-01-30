@@ -26,7 +26,10 @@ SOURCES += main.cpp \
     chunklist.cpp \
     mycamera.cpp \
     entity.cpp \
-    areaentity.cpp
+    areaentity.cpp \
+    polylineentity.cpp \
+    markerentity.cpp \
+    sphericalmercator.cpp
 
 RESOURCES += qml.qrc
 
@@ -55,4 +58,7 @@ HEADERS += \
     chunklist.h \
     mycamera.h \
     entity.h \
-    areaentity.h
+    areaentity.h \
+    polylineentity.h \
+    markerentity.h \
+    sphericalmercator.h

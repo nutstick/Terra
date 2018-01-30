@@ -8,27 +8,27 @@
 
 Tile::Tile(Map *map)
     : mMap(map)
+    , parent(nullptr)
+    , state(Skeleton)
+    , error(0.1) // TODO:
     , mX(0)
     , mY(0)
     , mZ(0)
-    , error(0.1) // TODO:
-    , state(Skeleton)
-    , parent(nullptr)
 {
 }
 
 Tile::Tile(Map *map, int x, int y, int z, float error, Tile *parent)
     : mMap(map)
-    , mX(x)
-    , mY(y)
-    , mZ(z)
-    , error(error)
     , parent(parent)
     , state(Skeleton)
     , loaderQueueEntry(nullptr)
     , replacementQueueEntry(nullptr)
     , loader(nullptr)
     , entity(nullptr)
+    , error(error)
+    , mX(x)
+    , mY(y)
+    , mZ(z)
 {
     for (int i = 0; i < 4; ++i)
         children[i] = nullptr;
@@ -36,7 +36,6 @@ Tile::Tile(Map *map, int x, int y, int z, float error, Tile *parent)
 
 Tile::~Tile()
 {
-    Q_ASSERT(state == Skeleton);
     Q_ASSERT(!loader);   // should be deleted when removed from loader queue
     Q_ASSERT(!entity);   // should be deleted when removed from replacement queue
     for (int i = 0; i < 4; ++i)
