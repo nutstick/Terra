@@ -27,6 +27,24 @@ LineMeshGeometry::LineMeshGeometry(QList<QVector4D> vertices, Qt3DCore::QNode *p
     addAttribute(mPositionAttribute);
 }
 
+void LineMeshGeometry::setVertices(QList<QVector4D> vertices)
+{
+    mVertices.clear();
+
+    QByteArray vertexBufferData;
+    vertexBufferData.resize(vertices.size() * 3 * sizeof(float));
+    float *rawVertexArray = reinterpret_cast<float *>(vertexBufferData.data());
+    int idx = 0;
+    for (const QVector4D &v : vertices) {
+        rawVertexArray[idx++] = v.x();
+        rawVertexArray[idx++] = v.y();
+        rawVertexArray[idx++] = v.z();
+        mVertices.append(v.toVector3D());
+    }
+
+    mVertexBuffer->setData(vertexBufferData);
+}
+
 int LineMeshGeometry::vertexCount()
 {
     return mVertices.size();

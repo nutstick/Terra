@@ -15,3 +15,9 @@ LineMesh::LineMesh(QList<QVector4D> vertices, Qt3DCore::QNode *parent)
     setVertexCount(mLineMeshGeo->vertexCount());
     setGeometry(mLineMeshGeo);
 }
+
+
+void LineMesh::setVertices(QList<QVector4D> vertices)
+{
+    mLineMeshGeo->setVertices(vertices);
+}

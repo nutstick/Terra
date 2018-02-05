@@ -13,6 +13,8 @@ class LineMeshGeometry : public Qt3DRender::QGeometry
 public:
     LineMeshGeometry(QList<QVector4D> vertices, Qt3DCore::QNode *parent = nullptr);
 
+    void setVertices(QList<QVector4D> vertices);
+
     int vertexCount();
 
 private:

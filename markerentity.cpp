@@ -2,6 +2,7 @@
 #include "cameracontroller.h"
 #include "sphericalmercator.h"
 #include "map.h"
+#include "linemesh.h"
 
 float MarkerEntity::headRadius = 300;
 float MarkerEntity::headHeight = 600;
@@ -47,6 +48,23 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     bottom->addComponent(mBottom);
     bottom->addComponent(mBottomMaterial);
     bottom->addComponent(mBottomTransform);
+
+    //! [2]
+    QList<QVector4D> points;
+    points.append(mHeadTransform->translation().toVector4D());
+    points.append(mBottomTransform->translation().toVector4D());
+    mLine = new LineMesh(points);
+
+    Qt3DCore::QTransform* lineTransform = new Qt3DCore::QTransform;
+
+    mLineMaterial = new Qt3DExtras::QPhongMaterial;
+    mLineMaterial->setAmbient(QColor(0, 255, 0));
+    mLineMaterial->setShininess(1);
+
+    Qt3DCore::QEntity* line = new Qt3DCore::QEntity(this);
+    line->addComponent(mLine);
+    line->addComponent(mLineMaterial);
+    line->addComponent(lineTransform);
 
     connect(mCamera, &Qt3DRender::QCamera::positionChanged, this, &MarkerEntity::onCameraPositionChanged);
 }
@@ -140,4 +158,9 @@ void MarkerEntity::update()
     // qDebug() << mBottomTransform->translation() << mBottomTransform->scale();
     mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight / mPerPixel + headHeight / 2.0f, 0));
     mBottomTransform->setTranslation(mPosition + QVector3D(0, mBottomTransform->scale() * headHeight / 2.0f, 0));
+
+    QList<QVector4D> points;
+    points.append(mHeadTransform->translation().toVector4D());
+    points.append(mBottomTransform->translation().toVector4D());
+    mLine->setVertices(points);
 }

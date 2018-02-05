@@ -13,6 +13,8 @@ class CameraController;
 
 class Map;
 
+class LineMesh;
+
 class MarkerEntity : public Entity
 {
     Q_OBJECT
@@ -80,6 +82,9 @@ private:
     Qt3DExtras::QConeMesh *mBottom;
     Qt3DCore::QTransform *mBottomTransform;
     Qt3DExtras::QPhongMaterial *mBottomMaterial;
+    //! [2]
+    LineMesh *mLine;
+    Qt3DExtras::QPhongMaterial *mLineMaterial;
 
     CameraController* mCameraController;
 
