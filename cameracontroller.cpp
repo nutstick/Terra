@@ -33,15 +33,7 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     , lastPosition()
     , lastQuaternion()
 
-    , theta(0)
-    , phi(0)
-    , phiDelta(0)
-    , thetaDelta(0)
-    , scale(1)
-    , panOffset(QVector3D())
     , enableZoom(true)
-    , zoomChanged(false)
-
     , zoomSpeed(50)
     , enableRotate(true)
     , rotateSpeed(1.0)
@@ -62,6 +54,14 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     , dollyDelta(QVector2D())
 
     , state(CameraController::State::None)
+
+    , theta(0)
+    , phi(0)
+    , phiDelta(0)
+    , thetaDelta(0)
+    , scale(1)
+    , panOffset(QVector3D())
+    , zoomChanged(false)
 
     , mMouseDevice(new Qt3DInput::QMouseDevice())
     , mKeyboardDevice(new Qt3DInput::QKeyboardDevice())
@@ -298,19 +298,19 @@ void CameraController::frameTriggered()
 void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 {
     // if (!enabled) return;
-    if (mouse->button() == Qt::RightButton && mouse->modifiers() & Qt3DInput::QMouseEvent::ControlModifier) {
+    if (mouse->button() == Qt3DInput::QMouseEvent::RightButton && mouse->modifiers() & Qt3DInput::QMouseEvent::ControlModifier) {
         if (!enableRotate) return;
 
         state = CameraController::State::Rotate;
 
         rotateStart = QVector2D(mouse->x(), mouse->y());
-    } else if (mouse->button() == Qt::MiddleButton) {
+    } else if (mouse->button() == Qt3DInput::QMouseEvent::MiddleButton) {
         if (!enableZoom) return;
 
         state = CameraController::State::Dolly;
 
         dollyStart = QVector2D(mouse->x(), mouse->y());
-    } else if (mouse->button() == Qt::LeftButton) {
+    } else if (mouse->button() == Qt3DInput::QMouseEvent::LeftButton) {
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
@@ -385,6 +385,7 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
 
 void CameraController::onMouseUp(Qt3DInput::QMouseEvent *mouse)
 {
+    Q_UNUSED(mouse);
     // if (!enabled) return;
 
     disconnect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
@@ -446,7 +447,7 @@ void CameraController::onKeyUp(Qt3DInput::QKeyEvent *event)
         disconnect(keyDownTimer, &QTimer::timeout, this, &CameraController::keyDownInterval);
 
         keyDownTimer = NULL;
-        keyDown = NULL;
+        keyDown = 0;
     }
 }
 

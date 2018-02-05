@@ -90,6 +90,8 @@ Map::Map(Qt3DCore::QNode *parent)
     : Qt3DCore::QEntity(parent)
     , mTerrainGenerator(new FlatTerrainGenerator)
     , mLayer(new Qt3DRender::QLayer(this))
+    , mMaxLevel(22)
+    , mBasePlaneDimesion(0.0f)
 {
     mTerrainGenerator->setMap(this);
     rootTile = new Tile(this, 0, 0, 0, /*TODO*/ 0.1f);

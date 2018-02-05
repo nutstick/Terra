@@ -1,5 +1,7 @@
 #include "markerentity.h"
 #include "cameracontroller.h"
+#include "sphericalmercator.h"
+#include "map.h"
 
 float MarkerEntity::headRadius = 300;
 float MarkerEntity::headHeight = 600;
@@ -7,6 +9,8 @@ float MarkerEntity::defaultHeight = 500;
 
 MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     : Entity(parent)
+    , mHeight(defaultHeight)
+    , mMap(nullptr)
 {
     //! [0]
     mHead = new Qt3DExtras::QCylinderMesh;
@@ -14,17 +18,17 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     mHead->setLength(headHeight);
 
     mHeadTransform = new Qt3DCore::QTransform;
-//    mHeadTransform->setTranslation(QVector3D(0, headHeight / 2, 0));
+    mHeadTransform->setTranslation(QVector3D(0, headHeight / 2, 0));
 
     mHeadMaterial = new Qt3DExtras::QPhongMaterial;
-    mHeadMaterial->setAmbient(QColor(255, 0, 0));
+    mHeadMaterial->setAmbient(QColor(255, 255, 0));
     mHeadMaterial->setShininess(1);
 //    mHeadMaterial->setAlpha(0.5);
 
-//    Qt3DCore::QEntity* head = new Qt3DCore::QEntity(this);
-//    head->addComponent(mHead);
-//    head->addComponent(mHeadMaterial);
-//    head->addComponent(mHeadTransform);
+    Qt3DCore::QEntity* head = new Qt3DCore::QEntity(this);
+    head->addComponent(mHead);
+    head->addComponent(mHeadMaterial);
+    head->addComponent(mHeadTransform);
 
     //! [1]
     mBottom = new Qt3DExtras::QConeMesh;
@@ -33,6 +37,7 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     mBottom->setLength(headHeight);
 
     mBottomTransform = new Qt3DCore::QTransform;
+    mBottomTransform->setTranslation(QVector3D(0, 0, 0));
 
     mBottomMaterial = new Qt3DExtras::QPhongMaterial;
     mBottomMaterial->setAmbient(QColor(255, 0, 0));
@@ -49,20 +54,17 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
 void MarkerEntity::setPosition(QVector3D position)
 {
     mPosition = position;
-
-    mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight, 0));
-    mBottomTransform->setTranslation(mPosition);
-
     emit positionChanged();
+
+    update();
 }
 
 void MarkerEntity::setHeight(const float height)
 {
     mHeight = height;
-
-    mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight, 0));
-
     emit heightChanged();
+
+    update();
 }
 
 void MarkerEntity::setCamera(Qt3DRender::QCamera *camera)
@@ -74,23 +76,68 @@ void MarkerEntity::setCamera(Qt3DRender::QCamera *camera)
     }
 
     mCamera = camera;
-    emit cameraChanged();
+    emit cameraControllerChanged();
 
     connect(mCamera, &Qt3DRender::QCamera::positionChanged, this, &MarkerEntity::onCameraPositionChanged);
 }
 
+void MarkerEntity::setCameraController(CameraController *cameraController)
+{
+    if (cameraController == mCameraController) return;
+
+    mCameraController = cameraController;
+    emit cameraChanged();
+}
+
+void MarkerEntity::setMap(Map *map)
+{
+    if (mMap == map) return;
+
+    if (mMap) {
+        qDebug() << mMap;
+        disconnect(mMap, &Map::basePlaneDimesionChanged, this, &MarkerEntity::onBasePlaneDimensionChanged);
+    }
+
+    mMap = map;
+
+    connect(mMap, &Map::basePlaneDimesionChanged, this, &MarkerEntity::onBasePlaneDimensionChanged);
+
+    emit mapChanged();
+
+    update();
+}
+
 void MarkerEntity::onCameraPositionChanged(const QVector3D &position)
 {
-    float scaleFactor = 12000.0f;
-    float scale = (position - mHeadTransform->translation()).length() / scaleFactor;
+    float scaleFactor = 3600.0f * qLn(position.y());
+    float scale = position.y() / scaleFactor;
 
-    qDebug() << "ENE" << position.y() << scale;
+//    qDebug() << "ENE" << position.y() << scale;
 
     // TODO:
     mHeadTransform->setScale(scale);
+    mBottomTransform->setScale(scale);
+
+    update();
+}
+
+void MarkerEntity::onBasePlaneDimensionChanged()
+{
+    update();
 }
 
 Entity::Type MarkerEntity::type() const
 {
     return Entity::Marker;
+}
+
+void MarkerEntity::update()
+{
+    if (!mMap || mMap->basePlaneDimesion() <= 1.0e-10) return;
+
+    float mPerPixel = 40075000.0f / mMap->basePlaneDimesion();
+
+    // qDebug() << mBottomTransform->translation() << mBottomTransform->scale();
+    mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight / mPerPixel + headHeight / 2.0f, 0));
+    mBottomTransform->setTranslation(mPosition + QVector3D(0, mBottomTransform->scale() * headHeight / 2.0f, 0));
 }

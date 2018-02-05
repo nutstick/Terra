@@ -29,7 +29,10 @@ SOURCES += main.cpp \
     areaentity.cpp \
     polylineentity.cpp \
     markerentity.cpp \
-    sphericalmercator.cpp
+    sphericalmercator.cpp \
+    singleton.cpp \
+    linemeshgeometry.cpp \
+    linemesh.cpp
 
 RESOURCES += qml.qrc
 
@@ -61,4 +64,8 @@ HEADERS += \
     areaentity.h \
     polylineentity.h \
     markerentity.h \
-    sphericalmercator.h
+    sphericalmercator.h \
+    call_once.h \
+    singleton.h \
+    linemeshgeometry.h \
+    linemesh.h

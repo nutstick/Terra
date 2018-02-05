@@ -94,9 +94,11 @@ Item {
 
             Marker {
                 id: marker
-                position: Qt.vector3d( 0.0, 1000.0, 0.0 )
+                position: Qt.vector3d( 0.0, 0.0, 0.0 )
                 layer: renderSettings.activeFrameGraph.entityLayer
                 camera: camera
+                map: map
+                cameraController: controller
             }
         }
     }
