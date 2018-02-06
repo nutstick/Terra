@@ -4,6 +4,7 @@
 #include <Qt3DInput/QMouseEvent>
 #include <Qt3DInput/QWheelEvent>
 #include "map.h"
+#include "markerentity.h"
 
 #include <Qt3DRender/QCamera>
 //#include "mycamera.h"
@@ -381,6 +382,9 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         if (!enableMarkerMove) return;
 
         panEnd = QVector2D(mouse->x(), mouse->y());
+        panDelta = panEnd - panStart;
+        
+        activeMarker->setHeight();
 
     }
 

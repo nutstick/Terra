@@ -3,6 +3,7 @@
 
 #include "entity.h"
 
+#include <Qt3DRender/QObjectPicker>
 #include <Qt3DExtras/QCylinderMesh>
 #include <Qt3DExtras/QConeMesh>
 #include <Qt3DExtras/QPhongAlphaMaterial>
@@ -65,6 +66,8 @@ private slots:
     void onCameraPositionChanged(const QVector3D &position);
     void onBasePlaneDimensionChanged();
 
+    void onHeadPress(Qt3DRender::QPickEvent *pick);
+
 private:
     void update();
 
@@ -78,6 +81,7 @@ private:
     Qt3DExtras::QCylinderMesh *mHead;
     Qt3DCore::QTransform *mHeadTransform;
     Qt3DExtras::QPhongMaterial *mHeadMaterial;
+    Qt3DRender::QObjectPicker *mHeadPicker;
     //! [1]
     Qt3DExtras::QConeMesh *mBottom;
     Qt3DCore::QTransform *mBottomTransform;

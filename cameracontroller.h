@@ -9,6 +9,7 @@
 //#include "mycamera.h"
 
 class Map;
+class MarkerEntity;
 
 class CameraController : public Qt3DCore::QEntity
 {
@@ -67,6 +68,8 @@ public:
     void reset();
     void straighten();
     void moveTo(QVector3D coords, qreal currentHeight);
+
+    void setMarkerHeadPressed(MarkerEntity* marker, QPointF point);
 
 signals:
     void mapChanged();
@@ -127,6 +130,8 @@ private:
     QRect mViewport;
     //! Camera target point
     QVector3D mTarget;
+    //! Current Active Marker
+    MarkerEntity* activeMarker;
 
     qreal mMinDistance;
     qreal mMaxDistance;
@@ -144,7 +149,6 @@ private:
     qreal mDampingFactor;
 
     qreal mMaxClickTimeInterval;
-    bool mEnableMoveMarker;
 
     QTime mLastMove;
     QTime mLastClick;
@@ -176,6 +180,8 @@ private:
     bool autoRotate;
     qreal autoRotateSpeed;
     bool enableKeys;
+
+    bool enableMarkerMove;
 
     QVector2D rotateStart;
     QVector2D rotateEnd;

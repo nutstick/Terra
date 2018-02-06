@@ -49,7 +49,7 @@ Item {
             MyCamera {
                 id: camera
                 projectionType: CameraLens.PerspectiveProjection
-                fieldOfView: 70
+                fieldOfView: 50
                 aspectRatio: width / height
                 nearPlane: 1/99
                 farPlane: 100000000000000

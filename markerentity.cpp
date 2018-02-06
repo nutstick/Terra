@@ -3,6 +3,7 @@
 #include "sphericalmercator.h"
 #include "map.h"
 #include "linemesh.h"
+#include <Qt3DRender/QPickEvent>
 
 float MarkerEntity::headRadius = 300;
 float MarkerEntity::headHeight = 600;
@@ -26,10 +27,14 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     mHeadMaterial->setShininess(1);
 //    mHeadMaterial->setAlpha(0.5);
 
+    mHeadPicker = new Qt3DRender::QObjectPicker;
+    connect(mHeadPicker, &Qt3DRender::QObjectPicker::pressed, this, &MarkerEntity::onHeadPress);
+
     Qt3DCore::QEntity* head = new Qt3DCore::QEntity(this);
     head->addComponent(mHead);
     head->addComponent(mHeadMaterial);
     head->addComponent(mHeadTransform);
+    head->addComponent(mHeadPicker);
 
     //! [1]
     mBottom = new Qt3DExtras::QConeMesh;
@@ -112,7 +117,6 @@ void MarkerEntity::setMap(Map *map)
     if (mMap == map) return;
 
     if (mMap) {
-        qDebug() << mMap;
         disconnect(mMap, &Map::basePlaneDimesionChanged, this, &MarkerEntity::onBasePlaneDimensionChanged);
     }
 
@@ -149,13 +153,19 @@ Entity::Type MarkerEntity::type() const
     return Entity::Marker;
 }
 
+void MarkerEntity::onHeadPress(Qt3DRender::QPickEvent *pick)
+{
+    if (pick->button() == Qt3DRender::QPickEvent::LeftButton) {
+        mCameraController->setMarkerHeadPressed(this, pick->position());
+    }
+}
+
 void MarkerEntity::update()
 {
     if (!mMap || mMap->basePlaneDimesion() <= 1.0e-10) return;
 
     float mPerPixel = 40075000.0f / mMap->basePlaneDimesion();
 
-    // qDebug() << mBottomTransform->translation() << mBottomTransform->scale();
     mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight / mPerPixel + headHeight / 2.0f, 0));
     mBottomTransform->setTranslation(mPosition + QVector3D(0, mBottomTransform->scale() * headHeight / 2.0f, 0));
 
