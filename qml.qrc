@@ -12,6 +12,7 @@
         <file>WireframeEffect.qml</file>
         <file>BasePlane.qml</file>
         <file>OrbitControls.qml</file>
+        <file>SceneRoot.qml</file>
     </qresource>
     <qresource prefix="/worker">
         <file>updatetile.js</file>

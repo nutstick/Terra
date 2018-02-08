@@ -218,7 +218,7 @@ void Map::update(Tile *tile)
     if (!tile->entity)
     {
         // this happens initially when root node is not ready yet
-        qDebug() << "Root tile not ready";
+        // qDebug() << "Root tile not ready";
         return;
     }
 
@@ -309,6 +309,52 @@ void Map::onNodeLoaded(Tile *tile)
     // needsUpdate = true;
 }
 
+QQmlListProperty<Entity> Map::entities()
+{
+    return QQmlListProperty<Entity>(this, this,
+             &Map::appendEntity,
+             &Map::entityCount,
+             &Map::entity,
+             &Map::clearEntities);
+}
+
+void Map::appendEntity(Entity* p) {
+    mEntities.append(p);
+}
+
+int Map::entityCount() const
+{
+    return mEntities.count();
+}
+
+Entity *Map::entity(int index) const
+{
+    return mEntities.at(index);
+}
+
+void Map::clearEntities() {
+    return mEntities.clear();
+}
+
+
+void Map::appendEntity(QQmlListProperty<Entity>* list, Entity* p) {
+    reinterpret_cast< Map* >(list->data)->appendEntity(p);
+}
+
+void Map::clearEntities(QQmlListProperty<Entity>* list) {
+    reinterpret_cast< Map* >(list->data)->clearEntities();
+}
+
+Entity* Map::entity(QQmlListProperty<Entity>* list, int i) {
+    return reinterpret_cast< Map* >(list->data)->entity(i);
+}
+
+int Map::entityCount(QQmlListProperty<Entity>* list) {
+    return reinterpret_cast< Map* >(list->data)->entityCount();
+}
+
+//! [0]
+
 LoaderThread::LoaderThread(ChunkList *list, QMutex &mutex, QWaitCondition &waitCondition)
     : loadList(list)
     , mutex(mutex)
@@ -337,11 +383,11 @@ void LoaderThread::run()
         entry = loadList->takeFirst();
         mutex.unlock();
 
-        qDebug() << "[THR] loading! " << entry->chunk->x() << " | " << entry->chunk->y() << " | " << entry->chunk->z();
+        // qDebug() << "[THR] loading! " << entry->chunk->x() << " | " << entry->chunk->y() << " | " << entry->chunk->z();
 
         entry->chunk->loader->load();
 
-        qDebug() << "[THR] done!";
+        // qDebug() << "[THR] done!";
 
         emit nodeLoaded(entry->chunk);
 

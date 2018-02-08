@@ -18,14 +18,14 @@ Tile::Tile(Map *map)
 }
 
 Tile::Tile(Map *map, int x, int y, int z, float error, Tile *parent)
-    : mMap(map)
-    , parent(parent)
+    : parent(parent)
     , state(Skeleton)
     , loaderQueueEntry(nullptr)
     , replacementQueueEntry(nullptr)
     , loader(nullptr)
     , entity(nullptr)
     , error(error)
+    , mMap(map)
     , mX(x)
     , mY(y)
     , mZ(z)
@@ -36,8 +36,8 @@ Tile::Tile(Map *map, int x, int y, int z, float error, Tile *parent)
 
 Tile::~Tile()
 {
-    Q_ASSERT(!loader);   // should be deleted when removed from loader queue
-    Q_ASSERT(!entity);   // should be deleted when removed from replacement queue
+//    Q_ASSERT(!loader);   // should be deleted when removed from loader queue
+//    Q_ASSERT(!entity);   // should be deleted when removed from replacement queue
     for (int i = 0; i < 4; ++i)
         delete children[i];
 }

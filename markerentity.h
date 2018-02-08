@@ -4,6 +4,7 @@
 #include "entity.h"
 
 #include <Qt3DRender/QObjectPicker>
+#include <Qt3DRender/QPickTriangleEvent>
 #include <Qt3DExtras/QCylinderMesh>
 #include <Qt3DExtras/QConeMesh>
 #include <Qt3DExtras/QPhongAlphaMaterial>
@@ -47,13 +48,13 @@ public:
     void setPosition(QVector3D position);
     //! set height
     void setHeight(const float height);
-
+    //! set camera
     void setCamera(Qt3DRender::QCamera *camera) override;
-
+    //! set camera controller
     void setCameraController(CameraController* cameraController);
-
+    //! set map
     void setMap(Map* map);
-
+    //! type definition
     Type type() const override;
 
 signals:
@@ -65,33 +66,35 @@ signals:
 private slots:
     void onCameraPositionChanged(const QVector3D &position);
     void onBasePlaneDimensionChanged();
-
-    void onHeadPress(Qt3DRender::QPickEvent *pick);
+    void onMousePressed(Qt3DRender::QPickEvent *pick);
 
 private:
+    //! Update position after set position and height
     void update();
 
+    //! Geometry settings
     static float headRadius;
     static float headHeight;
     static float defaultHeight;
 
+    //! Main property
     QVector3D mPosition;
     float mHeight;
-    //! [0]
+
+    //! Marker's head components
     Qt3DExtras::QCylinderMesh *mHead;
     Qt3DCore::QTransform *mHeadTransform;
     Qt3DExtras::QPhongMaterial *mHeadMaterial;
-    Qt3DRender::QObjectPicker *mHeadPicker;
-    //! [1]
+    //! Marker's bottom components
     Qt3DExtras::QConeMesh *mBottom;
     Qt3DCore::QTransform *mBottomTransform;
     Qt3DExtras::QPhongMaterial *mBottomMaterial;
-    //! [2]
+    //! Line between head and bottom
     LineMesh *mLine;
     Qt3DExtras::QPhongMaterial *mLineMaterial;
-
+    //! Camera controller
     CameraController* mCameraController;
-
+    //! Map
     Map* mMap;
 };
 

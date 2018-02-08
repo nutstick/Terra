@@ -4,6 +4,7 @@
 #include "map.h"
 #include "linemesh.h"
 #include <Qt3DRender/QPickEvent>
+#include <Qt3DRender/QPickTriangleEvent>
 
 float MarkerEntity::headRadius = 300;
 float MarkerEntity::headHeight = 600;
@@ -15,6 +16,8 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     , mMap(nullptr)
 {
     //! [0]
+    Qt3DCore::QEntity* head = new Qt3DCore::QEntity(this);
+
     mHead = new Qt3DExtras::QCylinderMesh;
     mHead->setRadius(headRadius);
     mHead->setLength(headHeight);
@@ -25,16 +28,20 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     mHeadMaterial = new Qt3DExtras::QPhongMaterial;
     mHeadMaterial->setAmbient(QColor(255, 255, 0));
     mHeadMaterial->setShininess(1);
-//    mHeadMaterial->setAlpha(0.5);
+//    mHeadMaterial->setAlpha(0.5);;
 
-    mHeadPicker = new Qt3DRender::QObjectPicker;
-    connect(mHeadPicker, &Qt3DRender::QObjectPicker::pressed, this, &MarkerEntity::onHeadPress);
+    Qt3DRender::QObjectPicker *objectPicker = new Qt3DRender::QObjectPicker(head);
+    objectPicker->setHoverEnabled(true);
+    objectPicker->setDragEnabled(true);
+    connect(objectPicker, &Qt3DRender::QObjectPicker::clicked, this, &MarkerEntity::onMousePressed);
+    connect(objectPicker, &Qt3DRender::QObjectPicker::entered, []{ qDebug() << "En\n";});
+    connect(objectPicker, &Qt3DRender::QObjectPicker::exited, []{ qDebug() << "Ex\n";});
 
-    Qt3DCore::QEntity* head = new Qt3DCore::QEntity(this);
+    head->setObjectName("head");
     head->addComponent(mHead);
     head->addComponent(mHeadMaterial);
     head->addComponent(mHeadTransform);
-    head->addComponent(mHeadPicker);
+    head->addComponent(objectPicker);
 
     //! [1]
     mBottom = new Qt3DExtras::QConeMesh;
@@ -129,35 +136,41 @@ void MarkerEntity::setMap(Map *map)
     update();
 }
 
-void MarkerEntity::onCameraPositionChanged(const QVector3D &position)
-{
-    float scaleFactor = 3600.0f * qLn(position.y());
-    float scale = position.y() / scaleFactor;
-
-//    qDebug() << "ENE" << position.y() << scale;
-
-    // TODO:
-    mHeadTransform->setScale(scale);
-    mBottomTransform->setScale(scale);
-
-    update();
-}
-
-void MarkerEntity::onBasePlaneDimensionChanged()
-{
-    update();
-}
-
 Entity::Type MarkerEntity::type() const
 {
     return Entity::Marker;
 }
 
-void MarkerEntity::onHeadPress(Qt3DRender::QPickEvent *pick)
+void MarkerEntity::onCameraPositionChanged(const QVector3D &position)
 {
-    if (pick->button() == Qt3DRender::QPickEvent::LeftButton) {
-        mCameraController->setMarkerHeadPressed(this, pick->position());
+    float scaleFactor = 3600.0f * qLn(position.y());
+    float scale = position.y() / scaleFactor;
+
+    // Set scale using scale factor
+    mHeadTransform->setScale(scale);
+    mBottomTransform->setScale(scale);
+    // Update position
+    update();
+}
+
+void MarkerEntity::onBasePlaneDimensionChanged()
+{
+    // Marker position render using base plane dimesion as relative height
+    update();
+}
+
+void MarkerEntity::onMousePressed(Qt3DRender::QPickEvent *pick)
+{
+    //Ignore pick events if the entity is disabled
+    if (!isEnabled()) {
+        pick->setAccepted(false);
+        return;
     }
+
+//    qDebug() << qobject_cast<Qt3DCore::QEntity*>(sender()->parent())->objectName();
+//    qDebug() << pick->localIntersection() << pick->worldIntersection();
+    //qDebug() << "tile touched";
+    pick->setAccepted(true);
 }
 
 void MarkerEntity::update()

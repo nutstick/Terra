@@ -4,6 +4,7 @@
 #include <Qt3DInput/QMouseEvent>
 #include <Qt3DInput/QWheelEvent>
 #include "map.h"
+#include "markerentity.h"
 
 #include <Qt3DRender/QCamera>
 //#include "mycamera.h"
@@ -68,104 +69,18 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     , mKeyboardDevice(new Qt3DInput::QKeyboardDevice())
     , mMouseHandler(new Qt3DInput::QMouseHandler())
     , mKeyboardHandler(new Qt3DInput::QKeyboardHandler())
-//    , mLogicalDevice(new Qt3DInput::QLogicalDevice())
-
-//    , mLeftMouseButtonAction(new Qt3DInput::QAction())
-//    , mLeftMouseButtonInput(new Qt3DInput::QActionInput())
-//    , mMiddleMouseButtonAction(new Qt3DInput::QAction())
-//    , mMiddleMouseButtonInput(new Qt3DInput::QActionInput())
-//    , mRightMouseButtonAction(new Qt3DInput::QAction())
-//    , mRightMouseButtonInput(new Qt3DInput::QActionInput())
-
-//    , mShiftAction(new Qt3DInput::QAction())
-//    , mShiftInput(new Qt3DInput::QActionInput())
-//    , mWheelAxis(new Qt3DInput::QAxis())
-//    , mMouseWheelInput(new Qt3DInput::QAnalogAxisInput())
-//    , mTxAxis(new Qt3DInput::QAxis())
-//    , mTyAxis(new Qt3DInput::QAxis())
-//    , mKeyboardTxPosInput(new Qt3DInput::QButtonAxisInput())
-//    , mKeyboardTyPosInput(new Qt3DInput::QButtonAxisInput())
-//    , mKeyboardTxNegInput(new Qt3DInput::QButtonAxisInput())
-//    , mKeyboardTyNegInput(new Qt3DInput::QButtonAxisInput())
 {
     // not using QAxis + QAnalogAxisInput for mouse X,Y because
     // it is only in action when a mouse button is pressed.
     mMouseHandler->setSourceDevice(mMouseDevice);
     connect(mMouseHandler, &Qt3DInput::QMouseHandler::pressed, this, &CameraController::onMouseDown);
-    // connect(mMouseHandler, &Qt3DInput::QMouseHandler::positionChanged, this, &CameraController::onMouseMove);
-    // connect(mMouseHandler, &Qt3DInput::QMouseHandler::released, this, &CameraController::onMouseUp);
     connect(mMouseHandler, &Qt3DInput::QMouseHandler::wheel, this, &CameraController::onMouseWheel);
     addComponent(mMouseHandler);
-
-    // left mouse button
-    // mLeftMouseButtonInput->setButtons(QVector<int>() << Qt::LeftButton);
-    // mLeftMouseButtonInput->setSourceDevice(mMouseDevice);
-    // mLeftMouseButtonAction->addInput(mLeftMouseButtonInput);
-
-    // middle mouse button
-    // mMiddleMouseButtonInput->setButtons(QVector<int>() << Qt::MiddleButton);
-    // mMiddleMouseButtonInput->setSourceDevice(mMouseDevice);
-    // mMiddleMouseButtonAction->addInput(mMiddleMouseButtonInput);
-
-    // right mouse button
-    // mRightMouseButtonInput->setButtons(QVector<int>() << Qt::RightButton);
-    // mRightMouseButtonInput->setSourceDevice(mMouseDevice);
-    // mRightMouseButtonAction->addInput(mRightMouseButtonInput);
 
     mKeyboardHandler->setSourceDevice(mKeyboardDevice);;
     connect(mKeyboardHandler, &Qt3DInput::QKeyboardHandler::pressed, this, &CameraController::onKeyDown);
     connect(mKeyboardHandler, &Qt3DInput::QKeyboardHandler::released, this, &CameraController::onKeyUp);
     addComponent(mKeyboardHandler);
-
-    // Keyboard shift
-    // mShiftInput->setButtons(QVector<int>() << Qt::Key_Shift);
-    // mShiftInput->setSourceDevice(mKeyboardDevice);
-    // mShiftAction->addInput(mShiftInput);
-
-    // Keyboard control
-    // mControlInput->setButtons(QVector<int>() << Qt::Key_Control);
-    // mControlInput->setSourceDevice(mKeyboardDevice);
-    // mControlAction->addInput(mControlInput);
-
-    // Keyboard Pos Tx
-    // mKeyboardTxPosInput->setButtons(QVector<int>() << Qt::Key_Right);
-    // mKeyboardTxPosInput->setScale(1.0f);
-    // mKeyboardTxPosInput->setSourceDevice(mKeyboardDevice);
-    // mTxAxis->addInput(mKeyboardTxPosInput);
-
-    // Keyboard Pos Ty
-    // mKeyboardTyPosInput->setButtons(QVector<int>() << Qt::Key_Up);
-    // mKeyboardTyPosInput->setScale(1.0f);
-    // mKeyboardTyPosInput->setSourceDevice(mKeyboardDevice);
-    // mTyAxis->addInput(mKeyboardTyPosInput);
-
-    // Keyboard Neg Tx
-    // mKeyboardTxNegInput->setButtons(QVector<int>() << Qt::Key_Left);
-    // mKeyboardTxNegInput->setScale(-1.0f);
-    // mKeyboardTxNegInput->setSourceDevice(mKeyboardDevice);
-    // mTxAxis->addInput(mKeyboardTxNegInput);
-
-    // Keyboard Neg Ty
-    // mKeyboardTyNegInput->setButtons(QVector<int>() << Qt::Key_Down);
-    // mKeyboardTyNegInput->setScale(-1.0f);
-    // mKeyboardTyNegInput->setSourceDevice(mKeyboardDevice);
-    // mTyAxis->addInput(mKeyboardTyNegInput);
-
-    // mLogicalDevice->addAction(mLeftMouseButtonAction);
-    // mLogicalDevice->addAction(mMiddleMouseButtonAction);
-    // mLogicalDevice->addAction(mRightMouseButtonAction);
-    // mLogicalDevice->addAction(mShiftAction);
-    // mLogicalDevice->addAction(mControlAction);
-    // mLogicalDevice->addAxis(mWheelAxis);
-    // mLogicalDevice->addAxis(mTxAxis);
-    // mLogicalDevice->addAxis(mTyAxis);
-
-    // Disable the logical device when the entity is disabled
-    // connect(this, &Qt3DCore::QEntity::enabledChanged, mLogicalDevice, &Qt3DInput::QLogicalDevice::setEnabled);
-
-    // addComponent(mLogicalDevice);
-
-    // From constraint function update()
 }
 
 void CameraController::setMap(Map *map)
@@ -319,6 +234,14 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
+        QVector3D target = QVector3D(0.0, 40.0, 0.0);
+        QVector3D nearPos = QVector3D(mouse->x(), mouse->y(), 0.0f);
+        nearPos = nearPos.unproject(mCamera->viewMatrix(), mCamera->projectionMatrix(), mViewport);
+        QVector3D farPos = QVector3D(mouse->x(), mouse->y(), 1.0f);
+        farPos = farPos.unproject(mCamera->viewMatrix(), mCamera->projectionMatrix(), mViewport);
+
+        qDebug() << target.crossProduct(nearPos, farPos).length();
+
         if ( enablePan == true ) {
 
             state = CameraController::State::Pan;
@@ -347,7 +270,6 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         rotateEnd = QVector2D(mouse->x(), mouse->y());
         rotateDelta = rotateEnd - rotateStart;
 
-        qDebug() << "P" << 2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed;
         // rotating across whole screen goes 360 degrees around
         rotateLeft(2 * M_PI * rotateDelta.x() / mViewport.width() * rotateSpeed);
 
@@ -381,6 +303,9 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         if (!enableMarkerMove) return;
 
         panEnd = QVector2D(mouse->x(), mouse->y());
+        panDelta = panEnd - panStart;
+
+        activeMarker->setHeight(activeMarker->height() - panDelta.y() * mCamera->position().y() / mViewport.height());
 
     }
 
@@ -490,7 +415,7 @@ void CameraController::setMarkerHeadPressed(MarkerEntity *marker, QPointF point)
 
     }
 
-    panStart = new QVector2D(point.x(), point.y());
+    panStart = QVector2D(point.x(), point.y());
     state = CameraController::State::MoveMarkerHeight;
 }
 

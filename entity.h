@@ -15,6 +15,7 @@ class Entity : public Qt3DCore::QEntity
 public:
     enum Type
     {
+        Base,
         Drone,
         Marker,
         Region,
@@ -33,11 +34,14 @@ public:
     void setLayer(Qt3DRender::QLayer* layer);
     virtual void setCamera(Qt3DRender::QCamera *camera);
 
+
+    virtual Type type() const {
+        return Type::Base;
+    }
+
 signals:
     void layerChanged();
     void cameraChanged();
-
-    virtual Type type() const = 0;
 
 protected:
     Qt3DRender::QCamera *mCamera;
