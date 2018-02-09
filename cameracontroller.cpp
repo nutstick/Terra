@@ -234,14 +234,6 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
-        QVector3D target = QVector3D(0.0, 40.0, 0.0);
-        QVector3D nearPos = QVector3D(mouse->x(), mouse->y(), 0.0f);
-        nearPos = nearPos.unproject(mCamera->viewMatrix(), mCamera->projectionMatrix(), mViewport);
-        QVector3D farPos = QVector3D(mouse->x(), mouse->y(), 1.0f);
-        farPos = farPos.unproject(mCamera->viewMatrix(), mCamera->projectionMatrix(), mViewport);
-
-        qDebug() << target.crossProduct(nearPos, farPos).length();
-
         if ( enablePan == true ) {
 
             state = CameraController::State::Pan;

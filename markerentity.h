@@ -65,7 +65,6 @@ signals:
 
 private slots:
     void onCameraPositionChanged(const QVector3D &position);
-    void onBasePlaneDimensionChanged();
     void onMousePressed(Qt3DRender::QPickEvent *pick);
 
 private:

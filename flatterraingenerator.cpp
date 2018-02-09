@@ -10,6 +10,7 @@
 
 #include "tile.h"
 #include "terrainchunkloader.h"
+#include "mapsettings.h"
 
 class FlatTerrainChunkLoader : public TerrainChunkLoader
 {
@@ -56,9 +57,9 @@ Qt3DCore::QEntity *FlatTerrainChunkLoader::createEntity(Qt3DCore::QEntity *paren
     transform = new Qt3DCore::QTransform();
     entity->addComponent(transform);
 
-    float size = mMap->basePlaneDimesion() / qPow(2, tile->z());
-    float xOffset = (tile->x() + 0.5) * size - mMap->basePlaneDimesion() / 2;
-    float yOffset = (tile->y() + 0.5) * size - mMap->basePlaneDimesion() / 2;
+    float size = MapSettings::basePlaneDimension() / qPow(2, tile->z());
+    float xOffset = (tile->x() + 0.5) * size - MapSettings::basePlaneDimension() / 2;
+    float yOffset = (tile->y() + 0.5) * size - MapSettings::basePlaneDimension() / 2;
 
     transform->setScale(size);
     transform->setTranslation(QVector3D(xOffset, 0, yOffset));

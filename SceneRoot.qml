@@ -68,9 +68,6 @@ Entity {
     Map {
         id: map
         cameraController: controller
-        tau: 0.00008
-        basePlaneDimesion: 650240.0
-        maxLevel: 22
 //        layer: renderSettings.activeFrameGraph.mapLayer
 
         entities: [
@@ -85,27 +82,27 @@ Entity {
         ]
     }
 
-    Entity {
-        components: [m, t, mat, p]
+//    Entity {
+//        components: [m, t, mat, p]
 //                CylinderMesh {
 //                    id: m
 //                }
-        CuboidMesh {
-            id: m
-        }
+//        CuboidMesh {
+//            id: m
+//        }
 
-        Transform {
-            id: t
-            translation: Qt.vector3d(2, 0, 10)
-            scale3D: Qt.vector3d(100, 100, 100)
-        }
-        PhongMaterial {
-            id: mat
-            ambient: "#FF0000"
-        }
-        ObjectPicker {
-            id: p
-            onClicked: console.log('px')
-        }
-    }
+//        Transform {
+//            id: t
+//            translation: Qt.vector3d(2, 0, 10)
+//            scale3D: Qt.vector3d(100, 100, 100)
+//        }
+//        PhongMaterial {
+//            id: mat
+//            ambient: "#FF0000"
+//        }
+//        ObjectPicker {
+//            id: p
+//            onClicked: console.log('px')
+//        }
+//    }
 }

@@ -3,7 +3,6 @@
 
 #include <QObject>
 
-class Map;
 class ChunkLoader;
 class ChunkListEntry;
 namespace Qt3DCore
@@ -17,8 +16,8 @@ class QVector3D;
 class Tile : public QObject
 {
 public:
-    Tile(Map* map);
-    Tile(Map* map, int x, int y, int z, float error, Tile* parent = nullptr);
+    Tile();
+    Tile(int x, int y, int z, float error, Tile* parent = nullptr);
     ~Tile();
 
     int x() const;
@@ -65,8 +64,6 @@ public:
     ChunkLoader* loader;
 
     float error;
-
-    Map* mMap;
 
 private:
     int mX, mY, mZ;

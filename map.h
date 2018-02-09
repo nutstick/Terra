@@ -25,9 +25,6 @@ class Map : public Qt3DCore::QEntity
     Q_OBJECT
 
     Q_PROPERTY(CameraController *cameraController READ cameraController WRITE setCameraController NOTIFY cameraControllerChanged)
-    Q_PROPERTY(float tau READ tau WRITE setTau NOTIFY tauChanged)
-    Q_PROPERTY(float basePlaneDimesion READ basePlaneDimesion WRITE setBasePlaneDimesion NOTIFY basePlaneDimesionChanged)
-    Q_PROPERTY(int maxLevel READ maxLevel WRITE setMaxLevel NOTIFY maxLevelChanged)
     Q_PROPERTY(Qt3DRender::QLayer* layer READ layer WRITE setLayer NOTIFY layerChanged)
     Q_PROPERTY(QQmlListProperty<Entity> entities READ entities)
 
@@ -43,15 +40,6 @@ public:
     CameraController *cameraController() const { return mCameraController; }
     void setCameraController(CameraController *cameraController);
 
-    float tau() const { return mTau; }
-    void setTau(const float tau);
-
-    float basePlaneDimesion() const { return mBasePlaneDimesion; }
-    void setBasePlaneDimesion(const float basePlaneDimesion);
-
-    int maxLevel() const { return mMaxLevel; }
-    void setMaxLevel(const int maxLevel);
-
     Qt3DRender::QLayer* layer() const { return mLayer; }
     void setLayer(Qt3DRender::QLayer *layer);
 
@@ -66,9 +54,6 @@ public:
 
 signals:
     void cameraControllerChanged();
-    void tauChanged();
-    void basePlaneDimesionChanged();
-    void maxLevelChanged();
     void layerChanged();
 
 private:

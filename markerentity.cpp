@@ -5,6 +5,7 @@
 #include "linemesh.h"
 #include <Qt3DRender/QPickEvent>
 #include <Qt3DRender/QPickTriangleEvent>
+#include "mapsettings.h"
 
 float MarkerEntity::headRadius = 300;
 float MarkerEntity::headHeight = 600;
@@ -34,8 +35,6 @@ MarkerEntity::MarkerEntity(Qt3DCore::QNode *parent)
     objectPicker->setHoverEnabled(true);
     objectPicker->setDragEnabled(true);
     connect(objectPicker, &Qt3DRender::QObjectPicker::clicked, this, &MarkerEntity::onMousePressed);
-    connect(objectPicker, &Qt3DRender::QObjectPicker::entered, []{ qDebug() << "En\n";});
-    connect(objectPicker, &Qt3DRender::QObjectPicker::exited, []{ qDebug() << "Ex\n";});
 
     head->setObjectName("head");
     head->addComponent(mHead);
@@ -123,13 +122,7 @@ void MarkerEntity::setMap(Map *map)
 {
     if (mMap == map) return;
 
-    if (mMap) {
-        disconnect(mMap, &Map::basePlaneDimesionChanged, this, &MarkerEntity::onBasePlaneDimensionChanged);
-    }
-
     mMap = map;
-
-    connect(mMap, &Map::basePlaneDimesionChanged, this, &MarkerEntity::onBasePlaneDimensionChanged);
 
     emit mapChanged();
 
@@ -153,12 +146,6 @@ void MarkerEntity::onCameraPositionChanged(const QVector3D &position)
     update();
 }
 
-void MarkerEntity::onBasePlaneDimensionChanged()
-{
-    // Marker position render using base plane dimesion as relative height
-    update();
-}
-
 void MarkerEntity::onMousePressed(Qt3DRender::QPickEvent *pick)
 {
     //Ignore pick events if the entity is disabled
@@ -169,15 +156,14 @@ void MarkerEntity::onMousePressed(Qt3DRender::QPickEvent *pick)
 
 //    qDebug() << qobject_cast<Qt3DCore::QEntity*>(sender()->parent())->objectName();
 //    qDebug() << pick->localIntersection() << pick->worldIntersection();
-    //qDebug() << "tile touched";
+    qDebug() << "tile touched";
+    cameraController()->setMarkerHeadPressed(this, pick->position());
     pick->setAccepted(true);
 }
 
 void MarkerEntity::update()
 {
-    if (!mMap || mMap->basePlaneDimesion() <= 1.0e-10) return;
-
-    float mPerPixel = 40075000.0f / mMap->basePlaneDimesion();
+    float mPerPixel = 40075000.0f / MapSettings::basePlaneDimension();
 
     mHeadTransform->setTranslation(mPosition + QVector3D(0, mHeight / mPerPixel + headHeight / 2.0f, 0));
     mBottomTransform->setTranslation(mPosition + QVector3D(0, mBottomTransform->scale() * headHeight / 2.0f, 0));

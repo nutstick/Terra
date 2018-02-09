@@ -8,6 +8,7 @@
 
 //#include <Qt3DRender/QCamera>
 #include "mycamera.h"
+#include "mapsettings.h"
 
 static float screenSpaceError(float epsilon, float distance, float screenSize, float fov)
 {
@@ -90,11 +91,9 @@ Map::Map(Qt3DCore::QNode *parent)
     : Qt3DCore::QEntity(parent)
     , mTerrainGenerator(new FlatTerrainGenerator)
     , mLayer(new Qt3DRender::QLayer(this))
-    , mMaxLevel(22)
-    , mBasePlaneDimesion(0.0f)
 {
     mTerrainGenerator->setMap(this);
-    rootTile = new Tile(this, 0, 0, 0, /*TODO*/ 0.1f);
+    rootTile = new Tile(0, 0, 0, /*TODO*/ 0.1f);
 
     chunkLoaderQueue = new ChunkList;
     replacementQueue = new ChunkList;
@@ -123,27 +122,6 @@ void Map::setCameraController(CameraController *cameraController)
 {
     mCameraController = cameraController;
     emit cameraControllerChanged();
-}
-
-void Map::setTau(const float tau)
-{
-    if (mTau == tau) return;
-    mTau = tau;
-    emit tauChanged();
-}
-
-void Map::setBasePlaneDimesion(const float basePlaneDimesion)
-{
-    if (mBasePlaneDimesion == basePlaneDimesion) return;
-    mBasePlaneDimesion = basePlaneDimesion;
-    emit basePlaneDimesionChanged();
-}
-
-void Map::setMaxLevel(const int maxLevel)
-{
-    if (mMaxLevel == maxLevel) return;
-    mMaxLevel = maxLevel;
-    emit maxLevelChanged();
 }
 
 void Map::setLayer(Qt3DRender::QLayer *layer)

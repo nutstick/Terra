@@ -68,4 +68,5 @@ HEADERS += \
     call_once.h \
     singleton.h \
     linemeshgeometry.h \
-    linemesh.h
+    linemesh.h \
+    mapsettings.h
