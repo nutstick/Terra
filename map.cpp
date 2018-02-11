@@ -305,7 +305,7 @@ int Map::entityCount() const
     return mEntities.count();
 }
 
-Entity *Map::entity(int index) const
+Entity* Map::entity(int index) const
 {
     return mEntities.at(index);
 }

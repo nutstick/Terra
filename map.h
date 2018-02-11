@@ -49,7 +49,7 @@ public:
     QQmlListProperty<Entity> entities();
     void appendEntity(Entity*);
     int entityCount() const;
-    Entity *entity(int) const;
+    Entity* entity(int) const;
     void clearEntities();
 
 signals:

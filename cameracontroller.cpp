@@ -234,6 +234,37 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         panStart = QVector2D(mouse->x(), mouse->y());
 
+        QMatrix4x4 M = (mCamera->projectionMatrix() * mCamera->viewMatrix()).inverted();
+        QVector4D rayStart = QVector4D(2.0f * float(mouse->x()) / mViewport.width() - 1.0f,
+                                  1.0f - 2.0f * float(mouse->y()) / mViewport.height(),
+                                  -1.0f,
+                                  1.0f);
+        QVector4D rayEnd = QVector4D(2.0f * float(mouse->x()) / mViewport.width() - 1.0f,
+                                  1.0f - 2.0f * float(mouse->y()) / mViewport.height(),
+                                  1.0f,
+                                  1.0f);
+        rayStart = M * rayStart;
+        rayStart /= rayStart.w();
+
+        rayEnd = M * rayEnd;
+        rayEnd /= rayEnd.w();
+        qDebug() << rayStart << rayEnd;
+
+        QVector3D rayDirection = (rayStart - rayEnd).toVector3D();
+        rayDirection.normalize();
+
+        for (int i = 0; i < mMap->entityCount(); ++i)
+        {
+            Entity* entity = mMap->entity(i);
+            if (entity->type() == Entity::Marker)
+            {
+                MarkerEntity* marker = static_cast<MarkerEntity*>(entity);
+                qDebug() << marker->position();
+                float distance;
+                qDebug() << marker->rayOBBIntersection(rayStart.toVector3D(), rayDirection, distance);
+            }
+        }
+
         if ( enablePan == true ) {
 
             state = CameraController::State::Pan;
@@ -291,15 +322,16 @@ void CameraController::onMouseMove(Qt3DInput::QMouseEvent *mouse)
         pan(panDelta.x(), panDelta.y());
 
         panStart = panEnd;
-    } else if (state == CameraController::State::MoveMarkerHeight) {
-        if (!enableMarkerMove) return;
-
-        panEnd = QVector2D(mouse->x(), mouse->y());
-        panDelta = panEnd - panStart;
-
-        activeMarker->setHeight(activeMarker->height() - panDelta.y() * mCamera->position().y() / mViewport.height());
-
     }
+//    else if (state == CameraController::State::MoveMarkerHeight) {
+//        if (!enableMarkerMove) return;
+
+//        panEnd = QVector2D(mouse->x(), mouse->y());
+//        panDelta = panEnd - panStart;
+
+//        activeMarker->setHeight(activeMarker->height() - panDelta.y() * mCamera->position().y() / mViewport.height());
+
+//    }
 
     if (state != CameraController::State::None) frameTriggered();
 }

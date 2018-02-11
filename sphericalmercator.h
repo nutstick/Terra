@@ -4,7 +4,7 @@
 #include <QtGlobal>
 #include <QScopedPointer>
 #include "call_once.h"
-#include <QVector>
+#include <QGeoCoordinate>
 
 class QVector2D;
 
@@ -19,12 +19,13 @@ public:
     ~SphericalMercator();
     static SphericalMercator* instance();
 
-    QVector2D screenPxToLonLat(QVector2D pixel, int zoom);
+    QPointF geoCoordinateToScreenPx(QGeoCoordinate coord, int zoom);
+    QGeoCoordinate screenPxToLGeoCoordinate(QPointF pixel, int zoom);
 
-    float size = 650240;
+    double size = 650240;
 
 private:
-    QVector<float> Ac, Bc, Cc, zc;
+    QVector<double> Ac, Bc, Cc, zc;
 };
 
 #endif // SPHERICALMERCATOR_H

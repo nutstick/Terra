@@ -57,6 +57,8 @@ public:
     //! type definition
     Type type() const override;
 
+    bool rayOBBIntersection(QVector3D rayOrigin, QVector3D rayDirection, float& distance);
+
 signals:
     void positionChanged();
     void heightChanged();

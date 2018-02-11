@@ -139,9 +139,9 @@ bool MarkerEntity::rayOBBIntersection(QVector3D rayOrigin, QVector3D rayDirectio
     //![0]
     //! AABB -> (-headRadius, -headRadius, -headHeight / 2.0)
     QVector3D AABBmin;
-    AABBmin = QVector3D(-headRadius, -headRadius, -headHeight / 2.0f) * mHeadTransform->scale() + mHeadTransform->translation();
+    AABBmin = QVector3D(-headRadius, -headRadius, -headHeight / 2.0f);// * mHeadTransform->scale() + mHeadTransform->translation();
     QVector3D AABBmax;
-    AABBmax = QVector3D(headRadius, headRadius, headHeight / 2.0f) * mHeadTransform->scale() + mHeadTransform->translation();
+    AABBmax = QVector3D(headRadius, headRadius, headHeight / 2.0f);// * mHeadTransform->scale() + mHeadTransform->translation();
 
     qDebug() << rayOrigin << rayDirection << rayOrigin + rayDirection * -12000;
     float tMin = 0.0f;
