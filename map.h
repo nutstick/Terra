@@ -9,6 +9,7 @@
 #include <QList>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QGeoCoordinate>
 
 #include "entity.h"
 
@@ -52,11 +53,14 @@ public:
     Entity* entity(int) const;
     void clearEntities();
 
+    Q_INVOKABLE void setView(const QGeoCoordinate coords);
+
 signals:
     void cameraControllerChanged();
     void layerChanged();
 
 private:
+    qreal getZoom();
     void update(Tile* tile);
 
 private slots:
@@ -77,12 +81,6 @@ private:
     QVector<Entity *> mEntities;
 
     Tile* rootTile;
-    //! max. allowed screen space error
-    float mTau;
-    //! base plane dimesion
-    float mBasePlaneDimesion;
-    //! maximum allowed depth of quad tree
-    int mMaxLevel;
     //! queue of chunks to be loaded
     ChunkList* chunkLoaderQueue;
     //! queue of chunk to be eventually replaced

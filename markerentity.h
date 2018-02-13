@@ -10,6 +10,7 @@
 #include <Qt3DExtras/QPhongAlphaMaterial>
 #include <Qt3DExtras/QPhongMaterial>
 #include <QTransform>
+#include <QGeoCoordinate>
 
 class CameraController;
 
@@ -42,10 +43,10 @@ public:
         return mMap;
     }
 
-    //! set position using 2D space then auto fill height from terrain
-    void setPosition(QVector2D position);
     //! set position by given x, y, z
     void setPosition(QVector3D position);
+    //! set position by given x, y, z
+    void setPosition(QGeoCoordinate coord);
     //! set height
     void setHeight(const float height);
     //! set camera

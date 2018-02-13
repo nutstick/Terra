@@ -6,7 +6,9 @@
 #include "map.h"
 #include "markerentity.h"
 
+#include "sphericalmercator.h"
 #include <Qt3DRender/QCamera>
+#include "mapsettings.h"
 //#include "mycamera.h"
 
 qreal distanceToSquared(QVector3D x, QVector3D y)
@@ -20,7 +22,7 @@ CameraController::CameraController(Qt3DCore::QNode *parent)
     , timer()
 
     , mMinDistance(0)
-    , mMaxDistance(12000)
+    , mMaxDistance(MapSettings::cameraDistance())
     , mMinZoom(0)
     , mMaxZoom(INFINITY)
     , mMinPolarAngle(0)
@@ -117,6 +119,8 @@ void CameraController::setViewport(const QRect &viewport)
 
   mViewport = viewport;
   emit viewportChanged();
+
+  frameTriggered();
 }
 
 
@@ -126,6 +130,8 @@ void CameraController::setTarget(QVector3D target)
     defaultTarget = target;
 
     emit targetChanged();
+
+    frameTriggered();
 }
 
 void CameraController::setMinDistance(qreal minDistance)
@@ -248,7 +254,7 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
 
         rayEnd = M * rayEnd;
         rayEnd /= rayEnd.w();
-        qDebug() << rayStart << rayEnd;
+//        qDebug() << rayStart << rayEnd;
 
         QVector3D rayDirection = (rayStart - rayEnd).toVector3D();
         rayDirection.normalize();
@@ -259,9 +265,9 @@ void CameraController::onMouseDown(Qt3DInput::QMouseEvent *mouse)
             if (entity->type() == Entity::Marker)
             {
                 MarkerEntity* marker = static_cast<MarkerEntity*>(entity);
-                qDebug() << marker->position();
+//                qDebug() << marker->position();
                 float distance;
-                qDebug() << marker->rayOBBIntersection(rayStart.toVector3D(), rayDirection, distance);
+//                qDebug() << marker->rayOBBIntersection(rayStart.toVector3D(), rayDirection, distance);
             }
         }
 
@@ -552,6 +558,8 @@ bool CameraController::update()
 
     offset = position - mTarget;
 
+    qDebug() << "O" << position.x() << mTarget.x() << qFloatDistance(position.x(), mTarget.x());
+
     offset = quat.rotatedVector(offset);
 
     theta = qAtan2(offset.x(), offset.z());
@@ -560,6 +568,8 @@ bool CameraController::update()
 
     theta += thetaDelta;
     phi += phiDelta;
+
+    qDebug() << "T" << theta << phi << offset << thetaDelta << phiDelta;
 
     // restrict theta to be between desired limits
     theta = qMax(mMinAzimuthAngle, qMin(mMaxAzimuthAngle, theta));
@@ -585,6 +595,7 @@ bool CameraController::update()
     // set Position
     mCamera->setPosition(mTarget + offset);
     // look at target
+    mCamera->setViewCenter(QVector3D());
     mCamera->setViewCenter(mTarget);
     Qt3DCore::QTransform* transform = mCamera->transform();
 
@@ -596,6 +607,8 @@ bool CameraController::update()
         thetaDelta = 0;
         phiDelta = 0;
     }
+
+    qDebug() << "P" << mCamera->position() << mCamera->viewCenter() << mTarget;
 
     scale = 1;
     panOffset.setX(0);

@@ -88,6 +88,19 @@ void MarkerEntity::setPosition(QVector3D position)
     update();
 }
 
+void MarkerEntity::setPosition(QGeoCoordinate coord)
+{
+    // Translate Lat-Lon-Att to World Space position
+    QVector3D newPosition = SphericalMercator::instance()->geoCoordinateToWorldSpace(coord);
+
+    if (newPosition == mPosition) return;
+
+    mPosition = newPosition;
+    emit positionChanged();
+    // Apply new position to marker
+    update();
+}
+
 void MarkerEntity::setHeight(const float height)
 {
     mHeight = height;
@@ -139,11 +152,11 @@ bool MarkerEntity::rayOBBIntersection(QVector3D rayOrigin, QVector3D rayDirectio
     //![0]
     //! AABB -> (-headRadius, -headRadius, -headHeight / 2.0)
     QVector3D AABBmin;
-    AABBmin = QVector3D(-headRadius, -headRadius, -headHeight / 2.0f) * mHeadTransform->scale() + mHeadTransform->translation();
+    AABBmin = QVector3D(-headRadius, -headRadius, -headHeight / 2.0f);// * mHeadTransform->scale() + mHeadTransform->translation();
     QVector3D AABBmax;
-    AABBmax = QVector3D(headRadius, headRadius, headHeight / 2.0f) * mHeadTransform->scale() + mHeadTransform->translation();
+    AABBmax = QVector3D(headRadius, headRadius, headHeight / 2.0f);// * mHeadTransform->scale() + mHeadTransform->translation();
 
-    qDebug() << rayOrigin << rayDirection << rayOrigin + rayDirection * -12000;
+//    qDebug() << rayOrigin << rayDirection << rayOrigin + rayDirection * -12000;
     float tMin = 0.0f;
     float tMax = 100000.0f;
     QVector3D OBBposition(mHeadTransform->matrix().column(3));

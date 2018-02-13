@@ -43,6 +43,7 @@
 
 //#include <Qt3DRender/QCameraLens>
 #include <Qt3DCore/QTransform>
+#include "mapsettings.h"
 
 //void MyCamera::updateViewMatrixAndTransform(bool doEmit)
 //{
@@ -70,6 +71,13 @@
 MyCamera::MyCamera(Qt3DCore::QNode *parent)
     : Qt3DRender::QCamera(parent)
 {
+    setFieldOfView(50);
+
+    setNearPlane(1);
+    setFarPlane(MapSettings::cameraDistance() * 10.0);
+    setPosition(QVector3D(0.0, MapSettings::cameraDistance(), 0.0));
+    setUpVector(QVector3D(0.0, 0.0, -1.0));
+    setViewCenter(QVector3D(0.0, 0.0, 0.0));
 //    connect(m_lens, &Qt3DRender::QCameraLens::projectionTypeChanged, this, &MyCamera::projectionTypeChanged);
 //    connect(m_lens, &Qt3DRender::QCameraLens::nearPlaneChanged, this, &MyCamera::nearPlaneChanged);
 //    connect(m_lens, &Qt3DRender::QCameraLens::farPlaneChanged, this, &MyCamera::farPlaneChanged);

@@ -10,6 +10,9 @@
 #include "map.h"
 #include "entity.h"
 #include "markerentity.h"
+#include "tile.h"
+
+#include "sphericalmercator.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +25,7 @@ int main(int argc, char *argv[])
 #if defined(Q_OS_WIN)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
+    qDebug() << SphericalMercator::instance()->geoCoordinateToScreenPx(QGeoCoordinate(13.7383777, 100.5320528, 9), 0);
 
     QGuiApplication app(argc, argv);
 

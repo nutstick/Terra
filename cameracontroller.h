@@ -48,6 +48,9 @@ public:
     qreal dampingFactor() const { return mDampingFactor; }
     qreal maxClickTimeInterval() const { return mMaxClickTimeInterval; }
 
+    qreal polarAngle() const { return phi; }
+    qreal azimuthAngle() const { return theta; }
+
     void setMap(Map* map);
     void setCamera(Qt3DRender::QCamera *camera);
     void setViewport(const QRect& viewport);

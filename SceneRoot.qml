@@ -8,67 +8,49 @@ import com.terra 1.0
 
 Entity {
     id: sceneRoot
+    readonly property Map map: _map
 
     FrameAction {
         onTriggered:
-            map.update();
+            _map.update();
     }
 
     CameraController {
         id: controller
-        map: map
+        map: _map
         camera: camera
         viewport: Qt.rect(0, 0, root.width, root.height)
-        maxDistance: 120000
     }
 
     MyCamera {
         id: camera
         projectionType: CameraLens.PerspectiveProjection
-        fieldOfView: 50
         aspectRatio: width / height
-        nearPlane: 1/99
-        farPlane: 120000
-        position: Qt.vector3d( 0.0, 12000.0, 0.0 );
-        upVector: Qt.vector3d( 0.0, 0.0, -1.0 )
-        viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
     }
-
-//            Camera {
-//                id: camera
-//                projectionType: CameraLens.PerspectiveProjection
-//                fieldOfView: 70
-//                aspectRatio: width / height
-//                nearPlane: 1/99
-//                farPlane: 100000000000000
-//                position: Qt.vector3d( 0.0, 12000.0, 0.0 );
-//                upVector: Qt.vector3d( 0.0, 0.0, -1.0 )
-//                viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
-//            }
 
     components: [
         RenderSettings {
             id: renderSettings
-            activeFrameGraph: ForwardRenderer {
-                clearColor: Qt.rgba(0, 0.5, 1, 1)
+//            activeFrameGraph: ForwardRenderer {
+//                clearColor: Qt.rgba(0, 0.5, 1, 1)
+//                camera: camera
+//            }
+            activeFrameGraph: MapForwardRenderer {
+
                 camera: camera
             }
-//                    activeFrameGraph: MapForwardRenderer {
-
-//                        camera: camera
-//                    }
 //                    pickingSettings.pickMethod: PickingSettings.TrianglePicking
 //                    pickingSettings.faceOrientationPickingMode: PickingSettings.FrontAndBackFace
 //                    pickingSettings.pickResultMode: PickingSettings.AllPicks
-//                    renderPolicy: RenderSettings.OnDemand
+            renderPolicy: RenderSettings.OnDemand
         },
         InputSettings {}
     ]
 
     Map {
-        id: map
+        id: _map
         cameraController: controller
-//        layer: renderSettings.activeFrameGraph.mapLayer
+        layer: renderSettings.activeFrameGraph.mapLayer
 
         entities: [
             Marker {
@@ -76,7 +58,7 @@ Entity {
                 position: Qt.vector3d( 0.0, 0.0, 0.0 )
                 layer: renderSettings.activeFrameGraph.entityLayer
                 camera: camera
-                map: map
+                map: _map
                 cameraController: controller
             }
         ]

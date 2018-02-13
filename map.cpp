@@ -9,6 +9,12 @@
 //#include <Qt3DRender/QCamera>
 #include "mycamera.h"
 #include "mapsettings.h"
+#include "sphericalmercator.h"
+
+static float estimatedLevelZeroGeometricError(float tileImageWidth, float numberOfTilesAtLevelZero)
+{
+    return 6378137.0 * 2.0 * M_PI * 0.25 / (tileImageWidth * numberOfTilesAtLevelZero);
+}
 
 static float screenSpaceError(float epsilon, float distance, float screenSize, float fov)
 {
@@ -36,8 +42,24 @@ static float screenSpaceError(float epsilon, float distance, float screenSize, f
     return phi;
 }
 
+static float screenSpaceError2D(Tile* tile, const CameraController* cameraController)
+{
+    Qt3DRender::QCamera* camera = cameraController->camera();
+
+    QRect rect = cameraController->viewport();
+    int screenSizePx = qMax(rect.width(), rect.height());
+    float pixelSize = qMax(camera->top() - camera->bottom(), camera->right() - camera->left()) / screenSizePx;
+    qDebug() << camera->top() << camera->bottom();
+    float error = tile->error / pixelSize;
+
+    return error;
+}
+
 static float screenSpaceError(Tile* tile, const CameraController* cameraController)
 {
+    // TODO:
+//    return screenSpaceError2D(tile, cameraController);
+
     float dist = tile->center3d().distanceToPoint(cameraController->camera()->position());
 
     // TODO: what to do when distance == 0 ?
@@ -58,7 +80,6 @@ static bool isInFrustum(const QRect& rect, const QMatrix4x4& viewProjectionMatri
     float xmin, ymin, zmin, xmax, ymax, zmax;
     for (int i = 0; i < 8; ++i)
     {
-        qDebug() << rect.top()<< rect.bottom();
         QVector4D p(((i >> 0) & 1) ? rect.bottom() : rect.top(),
                     ((i >> 1) & 1) ? rect.right() : rect.left(),
                     ((i >> 2) & 1) ? 0 : 0, 1);
@@ -93,7 +114,7 @@ Map::Map(Qt3DCore::QNode *parent)
     , mLayer(new Qt3DRender::QLayer(this))
 {
     mTerrainGenerator->setMap(this);
-    rootTile = new Tile(0, 0, 0, /*TODO*/ 0.1f);
+    rootTile = new Tile(0, 0, 0, /*TODO*/ estimatedLevelZeroGeometricError(MapSettings::basePlaneDimension(), 1));
 
     chunkLoaderQueue = new ChunkList;
     replacementQueue = new ChunkList;
@@ -200,9 +221,10 @@ void Map::update(Tile *tile)
         return;
     }
 
-    // qDebug() << tile->x() << "|" << tile->y() << "|" << tile->z() << "  " << mTau << "  " << screenSpaceError(tile, mCameraController);
-    if (screenSpaceError(tile, mCameraController) <= mTau)
+//    qDebug() << tile->x() << "|" << tile->y() << "|" << tile->z() << "  " << tile->error << MapSettings::tau() << "  " << screenSpaceError(tile, mCameraController);
+    if (screenSpaceError(tile, mCameraController) <= MapSettings::tau())
     {
+
         // acceptable error for the current chunk - let's render it
 
         activeTiles << tile;
@@ -220,7 +242,7 @@ void Map::update(Tile *tile)
 
         activeTiles << tile;
 
-        if (tile->z() <= mMaxLevel)
+        if (tile->z() <= MapSettings::maxLevel())
         {
             for (int i = 0; i < 4; ++i)
                 requestResidency(tile->children[i]);
@@ -331,6 +353,39 @@ int Map::entityCount(QQmlListProperty<Entity>* list) {
     return reinterpret_cast< Map* >(list->data)->entityCount();
 }
 
+void Map::setView(const QGeoCoordinate coords)
+{
+    QPointF px = SphericalMercator::instance()->geoCoordinateToScreenPx(coords, 0);\
+    QVector3D to(px.x() - MapSettings::basePlaneDimension() / 2, 0, px.y() - MapSettings::basePlaneDimension() / 2);
+
+    float distance = coords.altitude();
+    if (coords.altitude() <= 1.0e-5) {
+        distance = qPow(0.5, (getZoom() - 4)) * MapSettings::cameraDistance();
+    }
+    float bearing = mCameraController->azimuthAngle();
+    float pitch = mCameraController->polarAngle();
+
+    mCameraController->setTarget(to);
+
+    QVector3D cameraPosition = QVector3D(
+                to.x() - qSin(bearing) * qSin(pitch) * distance,
+                qCos(pitch) * distance,
+                to.z() - qCos(bearing) * qSin(pitch) * distance);
+
+    mCameraController->camera()->setPosition(cameraPosition);
+
+    mCameraController->frameTriggered();
+
+    qDebug() << "PX";
+}
+
+qreal Map::getZoom()
+{
+    float pt = mCameraController->target().distanceToPoint(mCameraController->camera()->position());
+
+    return qMin(qMax(qLn(pt / MapSettings::cameraDistance()) / qLn(0.5) + 4, 0.0), 22.0);
+}
+
 //! [0]
 
 LoaderThread::LoaderThread(ChunkList *list, QMutex &mutex, QWaitCondition &waitCondition)
@@ -361,11 +416,11 @@ void LoaderThread::run()
         entry = loadList->takeFirst();
         mutex.unlock();
 
-        // qDebug() << "[THR] loading! " << entry->chunk->x() << " | " << entry->chunk->y() << " | " << entry->chunk->z();
+//        qDebug() << "[THR] loading! " << entry->chunk->x() << " | " << entry->chunk->y() << " | " << entry->chunk->z();
 
         entry->chunk->loader->load();
 
-        // qDebug() << "[THR] done!";
+//        qDebug() << "[THR] done!";
 
         emit nodeLoaded(entry->chunk);
 
