@@ -16,7 +16,8 @@ SOURCES += main.cpp \
     jstimer.cpp \
     terraindatagenerator.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += qml.qrc \
+    terra.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

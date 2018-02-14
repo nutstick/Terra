@@ -38,6 +38,15 @@ Window {
         }
     }
 
+    WorkerScript {
+        id: tileReplacementQueue
+        source: "Core/TileReplacementQueue.js"
+
+        onMessage: {
+            console.log(messageObject)
+        }
+    }
+
     Canvas3D {
         id: canvas3d
 
@@ -106,15 +115,15 @@ Window {
         text: qsTr("loading")
     }
 
-    PlannerView {
-        property real dHeight: 200
-        y: 160
-        width: Math.min(parent.width * 0.8, 400)
-        height: Math.max(56, dHeight)
-        anchors.horizontalCenterOffset: 0
-        anchors.bottomMargin: 0
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+//    PlannerView {
+//        property real dHeight: 200
+//        y: 160
+//        width: Math.min(parent.width * 0.8, 400)
+//        height: Math.max(56, dHeight)
+//        anchors.horizontalCenterOffset: 0
+//        anchors.bottomMargin: 0
+//        anchors.bottom: parent.bottom
+//        anchors.horizontalCenter: parent.horizontalCenter
 
-    }
+//    }
 }

@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/"/>
+    <qresource prefix="/Core">
+        <file>Tile.js</file>
+        <file>DeveloperError.js</file>
+        <file>TilingScheme.js</file>
+        <file>Ellipsoid.js</file>
+        <file>Map.js</file>
+        <file>TileReplacementQueue.js</file>
+    </qresource>
+</RCC>

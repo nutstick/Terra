@@ -3,6 +3,8 @@ Qt.include("/lib/OrbitControls.js");
 Qt.include("/lib/utilities.js");
 Qt.include("/lib/image.js");
 
+Qt.include("/Core/Map.js");
+
 //var include = {
 //    init: false,
 //    mapbox: false,
@@ -28,6 +30,7 @@ var finished = 0;
 //compass functionality
 var screenPosition;
 var markers = [];
+var map;
 
 var basePlaneDimension = 65024;
 
@@ -411,6 +414,11 @@ function initializeGL(canvas, eventSource) {
 
     renderer = new THREE.Canvas3DRenderer({ canvas: canvas, antialias: true, devicePixelRatio: canvas.devicePixelRatio });
     renderer.setSize(canvas.width, canvas.height);
+
+    map = new Map({
+        cameraController: controls,
+        tileReplacementQueue: tileReplacementQueue
+    });
 }
 
 function resizeGL(canvas) {
@@ -433,6 +441,8 @@ function paintGL(canvas) {
         }
 
     }
+
+    map.update();
 
     // controls.update();
     renderer.render(scene, camera);
