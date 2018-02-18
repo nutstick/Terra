@@ -105,32 +105,3 @@ TileReplacementQueue.prototype.markTileRendered = function(item) {
 
     this.head = item;
 };
-
-var _tileReplacementQueue = new TileReplacementQueue();
-var loadingTile = undefined;
-
-WorkerScript.onMessage = function(msg) {
-    var method = msg.method;
-    console.log(JSON.stringify(msg));
-    
-    if (method === 'markTileRendered') {
-        var item = msg.item;
-        _tileReplacementQueue.markTileRendered(item);
-    } else {
-        var tileCacheSize = msg.tileCacheSize;
-        _tileReplacementQueue.trimTiles();
-    }
-};
-
-while (true) {
-    console.log('head', _tileReplacementQueue.head);
-    if (loadingTile || !_tileReplacementQueue.head) continue;
-
-    loadingTile = _tileReplacementQueue.head;
-    WorkerScript.sendMessage({ tile: loadingTile, state: 'Loading' });
-
-    setTimeout(function() {
-        WorkerScript.sendMessage({ tile: loadingTile, state: 'Loaded' });
-        loadingTile = undefined;
-    }, 500)
-}

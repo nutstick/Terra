@@ -17,7 +17,7 @@ function OrbitConstraint ( object ) {
 
     // Limits to how far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
-    this.maxDistance = 12000;
+    this.maxDistance = 12000*6400;
 
     // Limits to how far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
@@ -290,7 +290,7 @@ function OrbitConstraint ( object ) {
                     scope.needsUpdate = timer.setInterval(function(time){
                         if (Date.now()-scope.lastMove < 150) return
                         else {
-                            updateTiles()
+                            // updateTiles()
                             timer.clearInterval(scope.needsUpdate)
                             scope.needsUpdate = false
                         }
@@ -520,21 +520,21 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
             panStart.set( x, y );
 
             var now = Date.now();
-            if ( selectedObject && selectedObject.name === 'head' ) {
+            if ( selectedObject && selectedObject.name === 'Head' ) {
 
-                currentMarker = selectedObject.parent;
+                currentMarker = selectedObject.pin;
 
                 state = STATE.MARKERH;
 
-            } else if ( selectedObject && selectedObject.name === 'arrow' ) {
+            } else if ( selectedObject && selectedObject.name === 'Arrow' ) {
 
-                currentMarker = selectedObject.parent;
+                currentMarker = selectedObject.pin;
 
                 state = STATE.MARKERP;
 
             } else if ( lastClick && now - lastClick < constraint.maxClickTimeInterval && scope.enableMoveMarker === true ) {
 
-                currentMarker = addMarker( screenNormalize( x, y ) );
+                currentMarker = addMarker(screenNormalize( x, y ));
 
                 state = STATE.MARKERH;
 
@@ -615,7 +615,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
             panEnd.set( x, y );
             panDelta.subVectors( panEnd, panStart );
 
-            currentMarker.setOffsetY( - panDelta.y * scope.object.position.y / scope.canvas.height );
+            currentMarker.offsetHeight( - panDelta.y * scope.object.position.y / scope.canvas.height );
 
             panStart.copy( panEnd );
 
@@ -623,7 +623,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             if ( scope.enableMoveMarker === false ) return;
 
-            currentMarker.setPositionFromMouse(screenNormalize( x, y ));
+            setPositionFromMouse(currentMarker, screenNormalize( x, y ));
         }
 
         if ( state !== STATE.NONE ) scope.update();

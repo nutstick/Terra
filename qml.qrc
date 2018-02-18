@@ -2,8 +2,7 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>glcode.js</file>
-        <file>three.js</file>
-        <file>map.js</file>
+				<file>three.js</file>
         <file>ParserWorkerScript.qml</file>
         <file>ControlEventSource.qml</file>
         <file>Compass.qml</file>

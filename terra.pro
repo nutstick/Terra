@@ -1,4 +1,4 @@
-QT += quick widgets
+QT += quick widgets positioning
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -14,7 +14,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp \
     jstimer.cpp \
-    terraindatagenerator.cpp
+    terraindatagenerator.cpp \
+    gridcalculation.cpp
 
 RESOURCES += qml.qrc \
     terra.qrc
@@ -32,4 +33,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     jstimer.h \
-    terraindatagenerator.h
+    terraindatagenerator.h \
+    gridcalculation.h

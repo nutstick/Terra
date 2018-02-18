@@ -1,14 +1,20 @@
+Qt.include("/Core/MapSettings.js")
 Qt.include("/Core/Tile.js")
 Qt.include("/Core/TilingScheme.js")
+Qt.include("/Core/TileReplacementQueue.js");
+Qt.include("/Core/AABB.js");
+Qt.include("/Core/Imagery.js");
+Qt.include("/Core/DebugImagery.js");
+Qt.include("/Utility/SphericalMercator.js");
+Qt.include("/Object/Mission.js");
+Qt.include("/Object/Polygon.js");
 
 var SceneMode = {
 	SCENE2D: 0,
 	SCENE3D: 1
 };
 
-function WebWorker() {
-    return Qt.createQmlObject("import QtQuick 2.0; WorkerScript { source: 'Core/TileReplacementQueue.js' }");
-}
+var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
 
 function Map(options) {
     if (!options) throw new Error('No option provided');
@@ -16,20 +22,20 @@ function Map(options) {
     this.cameraController = options.cameraController;
     // if (typeof options.tileReplacementQueue === 'undefined') throw new Error('No option.tileReplacementQueue provided');
     // this._tileReplacementQueue = options.tileReplacementQueue;
-    this._tileReplacementQueue = WebWorker();
-    this._tileReplacementQueue.onMessage = function(msg) {
-        console.log(msg);
-    }
+    if (typeof options.scene === 'undefined') throw new Error('No options.scene provided');
+    this.scene = options.scene;
 
     this._tilingScheme = new TilingScheme();
-    this._rootTile = Tile.createRootTile(this._tilingScheme);
+    this._rootTile = Tile.createRootTile(this.scene, this._tilingScheme);
 
     this._activeTiles = [];
     this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
     this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
     this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
 
-    // this._tileReplacementQueue = new TileReplacementQueue();
+    this._tileReplacementQueue = new TileReplacementQueue();
+
+    this._imagery = new Imagery({});
     
     this._levelZeroTiles = undefined;
     this._loadQueueTimeSlice = 5.0;
@@ -41,15 +47,15 @@ function Map(options) {
     this._lastTileIndex = 0;
     this._updateHeightsTimeSlice = 2.0;
 
-    this.maximumScreenSpaceError = options.maximumScreenSpaceError | 2;
+    this.maximumScreenSpaceError = options.maximumScreenSpaceError || 2;
 
-    this.tileCacheSize = options.tileCacheSize | 512;
+    this.tileCacheSize = options.tileCacheSize || 512;
 
     this._lastTileLoadQueueLength = 0;
 
     this.mode = SceneMode.SCENE3D;
 
-    this._levelZeroMaximumGeometricError = this._tilingScheme.ellipsoid * 2 * Math.PI * 0.25 / (65 * 1);
+    this._levelZeroMaximumGeometricError = this._tilingScheme.ellipsoid * 2 * Math.PI / (MapSettings.basePlaneDimension * 1);
 
     this._debug = {
       enableDebugOutput : true,
@@ -68,6 +74,28 @@ function Map(options) {
 
       suspendLodUpdate : false
     };
+
+    // Mission
+    this.missions = [];
+    this._currentMission = undefined;
+
+    // View
+}
+
+Object.defineProperties(Map.prototype, {
+    currentMission: {
+        get: function() {
+            if (!this._currentMission) {
+                this._currentMission = new Polygon({ map: this });
+                this.missions.push(this._currentMission);
+            }
+            return this._currentMission;
+        }
+    }
+});
+
+Map.prototype.suspendLodUpdate = function(value) {
+    this._debug.suspendLodUpdate = value;
 }
 
 Map.prototype.update = function() {
@@ -76,30 +104,29 @@ Map.prototype.update = function() {
     this._activeTiles.forEach(function(tile) {
         tile.active = false;
     })
-    this._activeTiles.length = 0;
 
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function(tile) {
         tile.active = true;
-    })
+    });
 
     processTileLoadQueue(this);
     updateTileLoadProgress(this);
 }
 
-function clearTileLoadQueue(primitive) {
-        var debug = primitive._debug;
-        debug.maxDepth = 0;
-        debug.tilesVisited = 0;
-        debug.tilesCulled = 0;
-        debug.tilesRendered = 0;
-        debug.tilesWaitingForChildren = 0;
+function clearTileLoadQueue(map) {
+    var debug = map._debug;
+    debug.maxDepth = 0;
+    debug.tilesVisited = 0;
+    debug.tilesCulled = 0;
+    debug.tilesRendered = 0;
+    debug.tilesWaitingForChildren = 0;
 
-        primitive._tileLoadQueueHigh.length = 0;
-        primitive._tileLoadQueueMedium.length = 0;
-        primitive._tileLoadQueueLow.length = 0;
-    }
+    map._tileLoadQueueHigh.length = 0;
+    map._tileLoadQueueMedium.length = 0;
+    map._tileLoadQueueLow.length = 0;
+}
 
 
 Map.prototype.getLevelMaximumGeometricError = function(level) {
@@ -147,7 +174,7 @@ function selectTilesForRendering(map) {
     // Traverse in depth-first, near-to-far order.
     for (var i = 0, len = rootTiles.length; i < len; ++i) {
         tile = rootTiles[i];
-        map._tileReplacementQueue.sendMessage({ method: 'markTileRendered', item: tile });
+        map._tileReplacementQueue.markTileRendered(tile)
         if (!tile.renderable) {
             if (tile.needsLoading) {
                 map._tileLoadQueueHigh.push(tile);
@@ -171,8 +198,9 @@ function visitTile(map, tile) {
 
     ++debug.tilesVisited;
 
-    map._tileReplacementQueue.sendMessage({ method: 'markTileRendered', item: tile });
+    map._tileReplacementQueue.markTileRendered(tile);
 
+    // console.log(tile.stringify, screenSpaceError(map, tile));
     if (screenSpaceError(map, tile) < map.maximumScreenSpaceError) {
         // This tile meets SSE requirements, so render it.
         if (tile.needsLoading) {
@@ -212,7 +240,7 @@ function visitTile(map, tile) {
     } else {
         // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
         // render this tile in the meantime.
-        queueChildLoadNearToFar(map, cameraController.object.position, tile.children);
+        queueChildLoadNearToFar(map, map.cameraController.object.position, tile.children);
         addTileToRenderList(map, tile);
 
         if (tile.needsLoading) {
@@ -223,7 +251,7 @@ function visitTile(map, tile) {
 }
 
 function queueChildLoadNearToFar(map, cameraPosition, children) {
-    if (cameraPostion.x < children[2].right) {
+    if (cameraPosition.x < children[2].right) {
         if (cameraPosition.y < children[2].top) {
             // Camera in southwest quadrant
             queueChildTileLoad(map, children[2]);
@@ -253,7 +281,7 @@ function queueChildLoadNearToFar(map, cameraPosition, children) {
 }
 
 function queueChildTileLoad(map, childTile) {
-    map._tileReplacementQueue.sendMessage({ method: 'markTileRendered', item: childTile });
+    map._tileReplacementQueue.markTileRendered(childTile);
     if (childTile.needsLoading) {
         if (childTile.renderable) {
             map._tileLoadQueueLow.push(childTile);
@@ -296,20 +324,61 @@ function visitVisibleChildrenNearToFar(map, children) {
     }
 }
 
-function visitIfVisible(map, tile) {
-    // if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-        visitTile(map, tile);
-    // } else {
-    // 	++primitive._debug.tilesCulled;
-    // 	primitive._tileReplacementQueue.markTileRendered(tile);
+function computeTileVisibility(map, tile) {
+    var xmin, ymin, zmin, xmax, ymax, zmax;
+    var bbox = tile.bbox;
+    for (var i = 0; i < 8; ++i) {
+        var p = new THREE.Vector4(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
+                ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
+                ((i >> 2) & 1) ? bbox.zMin : bbox.zMax, 1);
+        var pc = map.cameraController.object.projectionMatrix * p;
+        pc /= pc.w;
+        var x = pc.x, y = pc.y, z = pc.z;
 
-    // 	// We've decided this tile is not visible, but if it's not fully loaded yet, we've made
-    // 	// this determination based on possibly-incorrect information.  We need to load this
-    // 	// culled tile with low priority just in case it turns out to be visible after all.
-    // 	if (tile.needsLoading) {
-    // 		primitive._tileLoadQueueLow.push(tile);
-    // 	}
-    // }
+        if (i == 0) {
+            xmin = xmax = x;
+            ymin = ymax = y;
+            zmin = zmax = z;
+        } else {
+            if (x < xmin) xmin = x;
+            if (x > xmax) xmax = x;
+            if (y < ymin) ymin = y;
+            if (y > ymax) ymax = y;
+            if (z < zmin) zmin = z;
+            if (z > zmax) zmax = z;
+        }
+    }
+    return new AABB({
+        xMin: -1,
+        yMin: -1,
+        zMin: -1,
+        xMax: 1,
+        yMax: 1,
+        zMax: 1
+    }).intersects(new AABB({
+        xMin: xmin,
+        yMin: ymin,
+        zMin: zmin,
+        xMax: xmax, 
+        yMax: ymax,
+        zMax: zmax
+    }));
+}
+
+function visitIfVisible(map, tile) {
+    if (computeTileVisibility(map, tile)) {
+        visitTile(map, tile);
+    } else {
+    	++map._debug.tilesCulled;
+    	map._tileReplacementQueue.markTileRendered(tile);
+
+    	// We've decided this tile is not visible, but if it's not fully loaded yet, we've made
+    	// this determination based on possibly-incorrect information.  We need to load this
+    	// culled tile with low priority just in case it turns out to be visible after all.
+    	if (tile.needsLoading) {
+    		map._tileLoadQueueLow.push(tile);
+    	}
+    }
 }
 
 function screenSpaceError(map, tile) {
@@ -319,9 +388,9 @@ function screenSpaceError(map, tile) {
 
     var maxGeometricError = map.getLevelMaximumGeometricError(tile.z);
 
+    // TODO: calculate distance from bounding box
     var distance = tile.center.distanceTo(map.cameraController.object.position);
-//    console.log('distance', tile.stringify, distance, maxGeometricError);
-    var height = map.cameraController.canvas.height;
+    var height = Math.max(map.cameraController.canvas.height, map.cameraController.canvas.width);
     var sseDenominator = 2 * Math.tan( map.cameraController.object.fov * Math.PI / (2 * 180) );
 
     var error = (maxGeometricError * height) / (distance * sseDenominator);
@@ -360,6 +429,7 @@ function screenSpaceError2D(map, tile) {
 
 function addTileToRenderList(map, tile) {
     map._activeTiles.push(tile);
+    ++map._debug.tilesRendered;
 }
 
 function processTileLoadQueue(map) {
@@ -373,7 +443,7 @@ function processTileLoadQueue(map) {
 
     // Remove any tiles that were not used this frame beyond the number
     // we're allowed to keep.
-    map._tileReplacementQueue.sendMessage({ method: 'trimTiles', item: map.tileCacheSize })
+    map._tileReplacementQueue.trimTiles(map.tileCacheSize);
 
     var endTime = Date.now() + map._loadQueueTimeSlice;
 
@@ -385,10 +455,10 @@ function processTileLoadQueue(map) {
 function processSinglePriorityLoadQueue(map, endTime, loadQueue) {
     for (var i = 0, len = loadQueue.length; i < len && Date.now() < endTime; ++i) {
         var tile = loadQueue[i];
-        map._tileReplacementQueue.sendMessage({ method: 'markTileRendered', item: tile });
+        map._tileReplacementQueue.markTileRendered(tile);
 
         // TODO: LoadTile
-        // tileProvider.loadTile(frameState, tile);
+        map._imagery.loadTile(tile);
     }
 }
 
@@ -416,4 +486,31 @@ function updateTileLoadProgress(map) {
             debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
         }
     }
+}
+
+Map.prototype.addPin = function(position) {
+    if (typeof this._currentMission === 'undefined') {
+        this._currentMission = new Polygon({ map: map });
+        this.missions.push(this._currentMission);
+    }
+
+    return this._currentMission.addPin(position);
+}
+
+Map.prototype.setView = function(position, zoom) {
+    console.log(this.cameraController.target.x, this.cameraController.target.z)
+    var px = sphericalMercator.px(position, 0);
+    px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
+    this.cameraController.target.copy(px);
+
+    var distance = Math.pow(0.5, (zoom-4)) * MapSettings.cameraDistance;
+    console.log(distance, zoom);
+    var c = new THREE.Vector3();
+    var pitch = this.cameraController.getAzimuthalAngle();
+    var bearing = this.cameraController.getPolarAngle();
+    c.x = px.x - Math.sin(bearing)*Math.sin(pitch)*distance;
+    c.z = px.z + Math.cos(bearing)*Math.sin(pitch)*distance;
+    c.y = Math.cos(pitch) * distance;
+
+    this.cameraController.object.position.copy(c);
 }

@@ -216,8 +216,6 @@ Ellipsoid.fromCartesian3 = function(cartesian, result) {
   */
 Ellipsoid.WGS84 = new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793);
 
-console.log('p', Ellipsoid.WGS84 )
-
 /**
   * An Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
   *

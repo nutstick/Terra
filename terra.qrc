@@ -7,5 +7,17 @@
         <file>Ellipsoid.js</file>
         <file>Map.js</file>
         <file>TileReplacementQueue.js</file>
+        <file>Imagery.js</file>
+        <file>DebugImagery.js</file>
+        <file>MapSettings.js</file>
+        <file>AABB.js</file>
+    </qresource>
+    <qresource prefix="/Object">
+        <file>Pin.js</file>
+        <file>Mission.js</file>
+        <file>Polygon.js</file>
+    </qresource>
+    <qresource prefix="/Utility">
+        <file>SphericalMercator.js</file>
     </qresource>
 </RCC>

@@ -1,9 +1,8 @@
+Qt.include("/Core/Map.js");
 Qt.include("three.js");
 Qt.include("/lib/OrbitControls.js");
 Qt.include("/lib/utilities.js");
 Qt.include("/lib/image.js");
-
-Qt.include("/Core/Map.js");
 
 //var include = {
 //    init: false,
@@ -41,7 +40,7 @@ function getZoom() {
 
 function mouseDownOnMarkers( picker ) {
 
-    var intersect = picker.intersectObjects(markers, true);
+    var intersect = picker.intersectObjects(map.currentMission.interactableObjects(), true);
 
     for (var i = 0; i < intersect.length; i++) {
         return intersect[i].object;
@@ -52,128 +51,24 @@ function mouseDownOnMarkers( picker ) {
 }
 
 function addMarker( position ) {
-
     var picker = new THREE.Raycaster();
 
     picker.setFromCamera(position, camera);
 
     var markerPosition = picker.intersectObject(plane)[0].point;
 
-    var markerGeometry = new THREE.CylinderGeometry( 3, 3, 8, 8, 1 );
+    console.log(JSON.stringify(markerPosition));
 
-    for (var i = 0; i < markerGeometry.vertices.length; i++) {
-        markerGeometry.vertices[i].y += 8;
-    }
+    return map.addPin(markerPosition);
+}
 
-    var lineGeometry = new THREE.Geometry();
+function setPositionFromMouse(pin, position) {
+    var picker = new THREE.Raycaster();
+    picker.setFromCamera(position, camera);
 
-    lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-    lineGeometry.vertices.push(new THREE.Vector3(0, 8, 0));
+    var markerPosition = picker.intersectObject(plane)[0].point;
 
-    var arrowGeometry = new THREE.CylinderGeometry( 4, 0, 6, 6, 1 );
-
-    for (var i = 0; i < arrowGeometry.vertices.length; i++) {
-        arrowGeometry.vertices[i].y += 3;
-    }
-
-    var marker = new THREE.Group();
-    marker.name = 'marker';
-
-    marker.head = new THREE.Mesh(
-        markerGeometry,
-        new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
-    );
-    marker.head.name = 'head';
-    marker.vLine = new THREE.LineSegments(
-        lineGeometry,
-        new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
-    );
-    marker.vLine.name = 'vLine';
-    marker.arrow = new THREE.Mesh(
-        arrowGeometry,
-        new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true })
-    );
-    marker.arrow.name = 'arrow';
-
-    if (markers.length !== 0) {
-        var cLineGeometry = new THREE.Geometry();
-
-        cLineGeometry.vertices.push(new THREE.Vector3().copy(markers[markers.length - 1].head.position));
-        cLineGeometry.vertices.push(new THREE.Vector3().copy(markerPosition));
-
-        marker.cLine = new THREE.LineSegments(
-            cLineGeometry,
-            new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
-        );
-        marker.cLine.name = 'cLine';
-
-        marker.add( marker.cLine );
-    }
-
-    marker.add( marker.head );
-    marker.add( marker.vLine );
-    marker.add( marker.arrow );
-
-    marker.setOffsetY = function(delta) {
-
-        this.head.position.y += delta;
-        this.vLine.geometry.vertices[1].y = this.head.position.y;
-        this.vLine.geometry.verticesNeedUpdate = true
-
-        if (this.cLine) {
-            this.cLine.geometry.vertices[1].y = this.head.position.y;
-            this.cLine.geometry.verticesNeedUpdate = true
-        }
-
-        if (this.index < markers.length - 1) {
-            markers[this.index + 1].cLine.geometry.vertices[0].y =  this.head.position.y;
-            markers[this.index + 1].cLine.geometry.verticesNeedUpdate = true
-        }
-
-    }
-
-    marker.setScale = function(scale) {
-
-        this.head.scale.set(scale, scale, scale);
-        this.arrow.scale.set(scale, scale, scale);
-
-    }
-
-    marker.setPositionFromMouse = function(position) {
-
-        var picker = new THREE.Raycaster();
-        picker.setFromCamera(position, camera);
-
-        var markerPosition = picker.intersectObject(plane)[0].point;
-
-        this.head.position.x = markerPosition.x;
-        this.head.position.z = markerPosition.z;
-        this.vLine.position.copy(markerPosition);
-        this.arrow.position.copy(markerPosition);
-
-
-        if (this.cLine) {
-            this.cLine.geometry.vertices[1].copy(this.head.position);
-            this.cLine.geometry.verticesNeedUpdate = true
-        }
-
-        if (this.index < markers.length - 1) {
-            markers[this.index + 1].cLine.geometry.vertices[0].copy(this.head.position);
-            markers[this.index + 1].cLine.geometry.verticesNeedUpdate = true
-        }
-
-    }
-
-    marker.head.position.copy(markerPosition);
-    marker.vLine.position.copy(markerPosition);
-    marker.arrow.position.copy(markerPosition);
-    marker.index = markers.length;
-
-    markers.push(marker);
-    scene.add(marker);
-
-    return marker;
-
+    pin.setPosition(markerPosition);
 }
 
 function assembleUrl(img, coords) {
@@ -384,6 +279,7 @@ function initializeGL(canvas, eventSource) {
 
     camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
     camera.position.z = 12000;
+    console.log(gridcalculation)
 
     controls = new THREE.OrbitControls( camera, eventSource, canvas );
 
@@ -417,7 +313,7 @@ function initializeGL(canvas, eventSource) {
 
     map = new Map({
         cameraController: controls,
-        tileReplacementQueue: tileReplacementQueue
+        scene: scene,
     });
 }
 
@@ -430,19 +326,28 @@ function resizeGL(canvas) {
 }
 
 function paintGL(canvas) {
-    if (markers.length > 0) {
+    // if (markers.length > 0) {
 
-        var scaleFactor = 120;
-        var scaleVector = new THREE.Vector3();
-        var scale = camera.position.y / scaleFactor;
+    //     var scaleFactor = 120;
+    //     var scaleVector = new THREE.Vector3();
+    //     var scale = camera.position.y / scaleFactor;
 
-        for (var i = 0; i < markers.length; i++) {
-            markers[i].setScale(scale);
-        }
+    //     for (var i = 0; i < markers.length; i++) {
+    //         markers[i].setScale(scale);
+    //     }
 
-    }
+    // }
 
     map.update();
+
+    var scaleFactor = 120;
+    var scale = camera.position.y / scaleFactor;
+
+    map.missions.forEach(function (mission) {
+        mission.pins.forEach(function(pin) {
+            pin.setScale(scale);
+        });
+    });
 
     // controls.update();
     renderer.render(scene, camera);
