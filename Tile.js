@@ -94,7 +94,10 @@ Tile.prototype.imageryDone = function(layerName) {
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
         var color = Math.random() * 0xffffff
-        var material = new THREE.MeshBasicMaterial({
+        var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
+           wireframe: true,
+           opacity:0
+        }) : new THREE.MeshBasicMaterial({
             map: this.data.texture,
             color: color
         });
@@ -205,12 +208,12 @@ Object.defineProperties(Tile.prototype, {
     },
     needsLoading : {
         get: function() {
-            return this.state < TileState.Done;
+            return this._state < TileState.Loading;
         }
     },
     renderable: {
         get: function() {
-            return this.state >= TileState.Done;
+            return this._state >= TileState.Done;
         }
     },
     center: {

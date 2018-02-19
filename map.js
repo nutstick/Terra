@@ -108,6 +108,7 @@ Map.prototype.update = function() {
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function(tile) {
+//        console.log(tile._entity)
         tile.active = true;
     });
 
@@ -174,7 +175,7 @@ function selectTilesForRendering(map) {
     // Traverse in depth-first, near-to-far order.
     for (var i = 0, len = rootTiles.length; i < len; ++i) {
         tile = rootTiles[i];
-        map._tileReplacementQueue.markTileRendered(tile)
+        map._tileReplacementQueue.markTileRendered(tile);
         if (!tile.renderable) {
             if (tile.needsLoading) {
                 map._tileLoadQueueHigh.push(tile);

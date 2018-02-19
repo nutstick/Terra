@@ -109,3 +109,15 @@ Pin.prototype.setPosition = function(position) {
     // TODO: line between pin update
     this._mission.updatePin(this._index);
 }
+
+Object.defineProperties(Pin.prototype, {
+    coordinate: {
+        get: function() {
+            var ll = defaultSphericalMercator.ll([this.position.x, this.position.z], 0);
+            var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
+            ll.attitude = this.height * meterPerPixel;
+
+            return ll;
+        }
+    }
+})

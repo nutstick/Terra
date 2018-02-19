@@ -1,6 +1,10 @@
 Qt.include('/three.js')
 Qt.include('/Object/Pin.js')
 
+var defaultSphericalMercator = new SphericalMercator({
+    size: MapSettings.basePlaneDimension
+});
+
 function Polygon(options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
@@ -9,6 +13,8 @@ function Polygon(options) {
     this.pins = [];
 
     this.lines = [];
+
+    this.grid = [];
     this._closeLine = undefined;
 }
 
@@ -63,12 +69,15 @@ Polygon.prototype.updatePin = function(index) {
         this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
         this.lines[index].geometry.verticesNeedUpdate = true;
     }
-    if (index === 0) {
-        this._closeLine.geometry.vertices[1].copy(this.pins[index].head.position);
-        this._closeLine.geometry.verticesNeedUpdate = true;
-    } else if (index + 1 === this.pins.length) {
-        this._closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
-        this._closeLine.geometry.verticesNeedUpdate = true;
+
+    if (this.pins.length > 1) {
+        if (index === 0) {
+            this._closeLine.geometry.vertices[1].copy(this.pins[index].head.position);
+            this._closeLine.geometry.verticesNeedUpdate = true;
+        } else if (index + 1 === this.pins.length) {
+            this._closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
+            this._closeLine.geometry.verticesNeedUpdate = true;
+        }
     }
 }
 
@@ -86,6 +95,24 @@ Polygon.prototype.interactableObjects = function() {
 }
 
 Polygon.prototype.generateGrid = function() {
-    console.log(gridcalculation);
-    gridcalculation.genGridInsideBound([], 4, 0);
+    var grid = gridcalculation.genGridInsideBound(this.pins.map(function(pin) {
+        return pin.coordinate;
+    }), 4000, 0);
+
+    console.log(grid.length)
+
+    var lineGeometry = new THREE.Geometry();
+    for (var i = 0; i < grid.length; i++) {
+        var px = defaultSphericalMercator.px(grid[i], 0);
+        console.log(px.x, px.y, grid[i].latitude, grid[i].longitude)
+        lineGeometry.vertices.push(new THREE.Vector3(px.x, 50, px.y));
+    }
+    this.grid = new THREE.LineSegments(
+        lineGeometry,
+        new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+    );
+
+    this._map.scene.add(this.grid);
+
+    return grid;
 }

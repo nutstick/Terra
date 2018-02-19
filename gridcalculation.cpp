@@ -7,7 +7,7 @@ GridCalculation::GridCalculation(QObject *parent)
 {
 }
 
-QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle)
+QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle)
 {
     QList<QGeoCoordinate> bound;
     for (const QVariant point : bound_) {
@@ -19,8 +19,13 @@ QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QVariantList bound_, f
     QList<QGeoCoordinate> returnValue;
 
     // Convert polygon to Qt coordinate system (y positive is down)
-    if(bound.count() <= 2)
-        return returnValue;
+    if(bound.count() <= 2) {
+        QList<QVariant> output;
+        foreach (QGeoCoordinate coor, returnValue) {
+            output.append(QVariant::fromValue(coor));
+        }
+        return output;
+    }
 
     QGeoCoordinate tangentOrigin = bound[0];
     polygonFromCoordinate(tangentOrigin, bound, polygonPoints);
@@ -35,15 +40,20 @@ QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QVariantList bound_, f
     }
 
     // Generate grid
-    gridGenerator(polygonPoints, interimPoints, gridSpace, gridAngle);
+    gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
     for (int i=0; i<gridPoints.count(); i++) {
         QPointF& point = gridPoints[i];
         QGeoCoordinate geoCoord;
         LtpToGeo(-point.y(), point.x(), -10, tangentOrigin, &geoCoord);
         returnValue += geoCoord;
     }
+    qDebug() << returnValue;
 
-    return returnValue;
+    QList<QVariant> output;
+    foreach (QGeoCoordinate coor, returnValue) {
+        output.append(QVariant::fromValue(coor));
+    }
+    return output;
 }
 
 void GridCalculation::GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double *x, double *y, double *z)
@@ -205,6 +215,7 @@ void GridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<Q
     // Make sure all lines are going to same direction. Polygon intersection leads to line which
     // can be in varied directions depending on the order of the intesecting sides.
     QList<QLineF> resultLines;
+
     adjustLineDirection(intersectLines, resultLines);
 
     // Turn into a path

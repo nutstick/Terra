@@ -76,6 +76,7 @@ function remove(tileReplacementQueue, item) {
  */
 TileReplacementQueue.prototype.markTileRendered = function(item) {
     var head = this.head;
+    // console.log(JSON.stringify(head), JSON.stringify(item))
     if (head === item) {
         if (item === this._lastBeforeStartOfFrame) {
             this._lastBeforeStartOfFrame = item.replacementNext;
@@ -84,7 +85,6 @@ TileReplacementQueue.prototype.markTileRendered = function(item) {
     }
 
     ++this.count;
-
     if (typeof head === 'undefined') {
         // no other tiles in the list
         item.replacementPrevious = undefined;

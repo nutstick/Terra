@@ -48,8 +48,8 @@ SphericalMercator.prototype.px = function(ll, zoom) {
     var y = (d + 0.5 * Math.log((1 + f) / (1 - f)) * (-this.Cc[zoom]));
     if (x > this.Ac[zoom]) x = this.Ac[zoom];
     if (y > this.Ac[zoom]) y = this.Ac[zoom];
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
+//    if (x < 0) x = 0;
+//    if (y < 0) y = 0;
     return new THREE.Vector2(x, y);
 };
 
@@ -61,5 +61,8 @@ SphericalMercator.prototype.ll = function(px, zoom) {
     var g = (px[1] - this.zc[zoom]) / (-this.Cc[zoom]);
     var lon = (px[0] - this.zc[zoom]) / this.Bc[zoom];
     var lat = R2D * (2 * Math.atan(Math.exp(g)) - 0.5 * Math.PI);
-    return [lon, lat];
+    var ll = QtPositioning.coordinate();
+    ll.longitude = lon;
+    ll.latitude = lat;
+    return ll;
 };

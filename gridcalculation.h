@@ -19,7 +19,7 @@ class GridCalculation : public QObject
     Q_OBJECT
 public:
     explicit GridCalculation(QObject *parent = nullptr);
-    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle);
+    Q_INVOKABLE QVariantList genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle);
 //    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
 
 private:

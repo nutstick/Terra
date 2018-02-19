@@ -184,7 +184,7 @@ function makeMesh(d) {
             function() {},
             // onError function
             function(err) {
-                console.log(err)
+                console.log('error', JSON.stringify(err))
             }
         );
 
@@ -239,7 +239,7 @@ function makeMesh(d) {
             function() {},
             // onError function
             function(err) {
-                console.log(err)
+                console.log('error', err)
             }
         );
 
@@ -284,7 +284,7 @@ function initializeGL(canvas, eventSource) {
     controls = new THREE.OrbitControls( camera, eventSource, canvas );
 
     raycaster = new THREE.Raycaster();
-
+    
     var basePlane = new THREE.PlaneBufferGeometry(basePlaneDimension*100, basePlaneDimension*100, 1, 1);
     var mat = new THREE.MeshBasicMaterial({
         wireframe: true,
@@ -313,7 +313,7 @@ function initializeGL(canvas, eventSource) {
 
     map = new Map({
         cameraController: controls,
-        scene: scene,
+        scene: scene
     });
 }
 
@@ -337,6 +337,8 @@ function paintGL(canvas) {
     //     }
 
     // }
+
+//    console.log(JSON.stringify(camera.position))
 
     map.update();
 

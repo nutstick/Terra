@@ -35,16 +35,7 @@ Window {
             var time = Date.now();
             canvas3d.parserRequests++
             if(messageObject.makeMesh) GLCode.makeMesh(messageObject.makeMesh)
-            else console.log(messageObject)
-        }
-    }
-
-    WorkerScript {
-        id: tileReplacementQueue
-        source: "Core/TileReplacementQueue.js"
-
-        onMessage: {
-            console.log(messageObject)
+            else console.log('parser', messageObject)
         }
     }
 
@@ -130,7 +121,8 @@ Window {
         anchors.right: parent.left
 
         onClicked: {
-            GLCode.map._currentMission.generateGrid();
+            var points = GLCode.map._currentMission.generateGrid();
+            console.log(points.length)
         }
 
         text: 'Grid'

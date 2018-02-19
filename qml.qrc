@@ -2,7 +2,7 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>glcode.js</file>
-				<file>three.js</file>
+        <file>three.js</file>
         <file>ParserWorkerScript.qml</file>
         <file>ControlEventSource.qml</file>
         <file>Compass.qml</file>
@@ -14,7 +14,7 @@
         <file>updatetile.js</file>
         <file>parseelevation.js</file>
     </qresource>
-    <qresource lang="js" prefix="/lib">
+    <qresource prefix="/lib" lang="js">
         <file>sm.js</file>
         <file>tilecover.js</file>
         <file alias="utilities.js">utilities.js</file>
