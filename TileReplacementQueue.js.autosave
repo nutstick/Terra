@@ -10,7 +10,7 @@ function TileReplacementQueue() {
  * list were used last frame and must not be unloaded.
  */
 TileReplacementQueue.prototype.markStartOfRenderFrame = function() {
-    console.log('h', this.head)
+    console.log('h',    this.head)
     this._lastBeforeStartOfFrame = this.head;
 };
 

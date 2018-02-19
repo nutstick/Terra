@@ -1,7 +1,7 @@
 Qt.include("three.js")
 
 function Imagery(options) {
-    if (!options) throw new Error('No option provided');
+    if (!options) throw new Error('No options provided');
 
     this._maxLoad = options._maxLoad || 1;
     this._loading = false;

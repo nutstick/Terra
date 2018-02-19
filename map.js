@@ -3,8 +3,9 @@ Qt.include("/Core/Tile.js")
 Qt.include("/Core/TilingScheme.js")
 Qt.include("/Core/TileReplacementQueue.js");
 Qt.include("/Core/AABB.js");
-Qt.include("/Core/Imagery.js");
-Qt.include("/Core/DebugImagery.js");
+//Qt.include("/Core/Imagery.js");
+//Qt.include("/Core/DebugImagery.js");
+Qt.include("/Core/TextureGenerator.js");
 Qt.include("/Utility/SphericalMercator.js");
 Qt.include("/Object/Mission.js");
 Qt.include("/Object/Polygon.js");
@@ -35,7 +36,9 @@ function Map(options) {
 
     this._tileReplacementQueue = new TileReplacementQueue();
 
-    this._imagery = new Imagery({});
+    // Image downloader
+    // this._imagery = new Imagery({});
+    this._textureGenerator = new TextureGenerator({ map: this });
     
     this._levelZeroTiles = undefined;
     this._loadQueueTimeSlice = 5.0;
@@ -49,7 +52,7 @@ function Map(options) {
 
     this.maximumScreenSpaceError = options.maximumScreenSpaceError || 2;
 
-    this.tileCacheSize = options.tileCacheSize || 512;
+    this.tileCacheSize = options.tileCacheSize || 128;
 
     this._lastTileLoadQueueLength = 0;
 
@@ -100,6 +103,7 @@ Map.prototype.suspendLodUpdate = function(value) {
 
 Map.prototype.update = function() {
     clearTileLoadQueue(this);
+    this._tileReplacementQueue.markStartOfRenderFrame();
 
     this._activeTiles.forEach(function(tile) {
         tile.active = false;
@@ -114,6 +118,8 @@ Map.prototype.update = function() {
 
     processTileLoadQueue(this);
     updateTileLoadProgress(this);
+
+    this._textureGenerator.load();
 }
 
 function clearTileLoadQueue(map) {
@@ -459,7 +465,7 @@ function processSinglePriorityLoadQueue(map, endTime, loadQueue) {
         map._tileReplacementQueue.markTileRendered(tile);
 
         // TODO: LoadTile
-        map._imagery.loadTile(tile);
+        // map._imagery.loadTile(tile);
     }
 }
 

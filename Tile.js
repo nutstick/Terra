@@ -93,13 +93,11 @@ Tile.prototype.imageryDone = function(layerName) {
     if (isDone) {
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
-        var color = Math.random() * 0xffffff
         var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
            wireframe: true,
            opacity:0
         }) : new THREE.MeshBasicMaterial({
             map: this.data.texture,
-            color: color
         });
 
         var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
@@ -236,6 +234,11 @@ Object.defineProperties(Tile.prototype, {
         get: function() {
             return this._x + "/" + this._y + "/" + this._z;
         }
+    },
+    eligibleForUnloading: {
+        get: function() {
+            return true;
+        }
     }
 });
 
@@ -244,8 +247,10 @@ Tile.prototype.freeResources = function() {
     this.data = {};
     this._entity = undefined;
 
-    for (var i = 0; i < 4; ++i) {
-        this._children[i].freeResources();
-        this._children[i] = undefined;
+    if (this._children) {
+        for (var i = 0; i < 4; ++i) {
+            this._children[i].freeResources();
+            this._children[i] = undefined;
+        }
     }
 };
