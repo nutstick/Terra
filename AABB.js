@@ -66,6 +66,6 @@ AABB.createAABBForTile = function(tile) {
         yMin: 0,
         yMax: 0,
         zMin: zMin,
-        zMax: 0
+        zMax: zMax
     });
 }

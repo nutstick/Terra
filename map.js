@@ -338,9 +338,9 @@ function computeTileVisibility(map, tile) {
         var p = new THREE.Vector4(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
                 ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
                 ((i >> 2) & 1) ? bbox.zMin : bbox.zMax, 1);
-        var pc = map.cameraController.object.projectionMatrix * p;
-        pc /= pc.w;
-        var x = pc.x, y = pc.y, z = pc.z;
+        p.applyMatrix4(map.cameraController.object.projectionMatrix);
+        p.divideScalar(p.w);
+        var x = p.x, y = p.y, z = p.z;
 
         if (i == 0) {
             xmin = xmax = x;
@@ -355,6 +355,7 @@ function computeTileVisibility(map, tile) {
             if (z > zmax) zmax = z;
         }
     }
+
     return new AABB({
         xMin: -1,
         yMin: -1,
@@ -450,7 +451,7 @@ function processTileLoadQueue(map) {
 
     // Remove any tiles that were not used this frame beyond the number
     // we're allowed to keep.
-    map._tileReplacementQueue.trimTiles(map.tileCacheSize);
+//    map._tileReplacementQueue.trimTiles(map.tileCacheSize);
 
     var endTime = Date.now() + map._loadQueueTimeSlice;
 
