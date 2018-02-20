@@ -130,14 +130,14 @@ Window {
         anchors.topMargin: 0
     }
 
-    Text {
-        id: progress
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "white"
+//    Text {
+//        id: progress
+//        anchors.verticalCenter: parent.verticalCenter
+//        anchors.horizontalCenter: parent.horizontalCenter
+//        color: "white"
 
-        text: qsTr("loading")
-    }
+//        text: qsTr("loading")
+//    }
 
 //    PlannerView {
 //        property real dHeight: 200
