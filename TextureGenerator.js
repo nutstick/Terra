@@ -14,7 +14,7 @@ function TextureGenerator(options) {
 TextureGenerator.prototype.url = function(x, y, z) {
     var serverIndex = 2*(x%2)+y%2
     var server = ['a','b','c','d'][serverIndex]
-    return 'https://'+server+'.tiles.mapbox.com/v4/mapbox.streets-satellite/'+z+'/'+x+'/'+y
+    return 'https://'+server+'.tiles.mapbox.com/v4/mapbox.satellite/'+z+'/'+x+'/'+y
         +'@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
 }
 
