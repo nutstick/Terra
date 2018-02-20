@@ -10,7 +10,6 @@ function TileReplacementQueue() {
  * list were used last frame and must not be unloaded.
  */
 TileReplacementQueue.prototype.markStartOfRenderFrame = function() {
-    console.log('h', this.head)
     this._lastBeforeStartOfFrame = this.head;
 };
 
@@ -24,12 +23,10 @@ TileReplacementQueue.prototype.markStartOfRenderFrame = function() {
 TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
     var tileToTrim = this.tail;
     var keepTrimming = true;
-    console.log(tileToTrim, this.count, this._lastBeforeStartOfFrame)
     while (keepTrimming &&
            typeof this._lastBeforeStartOfFrame !== 'undefined' &&
            this.count > maximumTiles &&
            typeof tileToTrim !== 'undefined') {
-        console.log('p');
         // Stop trimming after we process the last tile not used in the
         // current frame.
         keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;

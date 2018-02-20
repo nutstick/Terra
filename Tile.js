@@ -186,6 +186,18 @@ Object.defineProperties(Tile.prototype, {
                 });
             }
 
+            for (var i = 0; i < 4; ++i) {
+                if (typeof this._children[i] === 'undefined') {
+                    this._children[i] = new Tile({
+                        x: this._x * 2 + i % 2,
+                        y: this._y * 2 + (i / 2) % 2,
+                        z: this._z + 1,
+                        parent: this,
+                        scene: this._scene
+                    });
+                }
+            }
+
             return this._children;
         }
     },
