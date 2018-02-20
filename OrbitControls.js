@@ -17,7 +17,7 @@ function OrbitConstraint ( object ) {
 
     // Limits to how far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
-    this.maxDistance = 12000*6400;
+    this.maxDistance = 12000;
 
     // Limits to how far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
