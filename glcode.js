@@ -55,6 +55,12 @@ function addMarker( position ) {
 
     picker.setFromCamera(position, camera);
 
+
+    var p = picker.intersectObjects(map._activeTiles.map(function(tile) {
+        return tile._entity;
+    }));
+    console.log(p.map(function(x) { return x.object.tile.stringify }))
+
     var markerPosition = picker.intersectObject(plane)[0].point;
 
     console.log(JSON.stringify(markerPosition));

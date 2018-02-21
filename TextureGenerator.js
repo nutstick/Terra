@@ -1,3 +1,4 @@
+
 Qt.include("three.js")
 
 function TextureGenerator(options) {
@@ -9,6 +10,15 @@ function TextureGenerator(options) {
 
     this._loading = 0;
     this._loadingThisTick = 0;
+
+    this.debug = {
+        high: 0,
+        medium: 0,
+        low: 0,
+        lastHigh: 0,
+        lastMedium: 0,
+        lastLow: 0
+    };
 }
 
 TextureGenerator.prototype.url = function(x, y, z) {
@@ -21,6 +31,7 @@ TextureGenerator.prototype.url = function(x, y, z) {
 TextureGenerator.prototype.loadTile = function(tile) {
     if (this._loadingThisTick <= 0) return;
     if (!tile.needsLoading) return;
+    console.log(tile.stringify)
 
     var scope = this;
     this._loadingThisTick--;
@@ -45,14 +56,33 @@ TextureGenerator.prototype.loadTile = function(tile) {
 }
 
 TextureGenerator.prototype.load = function() {
+    // updateLoadingProgress(this);
+
     this._loadingThisTick = this._maxLoad - this._loading;
     for (var i = 0; i < map._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
         this.loadTile(map._tileLoadQueueHigh[i]);
     }
     for (var i = 0; i < map._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
-        this.loadTile(map._tileLoadQueueHigh[i]);
+        this.loadTile(map._tileLoadQueueMedium[i]);
     }
     for (var i = 0; i < map._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
-        this.loadTile(map._tileLoadQueueHigh[i]);
+        this.loadTile(map._tileLoadQueueLow[i]);
+    }
+}
+
+function updateLoadingProgress(textureGenerator) {
+    var debug = textureGenerator.debug;
+    debug.high = textureGenerator._map._tileLoadQueueHigh.length;
+    debug.medium = textureGenerator._map._tileLoadQueueMedium.length;
+    debug.low = textureGenerator._map._tileLoadQueueLow.length;
+
+    if (debug.high !== debug.lastHigh ||
+        debug.medium !== debug.lastMedium ||
+        debug.low !== debug.lastLow) {
+        
+        console.log('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
+        debug.lastHigh = debug.high;
+        debug.lastMedium = debug.medium;
+        debug.lastLow = debug.low;
     }
 }

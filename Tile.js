@@ -97,6 +97,7 @@ Tile.prototype.imageryDone = function(layerName) {
            wireframe: true,
            opacity:0
         }) : new THREE.MeshBasicMaterial({
+            wireframe: true,
             map: this.data.texture,
         });
 
@@ -120,6 +121,7 @@ Tile.prototype.imageryDone = function(layerName) {
         geometry.translate(xOffset, 0, yOffset);
 
         this._entity = new THREE.Mesh(geometry, material);
+        this._entity.tile = this;
 
         this._scene.add(this._entity);
 

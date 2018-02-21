@@ -184,6 +184,7 @@ function selectTilesForRendering(map) {
         map._tileReplacementQueue.markTileRendered(tile);
         if (!tile.renderable) {
             if (tile.needsLoading) {
+                console.log(tile.stringify)
                 map._tileLoadQueueHigh.push(tile);
             }
             ++debug.tilesWaitingForChildren;
@@ -207,6 +208,10 @@ function visitTile(map, tile) {
 
     map._tileReplacementQueue.markTileRendered(tile);
 
+    if (tile.z > debug.maxDepth) {
+        debug.maxDepth = tile.z;
+    }
+
     // console.log(tile.stringify, screenSpaceError(map, tile));
     if (screenSpaceError(map, tile) < map.maximumScreenSpaceError) {
         // This tile meets SSE requirements, so render it.
@@ -220,6 +225,7 @@ function visitTile(map, tile) {
     var allAreRenderable = tile.children[0].renderable && tile.children[1].renderable && tile.children[2].renderable && tile.children[3].renderable;
     var allAreUpsampled = tile.children[0].upsampledFromParent && tile.children[1].upsampledFromParent
     && tile.children[2].upsampledFromParent && tile.children[3].upsampledFromParent;
+    // console.log(tile.stringify, allAreRenderable, allAreUpsampled)
     if (allAreRenderable) {
         if (allAreUpsampled) {
             // No point in rendering the children because they're all upsampled.  Render this tile instead.
@@ -247,7 +253,7 @@ function visitTile(map, tile) {
     } else {
         // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
         // render this tile in the meantime.
-        queueChildLoadNearToFar(map, map.cameraController.object.position, tile.children);
+        queueChildLoadNearToFar(map, map.cameraController.target, tile.children);
         addTileToRenderList(map, tile);
 
         if (tile.needsLoading) {
@@ -258,33 +264,11 @@ function visitTile(map, tile) {
 }
 
 function queueChildLoadNearToFar(map, cameraPosition, children) {
-    if (cameraPosition.x < children[2].right) {
-        if (cameraPosition.y < children[2].top) {
-            // Camera in southwest quadrant
-            queueChildTileLoad(map, children[2]);
-            queueChildTileLoad(map, children[0]);
-            queueChildTileLoad(map, children[1]);
-            queueChildTileLoad(map, children[3]);
-        } else {
-            // Camera in northwest quadrant
-            queueChildTileLoad(map, children[0]);
-            queueChildTileLoad(map, children[1]);
-            queueChildTileLoad(map, children[2]);
-            queueChildTileLoad(map, children[3]);
-        }
-    } else if (cameraPosition.y < children[2].top) {
-        // Camera southeast quadrant
-        queueChildTileLoad(map, children[3]);
-        queueChildTileLoad(map, children[0]);
-        queueChildTileLoad(map, children[1]);
-        queueChildTileLoad(map, children[2]);
-    } else {
-        // Camera in northeast quadrant
-        queueChildTileLoad(map, children[2]);
-        queueChildTileLoad(map, children[0]);
-        queueChildTileLoad(map, children[1]);
-        queueChildTileLoad(map, children[3]);
-    }
+    children.sort(function(child) {
+        return child.bbox.distanceFromPoint(cameraPosition);
+    }).forEach(function(child) {
+        queueChildTileLoad(map, child);
+    });
 }
 
 function queueChildTileLoad(map, childTile) {
@@ -302,38 +286,21 @@ function queueChildTileLoad(map, childTile) {
 function visitVisibleChildrenNearToFar(map, children) {
     var cameraPosition = map.cameraController.target;
 
-    if (cameraPosition.x < children[2].right) {
-        if (cameraPosition.y < children[2].top) {
-            // Camera in southwest quadrant
-            visitIfVisible(map, children[2]);
-            visitIfVisible(map, children[0]);
-            visitIfVisible(map, children[1]);
-            visitIfVisible(map, children[3]);
-        } else {
-            // Camera in northwest quadrant
-            visitIfVisible(map, children[0]);
-            visitIfVisible(map, children[1]);
-            visitIfVisible(map, children[2]);
-            visitIfVisible(map, children[3]);
-        }
-    } else if (cameraPosition.y < children[2].top) {
-        // Camera southeast quadrant
-        visitIfVisible(map, children[3]);
-        visitIfVisible(map, children[0]);
-        visitIfVisible(map, children[1]);
-        visitIfVisible(map, children[2]);
-    } else {
-        // Camera in northeast quadrant
-        visitIfVisible(map, children[2]);
-        visitIfVisible(map, children[0]);
-        visitIfVisible(map, children[1]);
-        visitIfVisible(map, children[3]);
-    }
+    children.sort(function(child) {
+        return child.bbox.distanceFromPoint(cameraPosition);
+    }).forEach(function(child) {
+        visitIfVisible(map, child);
+    });
 }
 
-function computeTileVisibility(map, tile) {
+function computeTileVisibility(map, tile, debug) {
     var xmin, ymin, zmin, xmax, ymax, zmax;
+
     var bbox = tile.bbox;
+
+    if (debug) {
+        console.log(JSON.stringify(bbox));
+    }
     for (var i = 0; i < 8; ++i) {
         var p = new THREE.Vector4(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
                 ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
@@ -342,7 +309,7 @@ function computeTileVisibility(map, tile) {
         p.divideScalar(p.w);
         var x = p.x, y = p.y, z = p.z;
 
-        if (i == 0) {
+        if (i === 0) {
             xmin = xmax = x;
             ymin = ymax = y;
             zmin = zmax = z;
@@ -354,6 +321,16 @@ function computeTileVisibility(map, tile) {
             if (z < zmin) zmin = z;
             if (z > zmax) zmax = z;
         }
+    }
+    if (debug) {
+        console.log(JSON.stringify({
+                                       xMin: xmin,
+                                       yMin: ymin,
+                                       zMin: zmin,
+                                       xMax: xmax,
+                                       yMax: ymax,
+                                       zMax: zmax
+                                   }));
     }
 
     return new AABB({
@@ -374,6 +351,18 @@ function computeTileVisibility(map, tile) {
 }
 
 function visitIfVisible(map, tile) {
+    if (tile.x === 24 && tile.y === 14 && tile.z === 5) {
+        console.log('p1', tile.stringify, computeTileVisibility(map, tile, true))
+    }
+    if (tile.x === 24 && tile.y === 15 && tile.z === 5) {
+        console.log('p2', tile.stringify, computeTileVisibility(map, tile, true))
+    }
+    if (tile.x === 25 && tile.y === 14 && tile.z === 5) {
+        console.log('p3', tile.stringify, computeTileVisibility(map, tile, true))
+    }
+    if (tile.x === 25 && tile.y === 15 && tile.z === 5) {
+        console.log('p4', tile.stringify, computeTileVisibility(map, tile, true))
+    }
     if (computeTileVisibility(map, tile)) {
         visitTile(map, tile);
     } else {
@@ -437,6 +426,10 @@ function screenSpaceError2D(map, tile) {
 
 function addTileToRenderList(map, tile) {
     map._activeTiles.push(tile);
+
+    if (tile.x === 25 && tile.y === 15 && tile.z === 5) {
+        console.log('OMG')
+    }
     ++map._debug.tilesRendered;
 }
 
@@ -506,7 +499,7 @@ Map.prototype.addPin = function(position) {
 }
 
 Map.prototype.setView = function(position, zoom) {
-    console.log(this.cameraController.target.x, this.cameraController.target.z)
+    // console.log(this.cameraController.target.x, this.cameraController.target.z)
     var px = sphericalMercator.px(position, 0);
     px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
     this.cameraController.target.copy(px);
@@ -514,8 +507,8 @@ Map.prototype.setView = function(position, zoom) {
     var distance = Math.pow(0.5, (zoom-4)) * MapSettings.cameraDistance;
     console.log(distance, zoom);
     var c = new THREE.Vector3();
-    var pitch = this.cameraController.getAzimuthalAngle();
-    var bearing = this.cameraController.getPolarAngle();
+    var bearing = this.cameraController.getAzimuthalAngle();
+    var pitch = this.cameraController.getPolarAngle();
     c.x = px.x - Math.sin(bearing)*Math.sin(pitch)*distance;
     c.z = px.z + Math.cos(bearing)*Math.sin(pitch)*distance;
     c.y = Math.cos(pitch) * distance;
