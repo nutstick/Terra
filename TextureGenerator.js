@@ -31,7 +31,6 @@ TextureGenerator.prototype.url = function(x, y, z) {
 TextureGenerator.prototype.loadTile = function(tile) {
     if (this._loadingThisTick <= 0) return;
     if (!tile.needsLoading) return;
-    console.log(tile.stringify)
 
     var scope = this;
     this._loadingThisTick--;

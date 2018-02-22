@@ -105,16 +105,21 @@ Map.prototype.update = function() {
     clearTileLoadQueue(this);
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    this._activeTiles.forEach(function(tile) {
-        tile.active = false;
-    })
+    // console.log('Before rendering', this._activeTiles.length)
+   this._activeTiles.forEach(function(tile) {
+       tile.active = false;
+   });
+   this.scene.children.forEach(function(child) {
+       if (!child.tile) return;
+       child.tile.active = false;
+   })
 
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function(tile) {
-//        console.log(tile._entity)
         tile.active = true;
     });
+    // console.log('After rendering', this._activeTiles.length)
 
     processTileLoadQueue(this);
     updateTileLoadProgress(this);
@@ -184,11 +189,10 @@ function selectTilesForRendering(map) {
         map._tileReplacementQueue.markTileRendered(tile);
         if (!tile.renderable) {
             if (tile.needsLoading) {
-                console.log(tile.stringify)
                 map._tileLoadQueueHigh.push(tile);
             }
             ++debug.tilesWaitingForChildren;
-        } else if (1 || tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+        } else if (computeTileVisibility(map, tile)) {
             visitTile(map, tile);
         } else {
             if (tile.needsLoading) {
@@ -200,8 +204,6 @@ function selectTilesForRendering(map) {
 }
 
 function visitTile(map, tile) {
-    if (tile.z > 22) return;
-
     var debug = map._debug;
 
     ++debug.tilesVisited;
@@ -286,83 +288,47 @@ function queueChildTileLoad(map, childTile) {
 function visitVisibleChildrenNearToFar(map, children) {
     var cameraPosition = map.cameraController.target;
 
-    children.sort(function(child) {
+    // TODO: is .forEach is order
+    var sortedChild = children.sort(function(child) {
         return child.bbox.distanceFromPoint(cameraPosition);
-    }).forEach(function(child) {
-        visitIfVisible(map, child);
     });
+
+    for (var i = 0; i < sortedChild.length; ++i) {
+        visitIfVisible(map, sortedChild[i]);
+    };
 }
 
 function computeTileVisibility(map, tile, debug) {
     var xmin, ymin, zmin, xmax, ymax, zmax;
 
     var bbox = tile.bbox;
+    var camera = map.cameraController.object;
 
-    if (debug) {
-        console.log(JSON.stringify(bbox));
-    }
-    for (var i = 0; i < 8; ++i) {
-        var p = new THREE.Vector4(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
-                ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
-                ((i >> 2) & 1) ? bbox.zMin : bbox.zMax, 1);
-        p.applyMatrix4(map.cameraController.object.projectionMatrix);
-        p.divideScalar(p.w);
-        var x = p.x, y = p.y, z = p.z;
+    var matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    var frustum = new THREE.Frustum().setFromMatrix(matrix);
 
-        if (i === 0) {
-            xmin = xmax = x;
-            ymin = ymax = y;
-            zmin = zmax = z;
-        } else {
-            if (x < xmin) xmin = x;
-            if (x > xmax) xmax = x;
-            if (y < ymin) ymin = y;
-            if (y > ymax) ymax = y;
-            if (z < zmin) zmin = z;
-            if (z > zmax) zmax = z;
-        }
-    }
-    if (debug) {
-        console.log(JSON.stringify({
-                                       xMin: xmin,
-                                       yMin: ymin,
-                                       zMin: zmin,
-                                       xMax: xmax,
-                                       yMax: ymax,
-                                       zMax: zmax
-                                   }));
-    }
+    // console.log(JSON.stringify(bbox))
+    // console.log(matrix.elements[0], matrix.elements[1], matrix.elements[2], matrix.elements[3], matrix.elements[4],
+    //     matrix.elements[5], matrix.elements[6], matrix.elements[7], matrix.elements[8], matrix.elements[9],
+    //     matrix.elements[0], matrix.elements[10], matrix.elements[11], matrix.elements[12]);
+    // console.log('--');
 
-    return new AABB({
-        xMin: -1,
-        yMin: -1,
-        zMin: -1,
-        xMax: 1,
-        yMax: 1,
-        zMax: 1
-    }).intersects(new AABB({
-        xMin: xmin,
-        yMin: ymin,
-        zMin: zmin,
-        xMax: xmax, 
-        yMax: ymax,
-        zMax: zmax
-    }));
+    return frustum.intersectsObject(tile._entity);
+
+//    frustum.setFromMatrix(matrix);
+
+//    var intersects = false;
+//    for (var i = 0; i < 8; ++i) {
+//        var p = new THREE.Vector3(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
+//                ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
+//                ((i >> 2) & 1) ? bbox.zMin : bbox.zMax);
+//        console.log('contains', i, frustum.containsPoint(p), JSON.stringify(p.project(camera)));
+//        intersects = intersects || frustum.containsPoint(p);
+//    }
+//    return intersects;
 }
 
 function visitIfVisible(map, tile) {
-    if (tile.x === 24 && tile.y === 14 && tile.z === 5) {
-        console.log('p1', tile.stringify, computeTileVisibility(map, tile, true))
-    }
-    if (tile.x === 24 && tile.y === 15 && tile.z === 5) {
-        console.log('p2', tile.stringify, computeTileVisibility(map, tile, true))
-    }
-    if (tile.x === 25 && tile.y === 14 && tile.z === 5) {
-        console.log('p3', tile.stringify, computeTileVisibility(map, tile, true))
-    }
-    if (tile.x === 25 && tile.y === 15 && tile.z === 5) {
-        console.log('p4', tile.stringify, computeTileVisibility(map, tile, true))
-    }
     if (computeTileVisibility(map, tile)) {
         visitTile(map, tile);
     } else {
@@ -427,9 +393,6 @@ function screenSpaceError2D(map, tile) {
 function addTileToRenderList(map, tile) {
     map._activeTiles.push(tile);
 
-    if (tile.x === 25 && tile.y === 15 && tile.z === 5) {
-        console.log('OMG')
-    }
     ++map._debug.tilesRendered;
 }
 
@@ -499,13 +462,12 @@ Map.prototype.addPin = function(position) {
 }
 
 Map.prototype.setView = function(position, zoom) {
-    // console.log(this.cameraController.target.x, this.cameraController.target.z)
     var px = sphericalMercator.px(position, 0);
     px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
     this.cameraController.target.copy(px);
 
     var distance = Math.pow(0.5, (zoom-4)) * MapSettings.cameraDistance;
-    console.log(distance, zoom);
+
     var c = new THREE.Vector3();
     var bearing = this.cameraController.getAzimuthalAngle();
     var pitch = this.cameraController.getPolarAngle();
@@ -513,5 +475,12 @@ Map.prototype.setView = function(position, zoom) {
     c.z = px.z + Math.cos(bearing)*Math.sin(pitch)*distance;
     c.y = Math.cos(pitch) * distance;
 
-    this.cameraController.object.position.copy(c);
+    var camera = this.cameraController.object;
+
+    camera.position.copy(c);
+
+    camera.lookAt(this.cameraController.target);
+    camera.updateMatrix();
+    camera.updateMatrixWorld();
+    camera.matrixWorldInverse.getInverse(this.cameraController.object.matrixWorld);
 }

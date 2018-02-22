@@ -256,6 +256,11 @@ function OrbitConstraint ( object ) {
 
             this.object.lookAt( this.target );
 
+            // Update camera matrix
+            this.object.updateMatrix();
+            this.object.updateMatrixWorld();
+            this.object.matrixWorldInverse.getInverse(this.object.matrixWorld);
+
             if ( this.enableDamping === true ) {
 
                 thetaDelta *= ( 1 - this.dampingFactor );

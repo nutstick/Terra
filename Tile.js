@@ -95,9 +95,9 @@ Tile.prototype.imageryDone = function(layerName) {
 
         var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
            wireframe: true,
+           map: this.data.texture,
            opacity:0
         }) : new THREE.MeshBasicMaterial({
-            wireframe: true,
             map: this.data.texture,
         });
 
