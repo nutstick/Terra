@@ -105,7 +105,6 @@ Map.prototype.update = function() {
     clearTileLoadQueue(this);
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    // console.log('Before rendering', this._activeTiles.length)
    this._activeTiles.forEach(function(tile) {
        tile.active = false;
    });
@@ -119,7 +118,6 @@ Map.prototype.update = function() {
     this._activeTiles.forEach(function(tile) {
         tile.active = true;
     });
-    // console.log('After rendering', this._activeTiles.length)
 
     processTileLoadQueue(this);
     updateTileLoadProgress(this);
@@ -214,7 +212,6 @@ function visitTile(map, tile) {
         debug.maxDepth = tile.z;
     }
 
-    // console.log(tile.stringify, screenSpaceError(map, tile));
     if (screenSpaceError(map, tile) < map.maximumScreenSpaceError) {
         // This tile meets SSE requirements, so render it.
         if (tile.needsLoading) {
@@ -227,7 +224,6 @@ function visitTile(map, tile) {
     var allAreRenderable = tile.children[0].renderable && tile.children[1].renderable && tile.children[2].renderable && tile.children[3].renderable;
     var allAreUpsampled = tile.children[0].upsampledFromParent && tile.children[1].upsampledFromParent
     && tile.children[2].upsampledFromParent && tile.children[3].upsampledFromParent;
-    // console.log(tile.stringify, allAreRenderable, allAreUpsampled)
     if (allAreRenderable) {
         if (allAreUpsampled) {
             // No point in rendering the children because they're all upsampled.  Render this tile instead.
@@ -307,25 +303,8 @@ function computeTileVisibility(map, tile, debug) {
     var matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     var frustum = new THREE.Frustum().setFromMatrix(matrix);
 
-    // console.log(JSON.stringify(bbox))
-    // console.log(matrix.elements[0], matrix.elements[1], matrix.elements[2], matrix.elements[3], matrix.elements[4],
-    //     matrix.elements[5], matrix.elements[6], matrix.elements[7], matrix.elements[8], matrix.elements[9],
-    //     matrix.elements[0], matrix.elements[10], matrix.elements[11], matrix.elements[12]);
-    // console.log('--');
-
+    // TODO: using AABB to Culling
     return frustum.intersectsObject(tile._entity);
-
-//    frustum.setFromMatrix(matrix);
-
-//    var intersects = false;
-//    for (var i = 0; i < 8; ++i) {
-//        var p = new THREE.Vector3(((i >> 0) & 1) ? bbox.xMin : bbox.xMax,
-//                ((i >> 1) & 1) ? bbox.yMin : bbox.yMax,
-//                ((i >> 2) & 1) ? bbox.zMin : bbox.zMax);
-//        console.log('contains', i, frustum.containsPoint(p), JSON.stringify(p.project(camera)));
-//        intersects = intersects || frustum.containsPoint(p);
-//    }
-//    return intersects;
 }
 
 function visitIfVisible(map, tile) {

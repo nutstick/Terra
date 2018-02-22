@@ -59,11 +59,8 @@ function addMarker( position ) {
     var p = picker.intersectObjects(map._activeTiles.map(function(tile) {
         return tile._entity;
     }));
-    console.log(p.map(function(x) { return x.object.tile.stringify }))
 
     var markerPosition = picker.intersectObject(plane)[0].point;
-
-    console.log(JSON.stringify(markerPosition));
 
     return map.addPin(markerPosition);
 }
@@ -285,7 +282,6 @@ function initializeGL(canvas, eventSource) {
 
     camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
     camera.position.z = 12000;
-    console.log(gridcalculation)
 
     controls = new THREE.OrbitControls( camera, eventSource, canvas );
 

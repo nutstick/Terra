@@ -6,7 +6,6 @@ function defaultImage(url, cb) {
   var time = Date.now()
   console.time(time+' download elevation ')
   img.onload = function() {
-      console.log('p');
     //console.timeEnd(time+' download elevation ')
     var draw = Date.now()
     console.time(draw+' drawn elevation to canvas ')
@@ -18,7 +17,6 @@ function defaultImage(url, cb) {
 
   }
   img.onerror = function(err) {
-      console.log('prrr');
     cb(err)
   }
   img.src = url

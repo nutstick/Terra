@@ -122,7 +122,6 @@ Window {
 
         onClicked: {
             var points = GLCode.map._currentMission.generateGrid();
-            console.log(points.length)
         }
 
         text: 'Grid'
