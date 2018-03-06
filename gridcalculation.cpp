@@ -9,6 +9,7 @@ GridCalculation::GridCalculation(QObject *parent)
 
 QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle)
 {
+    qDebug() << "P";
     QList<QGeoCoordinate> bound;
     for (const QVariant point : bound_) {
         bound.append(point.value<QGeoCoordinate>());
@@ -25,6 +26,50 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
             output.append(QVariant::fromValue(coor));
         }
         return output;
+    }
+
+    qDebug() << bound;
+
+    QGeoCoordinate tangentOrigin = bound[0];
+    polygonFromCoordinate(tangentOrigin, bound, polygonPoints);
+
+    double coveredArea = 0.0;
+    for (int i=0; i<polygonPoints.count(); i++) {
+        if (i != 0) {
+            coveredArea += polygonPoints[i - 1].x() * polygonPoints[i].y() - polygonPoints[i].x() * polygonPoints[i -1].y();
+        } else {
+            coveredArea += polygonPoints.last().x() * polygonPoints[i].y() - polygonPoints[i].x() * polygonPoints.last().y();
+        }
+    }
+    qDebug() << coveredArea;
+
+    // Generate grid
+    gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
+    for (int i=0; i<gridPoints.count(); i++) {
+        QPointF& point = gridPoints[i];
+        QGeoCoordinate geoCoord;
+        LtpToGeo(-point.y(), point.x(), -10, tangentOrigin, &geoCoord);
+        returnValue += geoCoord;
+    }
+    qDebug() << returnValue;
+
+    QList<QVariant> output;
+    foreach (QGeoCoordinate coor, returnValue) {
+        output.append(QVariant::fromValue(coor));
+    }
+    return output;
+}
+
+QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle)
+{
+    QList<QPointF> polygonPoints;
+    QList<QPointF> gridPoints;
+    QList<QPointF> interimPoints;
+    QList<QGeoCoordinate> returnValue;
+
+    // Convert polygon to Qt coordinate system (y positive is down)
+    if(bound.count() <= 2) {
+        return returnValue;
     }
 
     QGeoCoordinate tangentOrigin = bound[0];
@@ -47,13 +92,8 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
         LtpToGeo(-point.y(), point.x(), -10, tangentOrigin, &geoCoord);
         returnValue += geoCoord;
     }
-    qDebug() << returnValue;
 
-    QList<QVariant> output;
-    foreach (QGeoCoordinate coor, returnValue) {
-        output.append(QVariant::fromValue(coor));
-    }
-    return output;
+    return returnValue;
 }
 
 void GridCalculation::GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double *x, double *y, double *z)

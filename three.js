@@ -22334,7 +22334,7 @@ THREE.Mesh.prototype.raycast = ( function () {
 		sphere.copy( geometry.boundingSphere );
 		sphere.applyMatrix4( matrixWorld );
 
-		if ( raycaster.ray.intersectsSphere( sphere ) === false ) return;
+		// if ( raycaster.ray.intersectsSphere( sphere ) === false ) return;
 
 		//
 

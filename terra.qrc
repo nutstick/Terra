@@ -12,6 +12,7 @@
         <file>MapSettings.js</file>
         <file>AABB.js</file>
         <file>TextureGenerator.js</file>
+        <file>QuadTree.js</file>
     </qresource>
     <qresource prefix="/Object">
         <file>Pin.js</file>

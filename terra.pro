@@ -15,7 +15,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
     jstimer.cpp \
     terraindatagenerator.cpp \
-    gridcalculation.cpp
+    gridcalculation.cpp \
+    optimizegridcalculation.cpp
 
 RESOURCES += qml.qrc \
     terra.qrc
@@ -34,4 +35,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     jstimer.h \
     terraindatagenerator.h \
-    gridcalculation.h
+    gridcalculation.h \
+    optimizegridcalculation.h

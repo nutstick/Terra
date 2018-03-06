@@ -88,24 +88,24 @@ Polygon.prototype.reindex = function(pin, index) {
 
 Polygon.prototype.interactableObjects = function() {
     return this.pins.reduce(function (prev, pin) {
+        console.log(JSON.stringify(pin.head.geometry.boundingSphere))
         prev.push(pin.head);
         prev.push(pin.arrow);
         return prev;
     }, []);
 }
 
-Polygon.prototype.generateGrid = function() {
+Polygon.prototype.generateGrid = function(gridSpace, gridAngle) {
     var grid = gridcalculation.genGridInsideBound(this.pins.map(function(pin) {
         return pin.coordinate;
-    }), 4000, 0);
-
-    console.log(grid.length)
+    }), gridSpace, gridAngle);
 
     var lineGeometry = new THREE.Geometry();
     for (var i = 0; i < grid.length; i++) {
         var px = defaultSphericalMercator.px(grid[i], 0);
-        console.log(px.x, px.y, grid[i].latitude, grid[i].longitude)
-        lineGeometry.vertices.push(new THREE.Vector3(px.x, 50, px.y));
+        px = new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, 0, px.y - MapSettings.basePlaneDimension / 2);
+        console.log(px.x, px.z, grid[i].latitude, grid[i].longitude)
+        lineGeometry.vertices.push(px);
     }
     this.grid = new THREE.LineSegments(
         lineGeometry,

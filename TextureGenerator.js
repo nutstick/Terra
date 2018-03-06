@@ -4,8 +4,8 @@ Qt.include("three.js")
 function TextureGenerator(options) {
     if (!options) throw new Error('No options provided');
 
-    if (!options.map) throw new Error('No options.map provided');
-    this._map = options.map;
+    if (!options.quadTree) throw new Error('No options.quadTree provided');
+    this._quadTree = options.quadTree;
     this._maxLoad = options.maxLoad || 50;
 
     this._loading = 0;
@@ -58,22 +58,22 @@ TextureGenerator.prototype.load = function() {
     // updateLoadingProgress(this);
 
     this._loadingThisTick = this._maxLoad - this._loading;
-    for (var i = 0; i < map._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
-        this.loadTile(map._tileLoadQueueHigh[i]);
+    for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
+        this.loadTile(this._quadTree._tileLoadQueueHigh[i]);
     }
-    for (var i = 0; i < map._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
-        this.loadTile(map._tileLoadQueueMedium[i]);
+    for (var i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
+        this.loadTile(this._quadTree._tileLoadQueueMedium[i]);
     }
-    for (var i = 0; i < map._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
-        this.loadTile(map._tileLoadQueueLow[i]);
+    for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
+        this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
 }
 
 function updateLoadingProgress(textureGenerator) {
     var debug = textureGenerator.debug;
-    debug.high = textureGenerator._map._tileLoadQueueHigh.length;
-    debug.medium = textureGenerator._map._tileLoadQueueMedium.length;
-    debug.low = textureGenerator._map._tileLoadQueueLow.length;
+    debug.high = textureGenerator._quadTree._tileLoadQueueHigh.length;
+    debug.medium = textureGenerator._quadTree._tileLoadQueueMedium.length;
+    debug.low = textureGenerator._quadTree._tileLoadQueueLow.length;
 
     if (debug.high !== debug.lastHigh ||
         debug.medium !== debug.lastMedium ||

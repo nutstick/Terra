@@ -13,32 +13,6 @@ Window {
     height: 360
     visible: true
 
-    WorkerScript {
-        id: updater
-        source: "worker/updatetile.js"
-
-        onMessage: {
-            var queue = messageObject.getTiles[0].length;
-
-            if (queue > 0) {
-                GLCode.getTiles(messageObject.getTiles);
-                GLCode.updateTileVisibility();
-            }
-        }
-    }
-
-    WorkerScript {
-        id: parser
-        source: "worker/parseelevation.js"
-
-        onMessage: {
-            var time = Date.now();
-            canvas3d.parserRequests++
-            if(messageObject.makeMesh) GLCode.makeMesh(messageObject.makeMesh)
-            else console.log('parser', messageObject)
-        }
-    }
-
     Canvas3D {
         id: canvas3d
 
@@ -109,7 +83,7 @@ Window {
         anchors.right: parent.right
 
         onClicked: {
-            GLCode.map.setView(QtPositioning.coordinate(13.7419073, 100.5279612), 16);
+            GLCode.map.setView(QtPositioning.coordinate(13.738521, 100.530987), 19);
         }
 
         text: 'TO CU'
@@ -121,32 +95,11 @@ Window {
         anchors.right: parent.left
 
         onClicked: {
-            var points = GLCode.map._currentMission.generateGrid();
+            var points = GLCode.map._currentMission.generateGrid(4, 0);
         }
 
         text: 'Grid'
         anchors.rightMargin: -75
         anchors.topMargin: 0
     }
-
-//    Text {
-//        id: progress
-//        anchors.verticalCenter: parent.verticalCenter
-//        anchors.horizontalCenter: parent.horizontalCenter
-//        color: "white"
-
-//        text: qsTr("loading")
-//    }
-
-//    PlannerView {
-//        property real dHeight: 200
-//        y: 160
-//        width: Math.min(parent.width * 0.8, 400)
-//        height: Math.max(56, dHeight)
-//        anchors.horizontalCenterOffset: 0
-//        anchors.bottomMargin: 0
-//        anchors.bottom: parent.bottom
-//        anchors.horizontalCenter: parent.horizontalCenter
-
-//    }
 }

@@ -7,7 +7,9 @@
  */
 /*global THREE, console */
 
-function OrbitConstraint ( object ) {
+function OrbitConstraint ( map, object ) {
+
+    this.map = map;
 
     this.object = object;
 
@@ -294,7 +296,7 @@ function OrbitConstraint ( object ) {
                     scope.needsUpdate = timer.setInterval(function(time){
                         if (Date.now()-scope.lastMove < 150) return
                         else {
-                            // updateTiles()
+                            scope.map.update();
                             timer.clearInterval(scope.needsUpdate)
                             scope.needsUpdate = false
                         }
@@ -322,12 +324,18 @@ function OrbitConstraint ( object ) {
 //    Zoom - middle mouse, or mousewheel / touch: two finger spread or squish
 //    Pan - left mouse, or arrow keys / touch: three finter swipe
 
-THREE.OrbitControls = function (object, eventSource, canvas) {
+THREE.OrbitControls = function (options) {
+    if (!options) throw new Error('No option provided');
+    if (!options.map) throw new Error('No options.map provided');
+    if (!options.map.camera) throw new Error('No options.map.camera provided');
+    if (!options.eventSource) throw new Error('No options.eventSource provided');
+    if (!options.canvas) throw new Error('No options.canvas provided');
 
-    var constraint = new OrbitConstraint(object);
+    var map = options.map;
+    var constraint = new OrbitConstraint(map, map.camera);
 
-    this.eventSource = eventSource;
-    this.canvas = canvas;
+    this.eventSource = options.eventSource;
+    this.canvas = options.canvas;
 
     // API
 
@@ -402,11 +410,11 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     var lastClick;
     var lastMouseDown;
 
-    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKORPAN : 6, MARKERH : 7, MARKERP : 8 };
+    var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5, CLICKORPAN : 6, CHANGE_PIN_HEIGHT : 7, CHANGE_PIN_POSITION : 8 };
 
     var state = STATE.NONE;
 
-    var currentMarker = null;
+    var currentPin = null;
 
 
     // set start position
@@ -429,7 +437,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
     // right and down are positive
     var pan = function ( deltaX, deltaY ) {
 
-        constraint.pan( deltaX, deltaY, canvas.width, canvas.height );
+        constraint.pan( deltaX, deltaY, scope.canvas.width, scope.canvas.height );
 
     }
     //pan(100,100000)
@@ -495,6 +503,15 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
     }
 
+    function pickerFromScreen(x, y) {
+
+        var picker = new THREE.Raycaster();
+        picker.setFromCamera( screenNormalize(x, y), scope.object );
+        
+        return picker;
+
+    }
+
     function onMouseDown(x, y, button, modifiers) {
 
         if ( scope.enabled === false ) return;
@@ -517,30 +534,29 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
         } else if ( button === scope.mouseButtons.PAN ) {
 
-            var picker = new THREE.Raycaster();
-            picker.setFromCamera( screenNormalize(x, y), scope.object );
-            var selectedObject = mouseDownOnMarkers(picker);
+            // Checking mouse down on marker
+            var selectedObject = map.mouseDownOnMarkers(pickerFromScreen(x, y));
 
             panStart.set( x, y );
 
             var now = Date.now();
             if ( selectedObject && selectedObject.name === 'Head' ) {
 
-                currentMarker = selectedObject.pin;
+                currentPin = selectedObject.pin;
 
-                state = STATE.MARKERH;
+                state = STATE.CHANGE_PIN_HEIGHT;
 
             } else if ( selectedObject && selectedObject.name === 'Arrow' ) {
 
-                currentMarker = selectedObject.pin;
+                currentPin = selectedObject.pin;
 
-                state = STATE.MARKERP;
+                state = STATE.CHANGE_PIN_POSITION;
 
             } else if ( lastClick && now - lastClick < constraint.maxClickTimeInterval && scope.enableMoveMarker === true ) {
 
-                currentMarker = addMarker(screenNormalize( x, y ));
+                currentPin = map.addPin(pickerFromScreen(x, y));
 
-                state = STATE.MARKERH;
+                state = STATE.CHANGE_PIN_HEIGHT;
 
             } else if ( scope.enablePan === true ) {
 
@@ -578,10 +594,10 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
             rotateDelta.subVectors( rotateEnd, rotateStart );
 
             // rotating across whole screen goes 360 degrees around
-            constraint.rotateLeft( 2 * Math.PI * rotateDelta.x / canvas.width * scope.rotateSpeed );
+            constraint.rotateLeft( 2 * Math.PI * rotateDelta.x / scope.canvas.width * scope.rotateSpeed );
 
             // rotating up and down along whole screen attempts to go 360, but limited to 180
-            constraint.rotateUp( 2 * Math.PI * rotateDelta.y / canvas.height * scope.rotateSpeed );
+            constraint.rotateUp( 2 * Math.PI * rotateDelta.y / scope.canvas.height * scope.rotateSpeed );
 
             rotateStart.copy( rotateEnd );
 
@@ -613,21 +629,22 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
 
             panStart.copy( panEnd );
 
-        } else if ( state === STATE.MARKERH ) {
+        } else if ( state === STATE.CHANGE_PIN_HEIGHT ) {
 
             if ( scope.enableMoveMarker === false ) return;
             panEnd.set( x, y );
             panDelta.subVectors( panEnd, panStart );
 
-            currentMarker.offsetHeight( - panDelta.y * scope.object.position.y / scope.canvas.height );
+            currentPin.offsetHeight( - panDelta.y * scope.object.position.y / scope.canvas.height );
 
             panStart.copy( panEnd );
 
-        } else if ( state === STATE.MARKERP ) {
+        } else if ( state === STATE.CHANGE_PIN_POSITION ) {
 
             if ( scope.enableMoveMarker === false ) return;
 
-            setPositionFromMouse(currentMarker, screenNormalize( x, y ));
+            var markerPosition = pickerFromScreen(x, y).intersectObject(map.basePlane)[0].point;
+            currentPin.setPosition(markerPosition);
         }
 
         if ( state !== STATE.NONE ) scope.update();
@@ -660,7 +677,7 @@ THREE.OrbitControls = function (object, eventSource, canvas) {
         // off-center zooming :D
         if (scope.object.position.y>=scope.maxDistance) return;
         var direction = -delta*0.001001001;
-        pan(direction*(x - canvas.width / 2), direction*(y - canvas.height / 2))
+        pan(direction*(x - scope.canvas.width / 2), direction*(y - scope.canvas.height / 2))
     }
 
     function onKeyDown( event ) {

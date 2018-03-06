@@ -24,8 +24,8 @@ function Tile(option) {
     this._y = option.y;
     if (typeof option.z === 'undefined') throw new Error('No option.z provided');
     this._z = option.z;
-    if (typeof option.scene === 'undefined') throw new Error('No option.scene provided');
-    this._scene = option.scene;
+    if (typeof option.quadTree === 'undefined') throw new Error('No option.quadTree provided');
+    this._quadTree = option.quadTree;
 
     // QuadTreeTile structure
     this._parent = option.parent;
@@ -49,7 +49,7 @@ function Tile(option) {
     this.upsampledFromParent = false;
 }
 
-Tile.createRootTile = function(scene, tilingScheme) {
+Tile.createRootTile = function(quadTree, tilingScheme) {
     if (!tilingScheme) {
         throw new Error('No tiling scheme provided');
     }
@@ -67,7 +67,7 @@ Tile.createRootTile = function(scene, tilingScheme) {
                 x: x,
                 y: y,
                 z: 0,
-                scene: scene
+                quadTree: quadTree
             });
         }
     }
@@ -123,9 +123,12 @@ Tile.prototype.imageryDone = function(layerName) {
         this._entity = new THREE.Mesh(geometry, material);
         this._entity.tile = this;
 
-        this._scene.add(this._entity);
+        this._quadTree.scene.add(this._entity);
 
         this._state = TileState.Done;
+
+        // Trigger update to quadTree
+        this._quadTree.update();
     }
 }
 
@@ -163,28 +166,28 @@ Object.defineProperties(Tile.prototype, {
                     y: this._y * 2,
                     z: this._z + 1,
                     parent: this,
-                    scene: this._scene
+                    quadTree: this._quadTree
                 });
                 this._children[1] = new Tile({
                     x: this._x * 2 + 1,
                     y: this._y * 2,
                     z: this._z + 1,
                     parent: this,
-                    scene: this._scene
+                    quadTree: this._quadTree
                 });
                 this._children[2] = new Tile({
                     x: this._x * 2,
                     y: this._y * 2 + 1,
                     z: this._z + 1,
                     parent: this,
-                    scene: this._scene
+                    quadTree: this._quadTree
                 });
                 this._children[3] = new Tile({
                     x: this._x * 2 + 1,
                     y: this._y * 2 + 1,
                     z: this._z + 1,
                     parent: this,
-                    scene: this._scene
+                    quadTree: this._quadTree
                 });
             }
 
@@ -195,7 +198,7 @@ Object.defineProperties(Tile.prototype, {
                         y: this._y * 2 + (i / 2) % 2,
                         z: this._z + 1,
                         parent: this,
-                        scene: this._scene
+                        quadTree: this._quadTree
                     });
                 }
             }

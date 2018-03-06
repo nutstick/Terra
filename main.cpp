@@ -3,6 +3,8 @@
 #include <QQmlContext>
 #include <QQmlApplicationEngine>
 
+#include <QVariantList>
+
 #include "jstimer.h"
 #include "gridcalculation.h"
 
@@ -14,13 +16,13 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    app.setStyleSheet("Component#markersDelegate { border-bottom: 1px solid grey; }");
+    // app.setStyleSheet("Component#markersDelegate { border-bottom: 1px solid grey; }");
 
-    JSTimer timer;
+    JSTimer* timer = new JSTimer();
     GridCalculation* g = new GridCalculation();
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("timer", &timer);
+    engine.rootContext()->setContextProperty("timer", timer);
     engine.rootContext()->setContextProperty("gridcalculation", g);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())

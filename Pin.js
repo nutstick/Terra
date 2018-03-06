@@ -30,6 +30,7 @@ function Pin(options) {
     for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
         this.headGeometry.vertices[i].y += 8;
     }
+    this.headGeometry.computeBoundingSphere();
     this.head = new THREE.Mesh(
         this.headGeometry,
         new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
@@ -53,6 +54,7 @@ function Pin(options) {
     for (var i = 0, len = this.arrowGeometry.vertices.length; i < len; i++) {
         this.arrowGeometry.vertices[i].y += 3;
     }
+    this.arrowGeometry.computeBoundingSphere();
     this.arrow = new THREE.Mesh(
         this.arrowGeometry,
         new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true })
@@ -75,6 +77,8 @@ function Pin(options) {
 
     // TODO: Better Add to scene function
     this._mission._map.scene.add(this.group)
+
+    this.lastScale = undefined;
 }
 
 Pin.prototype.offsetHeight = function(delta) {
@@ -91,8 +95,14 @@ Pin.prototype.offsetHeight = function(delta) {
 }
 
 Pin.prototype.setScale = function(scale) {
+    if (this.lastScale === scale) return;
+
+    this.lastScale = scale;
+
     this.head.scale.set(scale, scale, scale);
+    this.head.geometry.computeBoundingSphere();
     this.arrow.scale.set(scale, scale, scale);
+    this.head.geometry.computeBoundingSphere();
 }
 
 Pin.prototype.setPosition = function(position) {
@@ -113,7 +123,8 @@ Pin.prototype.setPosition = function(position) {
 Object.defineProperties(Pin.prototype, {
     coordinate: {
         get: function() {
-            var ll = defaultSphericalMercator.ll([this.position.x, this.position.z], 0);
+            var ll = defaultSphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
+                                                  this.position.z + MapSettings.basePlaneDimension / 2], 0);
             var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
             ll.attitude = this.height * meterPerPixel;
 
