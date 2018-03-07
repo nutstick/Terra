@@ -9,7 +9,6 @@ GridCalculation::GridCalculation(QObject *parent)
 
 QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle)
 {
-    qDebug() << "P";
     QList<QGeoCoordinate> bound;
     for (const QVariant point : bound_) {
         bound.append(point.value<QGeoCoordinate>());
@@ -28,8 +27,6 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
         return output;
     }
 
-    qDebug() << bound;
-
     QGeoCoordinate tangentOrigin = bound[0];
     polygonFromCoordinate(tangentOrigin, bound, polygonPoints);
 
@@ -41,7 +38,6 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
             coveredArea += polygonPoints.last().x() * polygonPoints[i].y() - polygonPoints[i].x() * polygonPoints.last().y();
         }
     }
-    qDebug() << coveredArea;
 
     // Generate grid
     gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);

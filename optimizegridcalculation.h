@@ -19,7 +19,10 @@ class OptimizeGridCalculation : public QObject
     Q_OBJECT
 public:
     explicit OptimizeGridCalculation(QObject *parent = nullptr);
+
+    Q_INVOKABLE QVariantList genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle);
 private:
+    static double calculateArea(QList<QPointF> &polygon);
     static void GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double* x, double* y, double* z);
     static void LtpToGeo(double x, double y, double z, QGeoCoordinate ref, QGeoCoordinate *out);
     static void polygonFromCoordinate(QGeoCoordinate tangentOrigin, QList<QGeoCoordinate> coordList, QList<QPointF> &polygonPoints);
