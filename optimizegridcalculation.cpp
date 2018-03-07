@@ -71,7 +71,7 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
     QList<QPointF> gridPoints;
     QList<QPointF> interimPoints;
     QList<QGeoCoordinate> returnValue;
-    QMap<double, int> percentPoint;
+    QList<double> percentPoint;
 
     // Convert polygon to Qt coordinate system (y positive is down)
     if(bound.count() <= 2) {
@@ -122,29 +122,44 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
 
     // Point length percent calculate
     qreal dist;
-    percentPoint[0.0] = 0;
-    for (int i=1; i<polygonPoints.count(); i++) {
-        dist += distance(polygonPoints[i-1], polygonPoints[i]);
-        percentPoint[dist] = i;
+    percentPoint.append(0.0);
+    for (int i=1; i<=polygonPoints.count(); i++) {
+        if (i == polygonPoints.count()) {
+            dist += distance(polygonPoints[i-1], polygonPoints.first());
+        } else {
+            dist += distance(polygonPoints[i-1], polygonPoints[i]);
+        }
+        percentPoint.append(dist);
     }
 
     for (int parts = 1; parts <= 5; parts++) {
         double area = coveredArea / parts;
+        QList<QPointF> seperatePoints;
 
+        qreal referenceDistance = percentPoint[1];
         QPointF referencePoint = polygonPoints[1];
+        int lowerindex = qLowerBound(percentPoint.begin(), percentPoint.end(), referenceDistance);
 
         for (int p = 0; p < parts; p++) {
-            double start = 0.0, end = dist, mid;
+            double start = referenceDistance, end = dist, mid;
+            QPointF midPoint;
+
             while(start - end >= eps) {
                 mid = (start + end) / 2.0;
-                int index = percentPoint.upperBound(mid).value();
+                midPoint = distanceToPoint(polygonPoints, percentPoint, mid);
+                int upperindex = qUpperBound(percentPoint.begin(), percentPoint.end(), mid);
 
+                // Create polygon
                 QList<QPointF> a;
-                for (int i=startIdx;i<index;i++) {
+                a << referencePoint;
+                for (int i=lowerindex;i<=upperindex;i++) {
                     a << polygonPoints[i];
                 }
+                a << midPoint;
+
                 qreal calcArea = calculateArea(a);
 
+                // Binary search
                 if (calcArea < area) {
                     start = mid;
                 } else if (calcArea > area) {
@@ -153,6 +168,10 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
                     break;
                 }
             }
+
+            seperatePoints << midPoint;
+            referenceDistance = mid;
+            referencePoint = midPoint;
         }
     }
 }
