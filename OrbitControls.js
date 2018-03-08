@@ -290,17 +290,17 @@ function OrbitConstraint ( map, object ) {
                 lastQuaternion.copy( this.object.quaternion );
                 zoomChanged = false;
 
-                scope.lastMove = Date.now();
+                // scope.lastMove = Date.now();
 
                 if (!scope.needsUpdate) {
                     scope.needsUpdate = timer.setInterval(function(time){
-                        if (Date.now()-scope.lastMove < 150) return
-                        else {
+                        // if (Date.now()-scope.lastMove < 150) return
+                        // else {
                             scope.map.update();
                             timer.clearInterval(scope.needsUpdate)
                             scope.needsUpdate = false
-                        }
-                    })
+                        // }
+                    });
                 }
 
                 return true;

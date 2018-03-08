@@ -16,25 +16,11 @@ Window {
     Canvas3D {
         id: canvas3d
 
-        property int parserRequest: 0
-        property int tilesToGet: 0
-        property bool inspectElevation: false
-
         anchors.fill: parent
         focus: true
 
-        states: [
-            State {
-                name: "View"
-            },
-            State {
-                name: "Edit"
-            }
-        ]
-
         onInitializeGL: {
             GLCode.initializeGL(canvas3d, eventSource);
-            state = 'View'
         }
 
         onPaintGL: {
@@ -60,22 +46,6 @@ Window {
     }
 
     Button {
-        id: modeButton
-        x: 544
-        anchors.top: parent.top
-        anchors.right: parent.right
-
-        onClicked: {
-            GLCode.map.suspendLodUpdate = canvas3d.state == 'Edit';
-            canvas3d.state = canvas3d.state == 'View' ? 'Edit' : 'View'
-        }
-
-        text: canvas3d.state == 'View' ? 'View Mode' : 'Edit Mode'
-        anchors.rightMargin: 0
-        anchors.topMargin: 26
-    }
-
-    Button {
         id: setViewButton
         x: 0
         y: 0
@@ -96,6 +66,17 @@ Window {
 
         onClicked: {
             var points = GLCode.map._currentMission.generateGrid(4, 0);
+            var points_ = GLCode.map._currentMission.generateGrid(4, 45);
+            var points_ = GLCode.map._currentMission.generateGrid(4, 90);
+
+            var pts = [
+                QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
+                QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
+                QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
+                QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
+            ]
+
+            optimizeGridCalculation.genGridInsideBound(pts, 4, pts[0])
         }
 
         text: 'Grid'

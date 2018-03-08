@@ -22,4 +22,9 @@
     <qresource prefix="/Utility">
         <file>SphericalMercator.js</file>
     </qresource>
+    <qresource prefix="/SceneMode">
+        <file>Scene3D.js</file>
+        <file>Scene2D.js</file>
+        <file>SceneMode.js</file>
+    </qresource>
 </RCC>

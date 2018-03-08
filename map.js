@@ -7,22 +7,30 @@ Qt.include("/three.js");
 Qt.include("/lib/OrbitControls.js");
 var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
 
+/**
+ * 
+ * @param {Object} options 
+ * @param {SceneMode} type - Scene2D or Scene3D
+ * @param {Canvas} options.canvas - Canvas
+ * @param {eventSource} options.eventSource - EventSource
+ */
 function Map(options) {
     if (!options) throw new Error('No option provided');
+    if (!options.mode) throw new Error('No option.mode provided');
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
     /*
-     * Setup ThreeJS scene
-     */
-    this.scene = new THREE.Scene();
-
-    this.camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
-    this.camera.position.z = 12000;
-
-    this.cameraController = new THREE.OrbitControls({
-        map: this,
-        eventSource: options.eventSource,
-        canvas: options.canvas,
+    * Setup ThreeJS scene
+    */
+   this.scene = new THREE.Scene();
+   
+   this.camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
+   this.camera.position.z = 12000;
+   
+   this.cameraController = new THREE.OrbitControls({
+       map: this,
+       eventSource: options.eventSource,
+       canvas: options.canvas,
     });
     // Base Plane
     this.basePlane = new THREE.Mesh(
@@ -39,7 +47,10 @@ function Map(options) {
     this._renderer.setSize(options.canvas.width, options.canvas.height);
 
     // Quad Tree
-    this.quadTree = new QuadTree({ map: this });
+    this.quadTree = new QuadTree({
+        map: this,
+        mode: options.mode
+    });
     // Mission
     this.missions = [];
     this._currentMission = undefined;

@@ -12,7 +12,6 @@
 #define GAS_CONS				287.1f
 #define ABS_ZERO_CELSIUS		-273.15f
 #define EARTH_RAD               6371000
-static const float eps = std::numeric_limits<double>::epsilon();
 
 class GridCalculation : public QObject
 {
@@ -24,6 +23,8 @@ public:
 //    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
 
 private:
+    static qreal distanceFromPointToPoint(QPointF A, QPointF B);
+    static double calculateLength(QList<QPointF> &polygon);
     static void GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double* x, double* y, double* z);
     static void LtpToGeo(double x, double y, double z, QGeoCoordinate ref, QGeoCoordinate *out);
     static void polygonFromCoordinate(QGeoCoordinate tangentOrigin, QList<QGeoCoordinate> coordList, QList<QPointF> &polygonPoints);

@@ -7,6 +7,7 @@
 
 #include "jstimer.h"
 #include "gridcalculation.h"
+#include "optimizegridcalculation.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,10 +21,12 @@ int main(int argc, char *argv[])
 
     JSTimer* timer = new JSTimer();
     GridCalculation* g = new GridCalculation();
+    OptimizeGridCalculation* opg = new OptimizeGridCalculation();
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("timer", timer);
     engine.rootContext()->setContextProperty("gridcalculation", g);
+    engine.rootContext()->setContextProperty("optimizeGridCalculation", opg);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

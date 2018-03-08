@@ -1,6 +1,12 @@
 #include "gridcalculation.h"
 #include <QVariant>
 #include <QVariantList>
+static const float eps = std::numeric_limits<double>::epsilon();
+
+qreal GridCalculation::distanceFromPointToPoint(QPointF A, QPointF B)
+{
+    return qSqrt((A.x() - B.x()) * (A.x() - B.x()) + (A.y() - B.y()) * (A.y() - B.y()));
+}
 
 GridCalculation::GridCalculation(QObject *parent)
     : QObject(parent)
@@ -41,13 +47,15 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
 
     // Generate grid
     gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
+
+    qDebug() << "length" << gridAngle << calculateLength(gridPoints);
+
     for (int i=0; i<gridPoints.count(); i++) {
         QPointF& point = gridPoints[i];
         QGeoCoordinate geoCoord;
         LtpToGeo(-point.y(), point.x(), -10, tangentOrigin, &geoCoord);
         returnValue += geoCoord;
     }
-    qDebug() << returnValue;
 
     QList<QVariant> output;
     foreach (QGeoCoordinate coor, returnValue) {
@@ -92,6 +100,14 @@ QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QList<QGeoCoordinate> 
     return returnValue;
 }
 
+double GridCalculation::calculateLength(QList<QPointF> &polygon)
+{
+    double length = 0.0;
+    for (int i=0; i<polygon.count(); i++) {
+        length += distanceFromPointToPoint(polygon[i], polygon[(i+1) % polygon.count()]);
+    }
+    return length;
+}
 void GridCalculation::GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double *x, double *y, double *z)
 {
     double lat_rad = in.latitude() * DEG_TO_RAD;

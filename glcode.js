@@ -1,19 +1,10 @@
 Qt.include("/Core/Map.js");
+Qt.include("/SceneMode/Scene3D.js");
 
-//var include = {
-//    init: false,
-//    mapbox: false,
-//}
-
-///* SphericalMercator */
-//Qt.include("sm.js")
-///* Mapbox */
-//Qt.include("https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js", function() {
-//    include.mapbox = true;
-//});
 var map;
 function initializeGL(canvas, eventSource) {
     map = new Map({
+        mode: new Scene3D(),
         canvas: canvas,
         eventSource: eventSource
     });
@@ -28,6 +19,4 @@ function resizeGL(canvas) {
 function paintGL(canvas) {
 //    map.update();
     map._renderer.render(map.scene, map.camera);
-
-    map.quadTree._textureGenerator.load();
 }

@@ -1,5 +1,3 @@
-// ECMAScript 6
-
 Qt.include("three.js");
 Qt.include("/Core/DeveloperError.js");
 Qt.include("/Core/TileReplacementQueue.js");
@@ -13,22 +11,33 @@ var TileState = {
     Failed: 3
 };
 
-function Tile(option) {
-    if (!option) {
+/**
+ * Tile
+ * @alias Tile
+ * @constructor
+ * @param {Object} options
+ * @param {number} options.x - x
+ * @param {number} options.y - y
+ * @param {number} options.z - z
+ * @param {QuadTree} options.quadTree - QuadTree
+ * @param {Tile} options.parent - Parent
+ */
+function Tile(options) {
+    if (!options) {
         throw new Error('No option provided');
     }
 
-    if (typeof option.x === 'undefined') throw new Error('No option.x provided');
-    this._x = option.x;
-    if (typeof option.y === 'undefined') throw new Error('No option.y provided');
-    this._y = option.y;
-    if (typeof option.z === 'undefined') throw new Error('No option.z provided');
-    this._z = option.z;
-    if (typeof option.quadTree === 'undefined') throw new Error('No option.quadTree provided');
-    this._quadTree = option.quadTree;
+    if (typeof options.x === 'undefined') throw new Error('No options.x provided');
+    this._x = options.x;
+    if (typeof options.y === 'undefined') throw new Error('No options.y provided');
+    this._y = options.y;
+    if (typeof options.z === 'undefined') throw new Error('No options.z provided');
+    this._z = options.z;
+    if (typeof options.quadTree === 'undefined') throw new Error('No options.quadTree provided');
+    this._quadTree = options.quadTree;
 
     // QuadTreeTile structure
-    this._parent = option.parent;
+    this._parent = options.parent;
     // State
     this._state = TileState.Start;
 
@@ -49,6 +58,12 @@ function Tile(option) {
     this.upsampledFromParent = false;
 }
 
+/**
+ * 
+ * @param {QuadTree} quadTree 
+ * @param {TilingScheme} tilingScheme
+ * @return {Tile[]}
+ */
 Tile.createRootTile = function(quadTree, tilingScheme) {
     if (!tilingScheme) {
         throw new Error('No tiling scheme provided');

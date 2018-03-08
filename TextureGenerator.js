@@ -1,6 +1,14 @@
 
 Qt.include("three.js")
 
+/**
+ * TextureGenerator Class
+ * @alias TextureGenerator
+ * @constructor
+ * @param {Object} options
+ * @param {QuadTree} options.quadTree - QuadTree
+ * @param {number} [options.maxLoad=50] - Max loading thread
+ */
 function TextureGenerator(options) {
     if (!options) throw new Error('No options provided');
 
@@ -19,8 +27,19 @@ function TextureGenerator(options) {
         lastMedium: 0,
         lastLow: 0
     };
+
+    this._needUpdate = false;
+
+    this.start();
 }
 
+/**
+ * 
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} z 
+ * @returns {string} - Url
+ */
 TextureGenerator.prototype.url = function(x, y, z) {
     var serverIndex = 2*(x%2)+y%2
     var server = ['a','b','c','d'][serverIndex]
@@ -28,6 +47,21 @@ TextureGenerator.prototype.url = function(x, y, z) {
         +'@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
 }
 
+TextureGenerator.prototype.start = function() {
+    var scope = this;
+    timer.setInterval(function() {
+        scope.load();
+        if (scope._needUpdate) {
+            scope._quadTree.update();
+            scope._needUpdate = false;
+        }
+    }, 100);
+}
+
+/**
+ * 
+ * @param {Tile} tile
+ */
 TextureGenerator.prototype.loadTile = function(tile) {
     if (this._loadingThisTick <= 0) return;
     if (!tile.needsLoading) return;
@@ -40,6 +74,7 @@ TextureGenerator.prototype.loadTile = function(tile) {
         .load(
             this.url(tile._x, tile._y, tile._z),
             function(resp) {
+                scope._needUpdate = true;
                 tile.imageryDone('texture');
                 scope._loading--;
             },
@@ -55,7 +90,7 @@ TextureGenerator.prototype.loadTile = function(tile) {
 }
 
 TextureGenerator.prototype.load = function() {
-    // updateLoadingProgress(this);
+    updateLoadingProgress(this);
 
     this._loadingThisTick = this._maxLoad - this._loading;
     for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {

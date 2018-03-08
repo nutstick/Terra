@@ -126,7 +126,7 @@ Object.defineProperties(Pin.prototype, {
             var ll = defaultSphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
                                                   this.position.z + MapSettings.basePlaneDimension / 2], 0);
             var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
-            ll.attitude = this.height * meterPerPixel;
+            ll.altitude = this.height * meterPerPixel;
 
             return ll;
         }
