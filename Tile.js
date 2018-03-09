@@ -141,9 +141,6 @@ Tile.prototype.imageryDone = function(layerName) {
         this._quadTree.scene.add(this._entity);
 
         this._state = TileState.Done;
-
-        // Trigger update to quadTree
-        this._quadTree.update();
     }
 }
 

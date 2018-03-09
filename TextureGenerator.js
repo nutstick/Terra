@@ -55,7 +55,7 @@ TextureGenerator.prototype.start = function() {
             scope._quadTree.update();
             scope._needUpdate = false;
         }
-    }, 100);
+    }, 500);
 }
 
 /**
@@ -74,9 +74,13 @@ TextureGenerator.prototype.loadTile = function(tile) {
         .load(
             this.url(tile._x, tile._y, tile._z),
             function(resp) {
+                var start_ = Date.now();
+                console.log('Start TileDone update');
                 scope._needUpdate = true;
                 tile.imageryDone('texture');
                 scope._loading--;
+                var end_ = Date.now();
+                console.log('Updated TileDone', end_ - start_);
             },
             function() {},
             function(err) {
@@ -90,7 +94,7 @@ TextureGenerator.prototype.loadTile = function(tile) {
 }
 
 TextureGenerator.prototype.load = function() {
-    updateLoadingProgress(this);
+    // updateLoadingProgress(this);
 
     this._loadingThisTick = this._maxLoad - this._loading;
     for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
