@@ -65,10 +65,6 @@ Window {
         anchors.right: parent.left
 
         onClicked: {
-            var points = GLCode.map._currentMission.generateGrid(4, 0);
-            var points_ = GLCode.map._currentMission.generateGrid(4, 45);
-            var points_ = GLCode.map._currentMission.generateGrid(4, 90);
-
             var pts = [
                 QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
                 QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),

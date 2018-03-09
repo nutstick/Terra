@@ -20,13 +20,14 @@ class OptimizeGridCalculation : public QObject
 public:
     explicit OptimizeGridCalculation(QObject *parent = nullptr);
 
-    Q_INVOKABLE QVariantList genGridInsideBound(QVariantList bound_, float gridSpace, QVariant startPoint_);
+    Q_INVOKABLE QList<QVariant> genGridInsideBound(QVariantList bound_, float gridSpace, QVariant startPoint_);
 private:
     static double calculateArea(QList<QPointF> &polygon);
     static double calculateLength(QList<QPointF> &polygon);
     static void GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double* x, double* y, double* z);
     static void LtpToGeo(double x, double y, double z, QGeoCoordinate ref, QGeoCoordinate *out);
     static void polygonFromCoordinate(QGeoCoordinate tangentOrigin, QList<QGeoCoordinate> coordList, QList<QPointF> &polygonPoints);
+    static void gridOptimizeGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace);
     static void gridGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace, float gridAngle);
     static void intersectLinesWithPolygon(const QList<QLineF>& lineList, const QPolygonF& polygon, QList<QLineF>& resultLines);
     static QPointF rotatePoint(const QPointF& point, const QPointF& origin, double angle);

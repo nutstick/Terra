@@ -77,7 +77,7 @@ OptimizeGridCalculation::OptimizeGridCalculation(QObject *parent)
 {
 }
 
-QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, QVariant startPoint_)
+QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, QVariant startPoint_)
 {
     QList<QGeoCoordinate> bound;
     // Parsing JS value to C++
@@ -88,17 +88,16 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
     QPointF startPoint(0.0, 0.0);
 
     QList<QPointF> polygonPoints;
-    QList<QList<QPointF>> returnValue_;
-    QList<QGeoCoordinate> returnValue;
+    QList<QList<QGeoCoordinate>> returnValue;
 
     // Convert polygon to Qt coordinate system (y positive is down)
-    if(bound.count() <= 2) {
-        QList<QVariant> output;
-        foreach (QGeoCoordinate coor, returnValue) {
-            output.append(QVariant::fromValue(coor));
-        }
-        return output;
-    }
+//    if(bound.count() <= 2) {
+//        QList<QVariant> output;
+//        foreach (QGeoCoordinate coor, returnValue) {
+//            output.append(QVariant::fromValue(coor));
+//        }
+//        return output;
+//    }
 
     // Translate Lat-Long base to metries base
     polygonFromCoordinate(startCoordinate, bound, polygonPoints);
@@ -151,10 +150,13 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
     }
     qDebug() << polygonPoints << distanceEachPoints;
 
-    // Brute force number of seperate parts
-    // TODO: binary searching number of parts
-    for (int parts = 1; parts <= 5; parts++) {
-        qreal area = coveredArea / parts;
+    // Brute force number of seperate regions
+    // TODO: binary searching number of regions
+    int regions = 2;
+    while (regions <= 2) {
+        returnValue.clear();
+
+        qreal area = coveredArea / regions;
         QList<QPointF> seperatePoints;
         QList<qreal> distanceOfSeperatePoints;
 
@@ -162,13 +164,12 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
         // FIXME: if area is too small to create from first and second vertex will error
         qreal referenceDistance = distanceEachPoints[1];
         QPointF referencePoint = polygonPoints[1];
+
         // TODO: should be 2?
         int lowerindex = 2; // std::lower_bound(distanceEachPoints.begin(), distanceEachPoints.end(), referenceDistance) - distanceEachPoints.begin();
 
-        if (parts > 5) break;
-
-        // Runing binary search : parts times
-        for (int p = 0; p < parts-1; p++) {
+        // Runing binary search : regions times
+        for (int p = 0; p < regions-1; p++) {
             double start = referenceDistance, end = distanceEachPoints[countPolygonPoints - 1], mid;
             QPointF midPoint;
 
@@ -223,32 +224,18 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
 
                 qDebug() << "area : " << calculateArea(a);
 
-                // Choose flying direction from longest side
-                // Case reverese direction is better
-                if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
-                    // Reverse vertex order
-                    QList<QPointF> b;
-                    for (int ii=0; ii<a.count(); ++ii) {
-                         b << a[a.count() - 1 - ii];
-                    }
-                    a = b;
-                    QPointF ab = a[1] - a[0];
-                    // FIXME: QPointF(0.0, 1.0) or QPointF(1.0, 0.0)?
-                    qreal angle = qAcos(QPointF::dotProduct(ab, QPointF(0.0, 1.0)) / ab.manhattanLength());
+                // Grid generator
+                QList<QPointF> b;
+                gridOptimizeGenerator(a, b, gridSpace);
+                QList<QGeoCoordinate> coorB;
 
-                    QList<QPointF> grid;
-                    gridGenerator(a, grid, gridSpace, angle);
-                    returnValue_ << grid;
-                } else {
-                    QPointF ab = a[1] - a[0];
-                    // FIXME: QPointF(0.0, 1.0) or QPointF(1.0, 0.0)?
-                    qreal angle = qAcos(QPointF::dotProduct(ab, QPointF(0.0, 1.0)) / ab.manhattanLength());
-
-                    QList<QPointF> grid;
-                    gridGenerator(a, grid, gridSpace, angle);
-                    returnValue_ << grid;
+                for (int i=0; i<b.count(); i++) {
+                    QPointF& point = b[i];
+                    QGeoCoordinate geoCoord;
+                    LtpToGeo(-point.y(), point.x(), -10, startCoordinate, &geoCoord);
+                    coorB << geoCoord;
                 }
-
+                returnValue << coorB;
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();
                 a << polygonPoints[0] << seperatePoints[j];
@@ -259,7 +246,33 @@ QVariantList OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, fl
             }
         }
         qDebug() << "area : " << calculateArea(a);
+
+        QList<QPointF> b;
+        gridOptimizeGenerator(a, b, gridSpace);
+        QList<QGeoCoordinate> coorB;
+
+        for (int i=0; i<b.count(); i++) {
+            QPointF& point = b[i];
+            QGeoCoordinate geoCoord;
+            LtpToGeo(-point.y(), point.x(), -10, startCoordinate, &geoCoord);
+            coorB << geoCoord;
+        }
+        returnValue << coorB;
+        
+        qDebug() << returnValue;
+
+        regions++;
     }
+
+    QList<QVariant> output;
+    foreach (auto polygon, returnValue) {
+        QList<QVariant> list;
+        foreach (auto coor, polygon) {
+            list.append(QVariant::fromValue(coor));
+        }
+        output.append(QVariant::fromValue(list));
+    }
+    return output;
 }
 
 double OptimizeGridCalculation::calculateLength(QList<QPointF> &polygon)
@@ -352,6 +365,26 @@ void OptimizeGridCalculation::polygonFromCoordinate(QGeoCoordinate tangentOrigin
         GeoToLtp(pt, tangentOrigin, &y, &x, &down);
         polygonPoints += QPointF(x, -y);
     }
+}
+
+void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace)
+{
+    QList<QPointF> a = polygonPoints;
+    // Choose flying direction from longest side
+    // Case reverese direction is better
+    if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
+        // Reverse vertex order
+        QList<QPointF> b;
+        for (int ii=0; ii<a.count(); ++ii) {
+                b << a[a.count() - 1 - ii];
+        }
+        a = b;
+    }
+    QPointF ab = a[1] - a[0];
+    // FIXME: QPointF(0.0, 1.0) or QPointF(1.0, 0.0)?
+    qreal angle = qAcos(QPointF::dotProduct(ab, QPointF(0.0, 1.0)) / ab.manhattanLength()) / M_PI * 180.0;
+
+    gridGenerator(a, gridPoints, gridSpace, angle);
 }
 
 void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace, float gridAngle)
