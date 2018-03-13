@@ -13,12 +13,15 @@ var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimen
  * @param {SceneMode} type - Scene2D or Scene3D
  * @param {Canvas} options.canvas - Canvas
  * @param {eventSource} options.eventSource - EventSource
+ * @param {Qt.Positioning} options.takeoffPoint - Take off coordinate
  */
 function Map(options) {
     if (!options) throw new Error('No option provided');
     if (!options.mode) throw new Error('No option.mode provided');
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
+
+    if (!options.takeoffPoint) throw new Error('No takeoffPoint provided');
     /*
     * Setup ThreeJS scene
     */
@@ -52,6 +55,7 @@ function Map(options) {
         mode: options.mode
     });
     // Mission
+    this.takeoffPoint = options.takeoffPoint;
     this.missions = [];
     this._currentMission = undefined;
 }
@@ -67,6 +71,12 @@ Object.defineProperties(Map.prototype, {
         }
     }
 });
+
+Map.prototype.newMission = function(type) {
+    this._currentMission = (type == 'Polyline') ? new Mission({ map: this}) : new Polygon({ map: this });
+    this.missions.push(this._currentMission);
+    return  this._currentMission;
+}
 
 Map.prototype.update = function() {
     this.quadTree.update();
@@ -93,6 +103,33 @@ Map.prototype.addPin = function(picker) {
     return this._currentMission.addPin(position);
 }
 
+Map.prototype.generateGrid = function() {
+    // FIXME: Debuging render line
+    // this.newMission('Polyline');
+    // this.currentMission.addPin(QtPositioning.coordinate(13.738755468, 100.53120837, 10))
+    // this.currentMission.addPin(QtPositioning.coordinate(13.738939837, 100.53120837, 10))
+    // this.currentMission.addPin(QtPositioning.coordinate(13.738945436, 100.53117134, 10))
+    // this.currentMission.addPin(QtPositioning.coordinate(13.738576698, 100.53117134, 10))
+    // this.currentMission.addPin(QtPositioning.coordinate(13.738397929, 100.53113431, 10))
+    
+    this.newMission();
+    
+    // FIXME: Debuging by fixing pin coordinate
+    var pts = [
+        QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
+        QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
+        QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
+        QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
+    ];
+    var scope = this;
+
+    pts.forEach(function(pt) {
+        scope.currentMission.addPin(pt);
+    });
+
+    this._currentMission.generateGrid(4);
+}
+
 Map.prototype.mouseDownOnMarkers = function(picker) {
     var intersect = picker.intersectObjects(this.currentMission.interactableObjects(), true);
 
@@ -105,6 +142,7 @@ Map.prototype.mouseDownOnMarkers = function(picker) {
 
 Map.prototype.setView = function(position, zoom) {
     var px = sphericalMercator.px(position, 0);
+    // FIXME: y = 0 in 2D map case
     px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
     this.cameraController.target.copy(px);
 

@@ -6,7 +6,8 @@ function initializeGL(canvas, eventSource) {
     map = new Map({
         mode: new Scene3D(),
         canvas: canvas,
-        eventSource: eventSource
+        eventSource: eventSource,
+        takeoffPoint: QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10)
     });
 
     map.update();
