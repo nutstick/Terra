@@ -15,9 +15,13 @@ function Pin(options) {
 
     if (options.position) {
         if (options.position.longitude) {
-            var pt = defaultSphericalMercator.px(options.position, 0);
+            var px= defaultSphericalMercator.px(options.position, 0);
+            // FIXME: y = 0 in 2D map case
+            px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
             var meterPerPixel = defaultSphericalMercator.mPerPixel(options.position.latitude);
-            this.height = options.position.attitude / meterPerPixel;
+
+            this.position = px;
+            this.height = options.position.altitude / meterPerPixel;
         } else {
             this.position = options.position ? options.position.clone() : new THREE.Vector3(0, 0, 0);
             this.height = options.height | 10 / defaultSphericalMercator.mPerPixel(0);
