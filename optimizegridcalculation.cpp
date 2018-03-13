@@ -148,7 +148,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
         totalDistance += distanceFromPointToPoint(polygonPoints[i], polygonPoints[(i+1)%countPolygonPoints]);
         distanceEachPoints << totalDistance;
     }
-    qDebug() << polygonPoints << distanceEachPoints;
+    qDebug() << 'Distance : ' :distanceEachPoints;
 
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
@@ -208,7 +208,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
             seperatePoints << midPoint;
             distanceOfSeperatePoints << mid;
-            qDebug() << midPoint << mid;
+            // qDebug() << midPoint << mid;
             referenceDistance = mid;
             referencePoint = midPoint;
         }
@@ -232,7 +232,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 for (int i=0; i<b.count(); i++) {
                     QPointF& point = b[i];
                     QGeoCoordinate geoCoord;
-                    LtpToGeo(-point.y(), point.x(), -10, startCoordinate, &geoCoord);
+                    LtpToGeo(-point.y(), point.x(), 0, startCoordinate, &geoCoord);
                     coorB << geoCoord;
                 }
                 returnValue << coorB;

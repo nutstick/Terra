@@ -65,14 +65,7 @@ Window {
         anchors.right: parent.left
 
         onClicked: {
-            var pts = [
-                QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
-                QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
-                QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
-                QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
-            ]
-
-            optimizeGridCalculation.genGridInsideBound(pts, 4, pts[0])
+            GLCode.map.generateGrid();
         }
 
         text: 'Grid'

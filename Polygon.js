@@ -34,7 +34,7 @@ Polygon.prototype.addPin = function(position, height) {
         lineGeometry.vertices.push(this.pins[index].head.position.clone());
         var line = new THREE.LineSegments(
             lineGeometry,
-            new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+            new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 })
         );
         this.lines[index - 1] = line;
 
@@ -47,7 +47,7 @@ Polygon.prototype.addPin = function(position, height) {
 
             this._closeLine = new THREE.LineSegments(
                 lineGeometry_,
-                new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+                new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 })
             );
 
             this._map.scene.add(this._closeLine);
@@ -94,28 +94,65 @@ Polygon.prototype.interactableObjects = function() {
     }, []);
 }
 
-Polygon.prototype.generateGrid = function(gridSpace, gridAngle) {
-    var grid = gridcalculation.genGridInsideBound(this.pins.map(function(pin) {
-        return pin.coordinate;
-    }), gridSpace, gridAngle);
+Polygon.prototype.generateGrid = function(gridSpace) {
+    if (MapSettings.optimize) {
+        var grids = optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, this._map.takeoffPoint);
 
-    var lineGeometry = new THREE.Geometry();
-    for (var i = 0; i < grid.length; i++) {
-        var px = defaultSphericalMercator.px(grid[i], 0);
-        px = new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, 0, px.y - MapSettings.basePlaneDimension / 2);
-        // console.log(px.x, px.z, grid[i].latitude, grid[i].longitude)
-        lineGeometry.vertices.push(px);
+        if (this.grid) {
+            this._map.scene.remove(this.grid);
+        }
+        this.grid = new THREE.Group();
+
+        this._map.scene.add(this.grid);
+
+        for (var j = 0; j < grids.length; j++) {
+            var grid = grids[j];
+
+            var lineGeometry = new THREE.Geometry();
+            for (var i = 0; i < grid.length; i++) {
+                var px = defaultSphericalMercator.px(grid[i], 0);
+                var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
+                
+                if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+                lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+            }
+
+            this.grid.add(new THREE.LineSegments(
+                lineGeometry,
+                new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+            ));
+        }
+    } else {
+        var grid = gridcalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, 0);
+
+        var lineGeometry = new THREE.Geometry();
+        for (var i = 0; i < grid.length; i++) {
+            var px = defaultSphericalMercator.px(grid[i], 0);
+            var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
+            if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+            lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+        }
+        if (this.grid) {
+            this._map.scene.remove(this.grid);
+        }
+
+        this.grid = new THREE.LineSegments(
+            lineGeometry,
+            new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+        );
+
+        this._map.scene.add(this.grid);
     }
-    if (this.grid) {
-        this._map.scene.remove(this.grid);
-    }
 
-    this.grid = new THREE.LineSegments(
-        lineGeometry,
-        new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
-    );
-
-    this._map.scene.add(this.grid);
-
-    return grid;
+    // return grid;
 }
+
+Object.defineProperties(Polygon.prototype, {
+    pinsCoordinate: {
+        get: function() {
+            return this.pins.map(function(pin) {
+                return pin.coordinate;
+            });
+        }
+    }
+})
