@@ -48,12 +48,12 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
     // Generate grid
     gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
 
-    qDebug() << "length" << gridAngle << calculateLength(gridPoints);
+    // qDebug() << "length" << gridAngle << calculateLength(gridPoints);
 
     for (int i=0; i<gridPoints.count(); i++) {
         QPointF& point = gridPoints[i];
         QGeoCoordinate geoCoord;
-        LtpToGeo(-point.y(), point.x(), -10, tangentOrigin, &geoCoord);
+        LtpToGeo(-point.y(), point.x(), 0, tangentOrigin, &geoCoord);
         returnValue += geoCoord;
     }
 
