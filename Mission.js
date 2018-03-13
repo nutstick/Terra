@@ -1,19 +1,12 @@
 Qt.include('/three.js')
 Qt.include('/Object/Pin.js')
 
-var MissionType = {
-    Polyline: 0,
-    Region: 1
-};
-
 function Mission(options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
     this._map = map;
 
     this.pins = [];
-
-    this._type = options.type || MissionType.Region;
 
     this.lines = [];
 }
@@ -39,24 +32,6 @@ Mission.prototype.addPin = function(position, height) {
         this.lines[index - 1] = line;
 
         this._map.scene.add(line);
-
-        if (this._type === MissionType.Region) {
-            if (!this.closeLine) {
-                var lineGeometry_ = new THREE.Geometry();
-                lineGeometry_.vertices.push(this.pins[index].head.position.clone());
-                lineGeometry_.vertices.push(this.pins[0].head.position.clone());
-
-                this.closeLine = new THREE.LineSegments(
-                    lineGeometry_,
-                    new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
-                );
-
-                this._map.scene.add(this.closeLine);
-            } else {
-                this.closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
-                this.closeLine.geometry.verticesNeedUpdate = true;
-            }
-        }
     }
 
     return pin;
@@ -70,15 +45,6 @@ Mission.prototype.updatePin = function(index) {
     if (index + 1 < this.pins.length) {
         this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
         this.lines[index].geometry.verticesNeedUpdate = true;
-    }
-    if (this._type === MissionType.Region && this.pins.length > 1) {
-        if (index === 0) {
-            this.closeLine.geometry.vertices[1].copy(this.pins[index].head.position);
-            this.closeLine.geometry.verticesNeedUpdate = true;
-        } else if (index + 1 === this.pins.length) {
-            this.closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
-            this.closeLine.geometry.verticesNeedUpdate = true;
-        }
     }
 }
 
