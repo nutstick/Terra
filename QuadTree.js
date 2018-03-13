@@ -80,9 +80,6 @@ QuadTree.prototype.suspendLodUpdate = function(value) {
 }
 
 QuadTree.prototype.update = function() {
-    var start = Date.now();
-    console.log('Start QuadTree update');
-
     clearTileLoadQueue(this);
     // FIXME: Need this?
     this._tileReplacementQueue.markStartOfRenderFrame();
@@ -104,9 +101,6 @@ QuadTree.prototype.update = function() {
 
     processTileLoadQueue(this);
     // updateTileLoadProgress(this);
-
-    var end = Date.now();
-    console.log('Updated QuadTree', end - start);
 }
 
 function clearTileLoadQueue(primative) {

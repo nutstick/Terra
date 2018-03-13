@@ -74,13 +74,9 @@ TextureGenerator.prototype.loadTile = function(tile) {
         .load(
             this.url(tile._x, tile._y, tile._z),
             function(resp) {
-                var start_ = Date.now();
-                console.log('Start TileDone update');
                 scope._needUpdate = true;
                 tile.imageryDone('texture');
                 scope._loading--;
-                var end_ = Date.now();
-                console.log('Updated TileDone', end_ - start_);
             },
             function() {},
             function(err) {
