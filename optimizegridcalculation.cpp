@@ -106,7 +106,6 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     
     // project snap start point to closest point on rounded line
     QPointF closestPoint = projectPointToLine(polygonPoints[nearestLineIndex], polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)], takeoffPoint, true);
-    // qDebug() << closestPoint;
 
     // Rearrange polygon with new closest point
     QList<QPointF> polygonPoints_;

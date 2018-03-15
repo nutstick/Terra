@@ -119,7 +119,8 @@ Polygon.prototype.generateGrid = function(gridSpace) {
         this.grid.add(new THREE.LineSegments(
             lineGeometry,
             // TODO: Random color for each flight
-            new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
+            new THREE.LineBasicMaterial({ color: Math.random() * 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
+            // new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
         ));
     }
     // return grid;

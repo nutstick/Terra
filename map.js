@@ -104,28 +104,18 @@ Map.prototype.addPin = function(picker) {
 }
 
 Map.prototype.generateGrid = function() {
-    // FIXME: Debuging render line
-    // this.newMission('Polyline');
-    // this.currentMission.addPin(QtPositioning.coordinate(13.738755468, 100.53120837, 10))
-    // this.currentMission.addPin(QtPositioning.coordinate(13.738939837, 100.53120837, 10))
-    // this.currentMission.addPin(QtPositioning.coordinate(13.738945436, 100.53117134, 10))
-    // this.currentMission.addPin(QtPositioning.coordinate(13.738576698, 100.53117134, 10))
-    // this.currentMission.addPin(QtPositioning.coordinate(13.738397929, 100.53113431, 10))
-    
-    this.newMission();
-    
-    // FIXME: Debuging by fixing pin coordinate
-    var pts = [
-        QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
-        QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
-        QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
-        QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
-    ];
-    var scope = this;
-
-    pts.forEach(function(pt) {
-        scope.currentMission.addPin(pt);
-    });
+    // FIXME: Debuging, Test Case #1
+    // this.newMission();
+    // var pts = [
+    //     QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
+    //     QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
+    //     QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
+    //     QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
+    // ];
+    // var scope = this;
+    // pts.forEach(function(pt) {
+    //     scope.currentMission.addPin(pt);
+    // });
 
     this._currentMission.generateGrid(4);
 }
