@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     // app.setStyleSheet("Component#markersDelegate { border-bottom: 1px solid grey; }");
 
     JSTimer* timer = new JSTimer();
-    GridCalculation* g = new GridCalculation();
-    OptimizeGridCalculation* opg = new OptimizeGridCalculation();
+    GridCalculation* g = new GridCalculation(5/*m*/ * 10/*min*/ * 60);
+    OptimizeGridCalculation* opg = new OptimizeGridCalculation(5/*m*/ * 10/*min*/ * 60);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("timer", timer);
