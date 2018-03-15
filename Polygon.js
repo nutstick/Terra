@@ -95,55 +95,33 @@ Polygon.prototype.interactableObjects = function() {
 }
 
 Polygon.prototype.generateGrid = function(gridSpace) {
-    if (MapSettings.optimize) {
-        var grids = optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, this._map.takeoffPoint);
+    var grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, this._map.takeoffPoint) :
+                gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace, 0);
+    if (this.grid) {
+        this._map.scene.remove(this.grid);
+    }
+    this.grid = new THREE.Group();
 
-        if (this.grid) {
-            this._map.scene.remove(this.grid);
-        }
-        this.grid = new THREE.Group();
+    this._map.scene.add(this.grid);
 
-        this._map.scene.add(this.grid);
-
-        for (var j = 0; j < grids.length; j++) {
-            var grid = grids[j];
-
-            var lineGeometry = new THREE.Geometry();
-            for (var i = 0; i < grid.length; i++) {
-                var px = defaultSphericalMercator.px(grid[i], 0);
-                var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
-                
-                if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
-                lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
-            }
-
-            this.grid.add(new THREE.LineSegments(
-                lineGeometry,
-                new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
-            ));
-        }
-    } else {
-        var grid = gridcalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, 0);
+    for (var j = 0; j < grids.length; j++) {
+        var grid = grids[j];
 
         var lineGeometry = new THREE.Geometry();
         for (var i = 0; i < grid.length; i++) {
             var px = defaultSphericalMercator.px(grid[i], 0);
             var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
+            
             if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
             lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
         }
-        if (this.grid) {
-            this._map.scene.remove(this.grid);
-        }
 
-        this.grid = new THREE.LineSegments(
+        this.grid.add(new THREE.LineSegments(
             lineGeometry,
+            // TODO: Random color for each flight
             new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
-        );
-
-        this._map.scene.add(this.grid);
+        ));
     }
-
     // return grid;
 }
 
