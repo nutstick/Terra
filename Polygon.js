@@ -95,7 +95,7 @@ Polygon.prototype.interactableObjects = function() {
 }
 
 Polygon.prototype.generateGrid = function(gridSpace) {
-    var grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, gridSpace, this._map.takeoffPoint) :
+    var grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace) :
                 gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace, 0);
     if (this.grid) {
         this._map.scene.remove(this.grid);
