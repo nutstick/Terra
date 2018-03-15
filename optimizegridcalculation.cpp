@@ -1,5 +1,6 @@
 #include "optimizegridcalculation.h"
 
+static const qreal eps_ = 1e-6;
 #define NEXT(i, count) (i + 1) % count
 
 qreal dot(QPointF A, QPointF B, QPointF C)
@@ -80,9 +81,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     }
 
     // Translate Lat-Long base to metries base
-    qDebug() << bound;
     QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
-    qDebug() << polygonPoints;
     QList<QList<QGeoCoordinate>> returnValue;
 
     int countPolygonPoints = polygonPoints.count();
@@ -95,7 +94,6 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     int nearestLineIndex = -1;
     for (int i=0; i<countPolygonPoints; i++) {
         qreal dist = linePointDist(polygonPoints[i], polygonPoints[NEXT(i, countPolygonPoints)], takeoffPoint, true);
-        qDebug() << dist;
 
         if (nearestDistance > dist) {
             nearestDistance = dist;
@@ -108,7 +106,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     
     // project snap start point to closest point on rounded line
     QPointF closestPoint = projectPointToLine(polygonPoints[nearestLineIndex], polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)], takeoffPoint, true);
-    qDebug() << closestPoint;
+    // qDebug() << closestPoint;
 
     // Rearrange polygon with new closest point
     QList<QPointF> polygonPoints_;
@@ -140,8 +138,9 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
-    int regions = 2;
-    while (regions <= 2) {
+    int regions = 1;
+    while (regions <= 10) {
+        qDebug() << "Region: " << regions;
         returnValue.clear();
 
         qreal area = coveredArea / regions;
@@ -161,7 +160,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
             QPointF midPoint;
 
             // TODO: start >= end? beware Infinite loop
-            while(end - start > eps) {
+            while(end - start > eps_) {
                 mid = (start + end) / 2.0;
                 midPoint = distanceToPoint(polygonPoints, distanceEachPoints, mid);
 
@@ -199,7 +198,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
             referencePoint = midPoint;
         }
 
-        // Debug
+        bool drawable = true;
         QList<QPointF> a;
         a << polygonPoints[0];
         int i = 1, j = 0;
@@ -212,8 +211,13 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
                 // Grid generator
                 QList<QPointF> b;
+                b << takeoffPoint;
                 gridOptimizeGenerator(a, b, gridSpace);
-
+                // If total length of grid > maxDistance, should divinded into more region
+                if (calculateLength(b) > mMaxDistancePerFlight) {
+                    drawable = false;
+                    break;
+                }
                 returnValue << LtpListToGeoList(tangentOrigin, b);
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();
@@ -224,15 +228,24 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 i++;
             }
         }
-        qDebug() << "area : " << calculateArea(a);
+        if (drawable) {
+            qDebug() << "area : " << calculateArea(a);
 
-        QList<QPointF> b;
-        gridOptimizeGenerator(a, b, gridSpace);
-        returnValue << LtpListToGeoList(tangentOrigin, b);;
-        
-        qDebug() << returnValue;
+            QList<QPointF> b;
+            b << takeoffPoint;
+            gridOptimizeGenerator(a, b, gridSpace);
+            // If total length of grid > maxDistance, should divinded into more region
+            if (calculateLength(b) > mMaxDistancePerFlight) {
+                drawable = false;
+            }
+            returnValue << LtpListToGeoList(tangentOrigin, b);
+        }
 
-        regions++;
+        if (drawable) {
+            break;
+        } else {
+            regions++;
+        }
     }
 
     QList<QVariant> output;
