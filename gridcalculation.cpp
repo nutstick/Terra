@@ -1,41 +1,43 @@
 #include "gridcalculation.h"
 #include <QVariant>
 #include <QVariantList>
-static const float eps = std::numeric_limits<double>::epsilon();
 
 qreal GridCalculation::distanceFromPointToPoint(QPointF A, QPointF B)
 {
     return qSqrt((A.x() - B.x()) * (A.x() - B.x()) + (A.y() - B.y()) * (A.y() - B.y()));
 }
 
-GridCalculation::GridCalculation(QObject *parent)
+GridCalculation::GridCalculation(qreal maxDistancePerFlight, QObject *parent)
     : QObject(parent)
+    , mMaxDistancePerFlight(maxDistancePerFlight)
 {
 }
 
-QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float gridSpace, float gridAngle)
+QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle)
 {
+    // Convert varinat list to GeoCoordinate list
     QList<QGeoCoordinate> bound;
     for (const QVariant point : bound_) {
         bound.append(point.value<QGeoCoordinate>());
     }
-    QList<QPointF> polygonPoints;
+    // Convert takeoff point
+    QGeoCoordinate tangentOrigin = takeoffPoint_.value<QGeoCoordinate>();
+    QPoint takeoffPoint(0.0, 0.0);
+
     QList<QPointF> gridPoints;
     QList<QPointF> interimPoints;
-    QList<QGeoCoordinate> returnValue;
 
-    // Convert polygon to Qt coordinate system (y positive is down)
+    // If least than 2 point in line return empty list
     if(bound.count() <= 2) {
         QList<QVariant> output;
-        foreach (QGeoCoordinate coor, returnValue) {
-            output.append(QVariant::fromValue(coor));
-        }
+        // TODO: Throw error
         return output;
     }
 
-    QGeoCoordinate tangentOrigin = bound[0];
-    polygonFromCoordinate(tangentOrigin, bound, polygonPoints);
+    // Convert polygon to Qt coordinate system (y positive is down)
+    QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
 
+    // Calculate covered area
     double coveredArea = 0.0;
     for (int i=0; i<polygonPoints.count(); i++) {
         if (i != 0) {
@@ -48,25 +50,78 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, float grid
     // Generate grid
     gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
 
-    // qDebug() << "length" << gridAngle << calculateLength(gridPoints);
+    qDebug() << gridPoints;
 
-    for (int i=0; i<gridPoints.count(); i++) {
-        QPointF& point = gridPoints[i];
-        QGeoCoordinate geoCoord;
-        LtpToGeo(-point.y(), point.x(), 0, tangentOrigin, &geoCoord);
-        returnValue += geoCoord;
+    // Sperate grid to Array<grid> by maxDistancePerFlight
+    QList<QList<QGeoCoordinate>> returnValue;
+    
+    QList<QPointF> flight;
+    // Next start point in case last reachable point not in polygon vertex
+    bool haveNextStartPoint = false;
+    QPointF nextStartPoint;
+    // Start new flight with takeoff point
+    flight << takeoffPoint;
+
+    qreal distance = 0.0;
+    for (int i=0; i<gridPoints.count();) {
+        QPointF A = flight.last();
+        // If nextStartPoint is empty, B = gridPoint[i]
+        QPointF B = haveNextStartPoint ? nextStartPoint : gridPoints[i];
+        qreal nextMoveDistance = distanceFromPointToPoint(A, B);
+
+        // qDebug() << i << nextMoveDistance << distance << mMaxDistancePerFlight;
+
+        // If remaining distance cant reach next point
+        // Completing current flight and create next flight
+        if (distance + nextMoveDistance > mMaxDistancePerFlight) {
+            // Case distance from takeoff to next polygon > mMaxDistancePerFlight
+            // throw cannot complete the mission
+            if (flight.count() <= 1) {
+                qCritical() << "Can\'t complete mission maxDistancePerFlight too low";
+            }
+            // Calculate last reachable point from remaining distance
+            qreal remainingDistance = mMaxDistancePerFlight - distance;
+            QPointF AB = B - A;
+            haveNextStartPoint = true;
+            nextStartPoint = (remainingDistance / nextMoveDistance) * AB + A;
+
+            flight << nextStartPoint;
+            
+            returnValue << LtpListToGeoList(tangentOrigin, flight);
+
+            // so nextStartPoint to gird[i+1] still > maxDistance
+            flight.clear();
+            // Start new flight with takeoffPoint
+            flight << takeoffPoint;
+            distance = 0.0;
+        } else {
+            flight << B;
+            distance += nextMoveDistance;
+            haveNextStartPoint = false;
+            i++;
+        }
     }
 
+    qDebug() << flight;
+    returnValue << LtpListToGeoList(tangentOrigin, flight);
+
+    qDebug() << returnValue;
+
+    // Converting List<List<geoCoor>> to QVariantList
     QList<QVariant> output;
-    foreach (QGeoCoordinate coor, returnValue) {
-        output.append(QVariant::fromValue(coor));
+    foreach (auto polygon, returnValue) {
+        QList<QVariant> list;
+        foreach (auto coor, polygon) {
+            list.append(QVariant::fromValue(coor));
+        }
+        output.append(QVariant::fromValue(list));
     }
     return output;
 }
 
 QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle)
 {
-    QList<QPointF> polygonPoints;
+    // TODO: Correct solution from above method
     QList<QPointF> gridPoints;
     QList<QPointF> interimPoints;
     QList<QGeoCoordinate> returnValue;
@@ -77,7 +132,7 @@ QList<QGeoCoordinate> GridCalculation::genGridInsideBound(QList<QGeoCoordinate> 
     }
 
     QGeoCoordinate tangentOrigin = bound[0];
-    polygonFromCoordinate(tangentOrigin, bound, polygonPoints);
+    QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
 
     double coveredArea = 0.0;
     for (int i=0; i<polygonPoints.count(); i++) {
@@ -163,19 +218,6 @@ void GridCalculation::LtpToGeo(double x, double y, double z, QGeoCoordinate ref,
     out->setLongitude(lon_rad * RAD_TO_DEG);
 
     out->setAltitude(-z + ref.altitude());
-}
-
-void GridCalculation::polygonFromCoordinate(QGeoCoordinate tangentOrigin, QList<QGeoCoordinate> coordList, QList<QPointF> &polygonPoints)
-{
-    polygonPoints.clear();
-    polygonPoints += QPointF(0, 0);
-
-    for (int i=1; i< coordList.count(); i++) {
-        double y, x, down;
-        auto pt = coordList[i];
-        GeoToLtp(pt, tangentOrigin, &y, &x, &down);
-        polygonPoints += QPointF(x, -y);
-    }
 }
 
 QPointF GridCalculation::rotatePoint(const QPointF& point, const QPointF& origin, double angle)
