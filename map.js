@@ -13,7 +13,7 @@ var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimen
  * @constructor
  * 
  * @param {Object} options 
- * @param {SceneMode} type - Scene2D or Scene3D
+ * @param {SceneMode} options.mode - Scene2D or Scene3D
  * @param {Canvas} options.canvas - Canvas
  * @param {eventSource} options.eventSource - EventSource
  * @param {Qt.Positioning} options.takeoffPoint - Take off coordinate

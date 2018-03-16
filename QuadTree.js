@@ -56,6 +56,12 @@ function QuadTree(options) {
 
     this._levelZeroMaximumGeometricError = this._tilingScheme.ellipsoid * 2 * Math.PI / (MapSettings.basePlaneDimension * 1);
 
+    /**
+     * Need update flag
+     * @type {boolean}
+     */
+    this.needUpdate = false;
+
     this._debug = {
         enableDebugOutput : true,
 
@@ -80,6 +86,9 @@ QuadTree.prototype.suspendLodUpdate = function(value) {
 }
 
 QuadTree.prototype.update = function() {
+    // If not thing need to update, do noting
+    if (!this.needUpdate) return;
+
     clearTileLoadQueue(this);
     // FIXME: Need this?
     this._tileReplacementQueue.markStartOfRenderFrame();

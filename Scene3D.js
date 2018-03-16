@@ -4,19 +4,23 @@ Qt.include("/Core/TextureGenerator.js");
  * Scene3D Class
  * @alias Scene3D
  * @constructor
+ * @extends {SceneMode}
  */
 function Scene3D() {
     /**
      * @type TextureGenerator
+     * @private
      */
     this._textureGenerator = null;
     /**
      * @type QuadTree
+     * @private
      */
     this._quadTree = null;
 }
 
 /**
+ * Screen space error calculation
  * @param {QuadTree} quadTree 
  * @param {Tile} tile 
  * @returns {number} screenSpaceError of tile
@@ -42,6 +46,7 @@ Object.defineProperties(Scene3D.prototype, {
     /**
      * Gets the quad tree.
      * @memberof Scene3D.prototype
+     *
      * @type {QuadTree}
      */
     quadTree: {

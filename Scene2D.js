@@ -2,21 +2,30 @@ Qt.include("/Core/TextureGenerator.js");
 
 /**
  * Scene3D Class
- * @alias Scene3D
+ * @alias Scene2D
  * @constructor
+ * @extends {SceneMode}
  */
 function Scene2D() {
     /**
      * @type TextureGenerator
+     * @private
      */
     this._textureGenerator = null;
     /**
      * @type QuadTree
+     * @private
      */
     this._quadTree = null;
 }
 
 // FIXME: Screen space error calculation
+/**
+ * Screen space error calculation
+ * @param {QuadTree} quadTree 
+ * @param {Tile} tile 
+ * @returns {number} screenSpaceError of tile
+ */
 Scene2D.prototype.screenSpaceError = function(quadTree, tile) {
     var camera = map.cameraController.object;
 
@@ -46,6 +55,7 @@ Object.defineProperties(Scene2D.prototype, {
     /**
      * Gets the quad tree.
      * @memberof Scene2D.prototype
+     * 
      * @type {QuadTree}
      */
     quadTree: {
