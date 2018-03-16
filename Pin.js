@@ -5,15 +5,48 @@ var defaultSphericalMercator = new SphericalMercator({
     size: MapSettings.basePlaneDimension
 });
 
+/**
+ * Pin Class
+ * @alias Pin
+ * @constructor
+ * 
+ * @param {Object} options 
+ * @param {Mission} options.mission
+ * @param {number} options.index
+ * @param {THREE.Vector2 | QtPositioning.coordinate} [options.position] - Initial position
+ * @param {number} options.height
+ */
 function Pin(options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.mission === 'undefined') throw new Error('No options.mission provided');
+    /**
+     * @type {Mission} Parent mission
+     * @private
+     */
     this._mission = options.mission;
 
     if (typeof options.index === 'undefined') throw new Error('No options.index provided');
+    /**
+     * Index in mission
+     * @type {number}
+     * @private
+     */
     this._index = options.index;
 
+    /**
+     * Position
+     * @type {THREE.Vector3}
+     */
+    this.position = new THREE.Vector3(0, 0, 0);
+    /**
+     * Height
+     * @type {number}
+     */
+    this.height = 0;
+
+    // Initialize pin position
     if (options.position) {
+        // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
             var px= defaultSphericalMercator.px(options.position, 0);
             // FIXME: y = 0 in 2D map case
@@ -23,18 +56,26 @@ function Pin(options) {
             this.position = px;
             this.height = options.position.altitude / meterPerPixel;
         } else {
-            this.position = options.position ? options.position.clone() : new THREE.Vector3(0, 0, 0);
+            this.position = options.position.clone();
+            // Default height is 10 meters
             this.height = options.height | 10 / defaultSphericalMercator.mPerPixel(0);
         }
     }
 
-    // Head geometry
+    /**
+     * Pin's head geomtry
+     * @type {THREE.CylinderGeometry}
+     */
     this.headGeometry = new THREE.CylinderGeometry( 3, 3, 8, 8, 1 );
-    // Recalculate centroid
+    // Recalculate centroid of mesh offset by 8
     for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
         this.headGeometry.vertices[i].y += 8;
     }
-    this.headGeometry.computeBoundingSphere();
+
+    /**
+     * Pin's head mesh
+     * @type {THREE.Mesh}
+     */
     this.head = new THREE.Mesh(
         this.headGeometry,
         new THREE.MeshBasicMaterial({ color: 0x3366ff, opacity: 0.8, transparent: true })
@@ -42,23 +83,37 @@ function Pin(options) {
     this.head.name = 'Head';
     this.head.pin = this;
 
-    // Line between head and arrow geometry
+    /**
+     * Line between head and arrow geometry
+     * @type {THREE.Geometry}
+     */
     this.lineGeometry = new THREE.Geometry();
     this.lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
     this.lineGeometry.vertices.push(new THREE.Vector3(0, 8, 0));
+    /**
+     * ine between head and arrow
+     * @type {THREE.LineSegments}
+     */
     this.line = new THREE.LineSegments(
         this.lineGeometry,
         new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
     );
     this.line.name = 'Line';
 
-    // Arrow geometry
+    /**
+     * Pin's arrow geometry
+     * @type {THREE.CylinderGeometry}
+     */
     this.arrowGeometry = new THREE.CylinderGeometry( 4, 0, 6, 6, 1 );
     // Recalculate centroid
     for (var i = 0, len = this.arrowGeometry.vertices.length; i < len; i++) {
         this.arrowGeometry.vertices[i].y += 3;
     }
     this.arrowGeometry.computeBoundingSphere();
+    /**
+     * Pin's arrow
+     * @type {THREE.Mesh}
+     */
     this.arrow = new THREE.Mesh(
         this.arrowGeometry,
         new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true })
@@ -74,17 +129,30 @@ function Pin(options) {
     this.line.geometry.vertices[1].y = this.height;
     this.line.geometry.verticesNeedUpdate = true;
 
+    /**
+     * Pack of all mesh in pin (head, line, arrow)
+     * @type {THREE.Group}
+     */
     this.group = new THREE.Group();
     this.group.add(this.head);
     this.group.add(this.line);
     this.group.add(this.arrow);
 
-    // TODO: Better Add to scene function
+    // TODO: Map should have addRenderingObject function instead of direct access to scene
     this._mission._map.scene.add(this.group)
 
+    /**
+     * Last move scale of pin
+     * @type {number}
+     */
+    // TODO: lastScale inside mission or map so that no need to calculate on all pin
     this.lastScale = undefined;
 }
 
+/**
+ * Moving head with offset height
+ * @param {number} delta 
+ */
 Pin.prototype.offsetHeight = function(delta) {
     this.height += delta;
     // Update Head position
@@ -94,7 +162,7 @@ Pin.prototype.offsetHeight = function(delta) {
     this.line.geometry.vertices[1].y = this.height;
     this.line.geometry.verticesNeedUpdate = true;
 
-    // TODO: line between pin update
+    // Update line inbetween pins
     this._mission.updatePin(this._index);
 }
 

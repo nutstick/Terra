@@ -8,6 +8,9 @@ Qt.include("/lib/OrbitControls.js");
 var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
 
 /**
+ * Map Class
+ * @alias Map
+ * @constructor
  * 
  * @param {Object} options 
  * @param {SceneMode} type - Scene2D or Scene3D

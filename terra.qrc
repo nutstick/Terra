@@ -18,6 +18,7 @@
         <file>Pin.js</file>
         <file>Mission.js</file>
         <file>Polygon.js</file>
+        <file>Polyline.js</file>
     </qresource>
     <qresource prefix="/Utility">
         <file>SphericalMercator.js</file>

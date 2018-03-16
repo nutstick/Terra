@@ -5,16 +5,52 @@ var defaultSphericalMercator = new SphericalMercator({
     size: MapSettings.basePlaneDimension
 });
 
+/**
+ * Polygon Class
+ * @alias Polygon
+ * @constructor
+ * 
+ * @param {Object} options 
+ * @param {Map} options.map
+ */
 function Polygon(options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
+    /**
+     *
+     * @type {Map} Map
+     * @private
+     */
     this._map = map;
 
+    /**
+     * Pin point that define polyline direction
+     * @type {Pin[]}
+     */
     this.pins = [];
 
+    /**
+     * Array of List of coordination that is generated as grid
+     * @type {QtPositioning.coordinate[][]}
+     */
+    this.grids = [];
+
+    /**
+     * Three.Line
+     * @type {THREE.LineSegments}
+     */
     this.lines = [];
 
-    this.grid = [];
+    /**
+     * Three.Line
+     * @type {THREE.LineSegments}
+     */
+    this.gridMesh = [];
+
+    /**
+     * Three.Line
+     * @type {THREE.LineSegments}
+     */
     this._closeLine = undefined;
 }
 
@@ -81,11 +117,6 @@ Polygon.prototype.updatePin = function(index) {
     }
 }
 
-Polygon.prototype.reindex = function(pin, index) {
-    // TODO:
-    console.log('Not implemented');
-}
-
 Polygon.prototype.interactableObjects = function() {
     return this.pins.reduce(function (prev, pin) {
         prev.push(pin.head);
@@ -95,35 +126,39 @@ Polygon.prototype.interactableObjects = function() {
 }
 
 Polygon.prototype.generateGrid = function(gridSpace) {
-    var grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace) :
+    // Call C++ function to genreate flight grid
+    this.grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace) :
                 gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace, 0);
-    if (this.grid) {
-        this._map.scene.remove(this.grid);
+
+    // Redraw grid mesh
+    // Remove exist mesh first
+    if (this.gridMesh) {
+        this._map.scene.remove(this.gridMesh);
     }
-    this.grid = new THREE.Group();
 
-    this._map.scene.add(this.grid);
-
-    for (var j = 0; j < grids.length; j++) {
-        var grid = grids[j];
+    // Define grid mesh as an array of consecutive line
+    this.gridMesh = new THREE.Group();
+    this._map.scene.add(this.gridMesh);
+    // Create each grid from geneated data
+    for (var j = 0; j < this.grids.length; j++) {
+        var grid = this.grids[j];
 
         var lineGeometry = new THREE.Geometry();
         for (var i = 0; i < grid.length; i++) {
+            // Passing Geocoordinate to 3D Point
             var px = defaultSphericalMercator.px(grid[i], 0);
             var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
-            
+            // Doubling point, so it's will render consecutive line
             if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
             lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
         }
 
-        this.grid.add(new THREE.LineSegments(
+        this.gridMesh.add(new THREE.LineSegments(
             lineGeometry,
-            // TODO: Random color for each flight
             new THREE.LineBasicMaterial({ color: Math.random() * 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
             // new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
         ));
     }
-    // return grid;
 }
 
 Object.defineProperties(Polygon.prototype, {
