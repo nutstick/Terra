@@ -1,6 +1,11 @@
 Qt.include("/Core/DeveloperError.js");
 Qt.include("/Core/Ellipsoid.js");
 
+/**
+ * TilingScheme class
+ * @alias TilingScheme
+ * @constructor
+ */
 function TilingScheme() {
     this._ellipsoid = 6378137.0;// new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793);
     this._numberOfLevelZeroTilesX = 1;

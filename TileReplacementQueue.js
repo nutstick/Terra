@@ -1,3 +1,8 @@
+/**
+ * TileReplacementQueue class
+ * @alias TileReplacementQueue
+ * @constructor
+ */
 function TileReplacementQueue() {
     this.head = undefined;
     this.tail = undefined;

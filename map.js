@@ -52,7 +52,9 @@ function Map(options) {
     this._renderer = new THREE.Canvas3DRenderer({ canvas: options.canvas, antialias: true, devicePixelRatio: options.canvas.devicePixelRatio });
     this._renderer.setSize(options.canvas.width, options.canvas.height);
 
-    // Quad Tree
+    /**
+     * @type {QuadTree}
+     */
     this.quadTree = new QuadTree({
         map: this,
         mode: options.mode
@@ -158,7 +160,7 @@ Map.prototype.setView = function(position, zoom) {
     camera.updateMatrixWorld();
     camera.matrixWorldInverse.getInverse(this.cameraController.object.matrixWorld);
 
-    this.update();
+    this.quadTree.needUpdate = true;
 }
 
 Map.prototype.resizeView = function(canvas) {

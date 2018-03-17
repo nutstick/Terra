@@ -25,17 +25,32 @@ function QuadTree(options) {
     this.scene = options.map.scene;
     this.cameraController = options.map.cameraController;
 
+    /**
+     * Scene mode
+     * @type {SceneMode}
+     */
     this.mode = options.mode;
     this.mode.quadTree = this;
 
+    /**
+     * TilingScheme
+     * @type {TilingScheme}
+     */
     this._tilingScheme = new TilingScheme();
     this._rootTile = Tile.createRootTile(this, this._tilingScheme);
 
+    /**
+     * Active tiles on screen
+     * @type {Tile[]}
+     */
     this._activeTiles = [];
     this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
     this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
     this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
 
+    /**
+     * @type {TileReplacementQueue}
+     */
     this._tileReplacementQueue = new TileReplacementQueue();
 
     this._levelZeroTiles = undefined;
@@ -322,52 +337,6 @@ function visitIfVisible(primative, tile) {
     }
 }
 
-function screenSpaceError(primative, tile) {
-    if (primative.mode === SceneMode.SCENE2D || primative.cameraController.camera instanceof THREE.OrthographicCamera) {
-        return screenSpaceError2D(primative, tile);
-    }
-
-    var maxGeometricError = primative.getLevelMaximumGeometricError(tile.z);
-
-    // TODO: calculate distance from bounding box
-    var distance = tile.center.distanceTo(primative.cameraController.object.position);
-    var height = Math.max(primative.cameraController.canvas.height, primative.cameraController.canvas.width);
-    var sseDenominator = 2 * Math.tan( primative.cameraController.object.fov * Math.PI / (2 * 180) );
-
-    var error = (maxGeometricError * height) / (distance * sseDenominator);
-
-    // if (frameState.fog.enabled) {
-    // 	error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
-    // }
-
-    return error;
-}
-
-function screenSpaceError2D(primative, tile) {
-    var camera = primative.cameraController.object;
-
-    // Frustum calculate
-    var _fovy = (camera.aspect <= 1) ? camera.fov : Math.atan(Math.tan(camera.fov * 0.5) / camera.aspect) * 2.0;
-    var top = camera.near * Math.tan(0.5 * _fovy)
-    var bottom = -top;
-    var right = camera.aspect * top;
-    var left = -right;
-
-    var context = primative.cameraController.canvas;
-    var width = context.width;
-    var height = context.height;
-
-    var maxGeometricError = primative.getLevelMaximumGeometricError(tile.level);
-    var pixelSize = Math.max(top - bottom, right - left) / Math.max(width, height);
-    var error = maxGeometricError / pixelSize;
-
-    // if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-    // 	error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
-    // }
-
-    return error;
-}
-
 function addTileToRenderList(primative, tile) {
     primative._activeTiles.push(tile);
 
@@ -385,7 +354,7 @@ function processTileLoadQueue(primative) {
 
     // Remove any tiles that were not used this frame beyond the number
     // we're allowed to keep.
-    //    primative._tileReplacementQueue.trimTiles(primative.tileCacheSize);
+    primative._tileReplacementQueue.trimTiles(primative.tileCacheSize);
 
     var endTime = Date.now() + primative._loadQueueTimeSlice;
 
