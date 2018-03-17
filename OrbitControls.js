@@ -290,18 +290,21 @@ function OrbitConstraint ( map, object ) {
                 lastQuaternion.copy( this.object.quaternion );
                 zoomChanged = false;
 
+                if (scope.map.quadTree) {
+                    scope.map.quadTree.needUpdate = true;
+                }
                 // scope.lastMove = Date.now();
 
-                if (!scope.needsUpdate) {
-                    scope.needsUpdate = timer.setInterval(function(time){
-                        // if (Date.now()-scope.lastMove < 150) return
-                        // else {
-                            scope.map.update();
-                            timer.clearInterval(scope.needsUpdate)
-                            scope.needsUpdate = false
-                        // }
-                    });
-                }
+                // if (!scope.needsUpdate) {
+                //     scope.needsUpdate = timer.setInterval(function(time){
+                //         // if (Date.now()-scope.lastMove < 150) return
+                //         // else {
+                //             scope.map.update();
+                //             timer.clearInterval(scope.needsUpdate)
+                //             scope.needsUpdate = false
+                //         // }
+                //     });
+                // }
 
                 return true;
 

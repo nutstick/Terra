@@ -60,7 +60,7 @@ function QuadTree(options) {
      * Need update flag
      * @type {boolean}
      */
-    this.needUpdate = false;
+    this.needUpdate = true;
 
     this._debug = {
         enableDebugOutput : true,
@@ -88,6 +88,7 @@ QuadTree.prototype.suspendLodUpdate = function(value) {
 QuadTree.prototype.update = function() {
     // If not thing need to update, do noting
     if (!this.needUpdate) return;
+    this.needUpdate = false;
 
     clearTileLoadQueue(this);
     // FIXME: Need this?

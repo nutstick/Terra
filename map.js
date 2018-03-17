@@ -82,6 +82,7 @@ Map.prototype.newMission = function(type) {
 }
 
 Map.prototype.update = function() {
+    // Quad Tree update
     this.quadTree.update();
 
     // Mission update
