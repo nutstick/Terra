@@ -2,10 +2,17 @@ Qt.include("/Core/MapSettings.js");
 Qt.include("/Core/QuadTree.js");
 Qt.include("/Object/Mission.js");
 Qt.include("/Object/Polygon.js");
+Qt.include("/Object/Vehicle.js");
 Qt.include("/Utility/SphericalMercator.js");
 Qt.include("/three.js");
 Qt.include("/lib/OrbitControls.js");
+
 var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
+
+var DState = {
+    GROUND: 0,
+    TAKEOFF: 1
+};
 
 /**
  * Map Class
@@ -16,7 +23,6 @@ var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimen
  * @param {SceneMode} options.mode - Scene2D or Scene3D
  * @param {Canvas} options.canvas - Canvas
  * @param {eventSource} options.eventSource - EventSource
- * @param {Qt.Positioning} options.takeoffPoint - Take off coordinate
  */
 function Map(options) {
     if (!options) throw new Error('No option provided');
@@ -24,7 +30,6 @@ function Map(options) {
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
 
-    if (!options.takeoffPoint) throw new Error('No takeoffPoint provided');
     /*
     * Setup ThreeJS scene
     */
@@ -59,10 +64,21 @@ function Map(options) {
         map: this,
         mode: options.mode
     });
+    
     // Mission
-    this.takeoffPoint = options.takeoffPoint;
     this.missions = [];
     this._currentMission = undefined;
+
+    /**
+     * @type {Vehicle}
+     */
+    this.vehicle = new Vehicle({ map: this });
+
+    /**
+     * Drone State
+     * @type {number}
+     */
+    this.state = DState.GROUND;
 }
 
 Object.defineProperties(Map.prototype, {
@@ -73,6 +89,14 @@ Object.defineProperties(Map.prototype, {
                 this.missions.push(this._currentMission);
             }
             return this._currentMission;
+        }
+    },
+    vehiclePosition: {
+        get: function(position) {
+            return this.vehicle.position;
+        },
+        set: function(position) {
+            this.vehicle.position = position;
         }
     }
 });
@@ -91,6 +115,7 @@ Map.prototype.update = function() {
     var scaleFactor = 120;
     var scale = this.camera.position.y / scaleFactor;
 
+    this.vehicle.scale = scale;
     this.missions.forEach(function (mission) {
         mission.pins.forEach(function(pin) {
             pin.setScale(scale);

@@ -127,8 +127,8 @@ Polygon.prototype.interactableObjects = function() {
 
 Polygon.prototype.generateGrid = function(gridSpace) {
     // Call C++ function to genreate flight grid
-    this.grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace) :
-                gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.takeoffPoint, gridSpace, 0);
+    this.grids = MapSettings.optimize ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace) :
+                gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, 0);
 
     // Redraw grid mesh
     // Remove exist mesh first
