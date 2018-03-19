@@ -281,8 +281,10 @@ Tile.prototype.freeResources = function() {
 
     if (this._children) {
         for (var i = 0; i < 4; ++i) {
-            this._children[i].freeResources();
-            this._children[i] = undefined;
+            if (this._children[i]) {
+                this._children[i].freeResources();
+                this._children[i] = undefined;
+            }
         }
     }
 };
