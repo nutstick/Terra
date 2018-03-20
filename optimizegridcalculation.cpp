@@ -64,6 +64,7 @@ OptimizeGridCalculation::OptimizeGridCalculation(qreal maxDistancePerFlight, QOb
 
 QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle)
 {
+    Q_UNUSED(gridAngle);
     // Convert varinat list to GeoCoordinate list
     QList<QGeoCoordinate> bound;
     for (const QVariant point : bound_) {
