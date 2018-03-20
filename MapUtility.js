@@ -7,10 +7,15 @@ var defaultSphericalMercator = new SphericalMercator({
 var meterPerPixel = defaultSphericalMercator.mPerPixel(0);
 
 /**
- * @class MapUtility
+ * MapUtility
+ * @type {Object}
  */
 var MapUtility = {};
 
+/**
+ * Project 3D point to ground
+ * @param {THREE.Vector2} position 
+ */
 MapUtility.ground = function(position) {
     var _ = position.clone();
     // FIXME: ground = 0 by now
@@ -34,6 +39,10 @@ MapUtility.GeoToLtp = function(coordinate) {
 }
 
 MapUtility.LtpToGeo = function(position) {
-    // TODO:
-    // var ll = defaultSphericalMercator.ll(position, 0);
+    var ll = defaultSphericalMercator.ll([position.x + MapSettings.basePlaneDimension / 2,
+                                          position.z + MapSettings.basePlaneDimension / 2], 0);
+    var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
+    ll.altitude = position.y * meterPerPixel;
+    
+    return ll;
 }
