@@ -106,6 +106,7 @@ Tile.prototype.imageryDone = function(layerName) {
     }.bind(this), true)
 
     if (isDone) {
+        console.log('LOADED', this.stringify)
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
         var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
@@ -226,6 +227,9 @@ Object.defineProperties(Tile.prototype, {
             return this._entity.visible;
         },
         set: function(value) {
+            if (this.state == TileState.Start) {
+                console.log('??', this.stringify)
+            }
             if (this._entity) {
                 this._entity.visible = value;
             }
@@ -275,8 +279,12 @@ Object.defineProperties(Tile.prototype, {
 });
 
 Tile.prototype.freeResources = function() {
+    console.log('DELETE', this.stringify)
     this.state = TileState.START;
-    this.data = {};
+    this.upsampledFromParent = false;
+    // this.data = {};
+    // this._parent = undefined;
+    this._quadTree.scene.remove(this._entity);
     this._entity = undefined;
 
     if (this._children) {

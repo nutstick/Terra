@@ -111,18 +111,21 @@ QuadTree.prototype.update = function() {
 
     // TODO: Performance fixing on in active tile method
     this._activeTiles.forEach(function(tile) {
-        tile.active = false;
+       tile.active = false;
     });
-    this.scene.children.forEach(function(child) {
-        if (!child.tile) return;
-        child.tile.active = false;
-    })
+    console.log(this.scene.children.map(function(child) {
+        if (!child.tile) return '';
+        return child.tile.stringify;
+    }));
 
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function(tile) {
         tile.active = true;
     });
+    console.log(this._activeTiles.map(function(tile) {
+        return tile.stringify;
+    }));
 
     processTileLoadQueue(this);
     // updateTileLoadProgress(this);
