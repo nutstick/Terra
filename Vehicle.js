@@ -121,7 +121,7 @@ Object.defineProperties(Vehicle.prototype, {
     },
     coordinate: {
         get: function() {
-            return this._position;
+            return MapUtility.LtpToGeo(this._position);
         },
     },
     height: {
@@ -147,7 +147,6 @@ Object.defineProperties(Vehicle.prototype, {
             return this.lastScale;
         },
         set: function(scale) {
-            console.log(scale)
             if (this.lastScale === scale) return;
         
             this.lastScale = scale;

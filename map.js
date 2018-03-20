@@ -35,7 +35,7 @@ function Map(options) {
     */
    this.scene = new THREE.Scene();
    
-   this.camera = new THREE.PerspectiveCamera(70, width / height, 1/99, 100000000000000);
+   this.camera = new THREE.PerspectiveCamera(70, options.canvas.width / options.canvas.height, 1/99, 100000000000000);
    this.camera.position.z = 12000;
    
    this.cameraController = new THREE.OrbitControls({
