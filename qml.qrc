@@ -5,9 +5,7 @@
         <file>three.js</file>
         <file>ControlEventSource.qml</file>
         <file>Compass.qml</file>
-        <file>PlannerView.qml</file>
-        <file>NavbarButton.qml</file>
-        <file>MarkerModel.qml</file>
+        <file>ControlWindow.qml</file>
     </qresource>
     <qresource prefix="/worker">
         <file>updatetile.js</file>
