@@ -48,9 +48,9 @@ AABB.prototype.intersects = function(x, y, z) {
 }
 
 AABB.prototype.distanceFromPoint = function(vector) {
-    var dx = Math.max(this.xMin - vector.x, Math.max(0, vector.x - this.xMax));
-    var dy = Math.max(this.yMin - vector.y, Math.max(0, vector.y - this.yMax));
-    var dz = Math.max(this.zMin - vector.z, Math.max(0, vector.z - this.zMax));
+    var dx = Math.max(this.xMin - vector.x, vector.x - this.xMax);
+    var dy = Math.max(this.yMin - vector.y, vector.y - this.yMax);
+    var dz = Math.max(this.zMin - vector.z, vector.z - this.zMax);
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
