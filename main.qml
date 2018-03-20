@@ -75,11 +75,5 @@ QtObject {
         }
     }
 
-    property var controlWindow: Window {
-        width: 600
-        height: 500
-        title: "Test Window"
-        flags: Qt.Window
-        visible: true
-    }
+    property var controlWindow: ControlWindow {}
 }
