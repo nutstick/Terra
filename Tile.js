@@ -99,14 +99,14 @@ Tile.prototype.imageryLoading = function(layerName, texture) {
 }
 
 Tile.prototype.imageryDone = function(layerName) {
-    if (this._state === TileState.Failed) return;
+    // If the state of tile is not loading means tile is after freeResource or fail download
+    if (this._state !== TileState.Loading) return;
 
     var isDone = Object.keys(this.data).reduce(function (prev, key) {
         return prev && !this.data[key].loading;
     }.bind(this), true)
 
     if (isDone) {
-        console.log('LOADED', this.stringify)
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
         var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
@@ -211,7 +211,8 @@ Object.defineProperties(Tile.prototype, {
                 if (typeof this._children[i] === 'undefined') {
                     this._children[i] = new Tile({
                         x: this._x * 2 + i % 2,
-                        y: this._y * 2 + (i / 2) % 2,
+                        // Rounding float to integer ex. ~~2.5 = 2
+                        y: this._y * 2 + (~~(i / 2)) % 2,
                         z: this._z + 1,
                         parent: this,
                         quadTree: this._quadTree
@@ -227,9 +228,6 @@ Object.defineProperties(Tile.prototype, {
             return this._entity.visible;
         },
         set: function(value) {
-            if (this.state == TileState.Start) {
-                console.log('??', this.stringify)
-            }
             if (this._entity) {
                 this._entity.visible = value;
             }
@@ -279,11 +277,22 @@ Object.defineProperties(Tile.prototype, {
 });
 
 Tile.prototype.freeResources = function() {
-    console.log('DELETE', this.stringify)
-    this.state = TileState.START;
+    // Remove link betweem parent
+    if (this._parent) {
+        for (var i = 0; i < 4; i++) {
+            if (this._parent._children[i] && this.stringify === this._parent._children[i].stringify) {
+                this._parent._children[i] = undefined;
+            }
+        }
+    }
+    this._parent = undefined;
+    
+    this._state = TileState.Start;
+
     this.upsampledFromParent = false;
-    // this.data = {};
-    // this._parent = undefined;
+    this.data = {};
+
+    // Remove entity from scene
     this._quadTree.scene.remove(this._entity);
     this._entity = undefined;
 

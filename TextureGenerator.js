@@ -90,6 +90,7 @@ TextureGenerator.prototype.loadTile = function(tile) {
 }
 
 TextureGenerator.prototype.load = function() {
+    // Print out debug
     // updateLoadingProgress(this);
 
     this._loadingThisTick = this._maxLoad - this._loading;
