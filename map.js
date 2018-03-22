@@ -134,7 +134,7 @@ Map.prototype.addPin = function(picker) {
     return this._currentMission.addPin(position);
 }
 
-Map.prototype.generateGrid = function() {
+Map.prototype.generateGrid = function(type) {
     // FIXME: Debuging, Test Case #1
     // this.newMission();
     // var pts = [
@@ -148,7 +148,7 @@ Map.prototype.generateGrid = function() {
     //     scope.currentMission.addPin(pt);
     // });
 
-    this._currentMission.generateGrid(4);
+    this._currentMission.generateGrid(type || 'opt', 4);
 }
 
 Map.prototype.mouseDownOnMarkers = function(picker) {

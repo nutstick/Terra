@@ -6,12 +6,13 @@
         <file>ControlEventSource.qml</file>
         <file>Compass.qml</file>
         <file>ControlWindow.qml</file>
+        <file>MapControlView.qml</file>
     </qresource>
     <qresource prefix="/worker">
         <file>updatetile.js</file>
         <file>parseelevation.js</file>
     </qresource>
-    <qresource prefix="/lib" lang="js">
+    <qresource lang="js" prefix="/lib">
         <file>sm.js</file>
         <file>tilecover.js</file>
         <file alias="utilities.js">utilities.js</file>

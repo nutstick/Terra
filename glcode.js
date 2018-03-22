@@ -20,5 +20,8 @@ function resizeGL(canvas) {
 
 function paintGL(canvas) {
     map.update();
+    // Trigger debug update
+    controlWindow.onMapUpdate();
+
     map._renderer.render(map.scene, map.camera);
 }
