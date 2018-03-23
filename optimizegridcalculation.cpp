@@ -139,7 +139,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
     int regions = 1;
-    while (regions <= 10) {
+    while (regions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
 
@@ -213,11 +213,13 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 QList<QPointF> b;
                 b << takeoffPoint;
                 gridOptimizeGenerator(a, b, gridSpace);
+                
                 // If total length of grid > maxDistance, should divinded into more region
                 if (calculateLength(b) > mMaxDistancePerFlight) {
                     drawable = false;
                     break;
                 }
+                qDebug() << b;
                 returnValue << LtpListToGeoList(tangentOrigin, b);
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();

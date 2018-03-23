@@ -11,19 +11,8 @@ Column {
     spacing: 5
 
     property var map
-    property var gridLength: 0
-    property var optimizeGridLength: 0
 
-    function calculateLength(grids) {
-
-    }
-
-    function vector3toString(x) {
-        return 'x: ' + x.x + ', y: ' + x.y + ', z: ' + x.z;
-    }
     function onUpdate() {
-        camreaPositionContent.text = vector3toString(map.camera.position)
-        camreaTargetContent.text = vector3toString(map.cameraController.target)
     }
 
     onMapChanged: {
@@ -34,7 +23,7 @@ Column {
     Text {
         id: header
         color: "#4029ff"
-        text: "Map controller"
+        text: "Mission Controller"
         font.bold: true
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: 16
@@ -47,42 +36,61 @@ Column {
         spacing: 0
 
         Text {
-            id: camreaPositionText
+            id: missionText
             height: parent.height
             text: qsTr("Mission : ")
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: 12
         }
-        
-        Text {
-            id: camreaPositionContent
-            height: parent.height
-            text: qsTr("Text")
-            verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 12
+
+        ComboBox {
+            id: missionComboBox
         }
-        
+
     }
 
     Row {
         id: row1
         width: parent.width
-        height: 26
-        Text {
-            id: camreaTargetText
-            height: parent.height
-            text: qsTr("Camera Target : ")
-            verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 12
+        height: 200
+        Column {
+            id: column
+            width: parent.width
+            height: 400
+
+            Text {
+                id: pinsText
+                x: 0
+                height: 26
+                text: qsTr("Pins : ")
+                verticalAlignment: Text.AlignVCenter
+                font.pixelSize: 12
+            }
+
+            ListView {
+                id: listView
+                x: 0
+                width: parent.width
+                height: 26
+
+                delegate: PinItemView {
+                    x: 5
+                    width: parent.width
+                }
+                model: ListModel {
+                    ListElement {
+                        index: 1
+                        colorCode: "grey"
+                    }
+
+                    ListElement {
+                        index: 2
+                        colorCode: "red"
+                    }
+                }
+            }
         }
 
-        Text {
-            id: camreaTargetContent
-            height: parent.height
-            text: qsTr("Text")
-            verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 12
-        }
         spacing: 0
     }
 

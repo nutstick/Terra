@@ -63,7 +63,7 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant t
     flight << takeoffPoint;
 
     qreal distance = 0.0;
-    for (int i=0; i<gridPoints.count();) {
+    for (int i=gridPoints.count()-1; i>=0;) {
         QPointF A = flight.last();
         // If nextStartPoint is empty, B = gridPoint[i]
         QPointF B = haveNextStartPoint ? nextStartPoint : gridPoints[i];
@@ -98,7 +98,7 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant t
             flight << B;
             distance += nextMoveDistance;
             haveNextStartPoint = false;
-            i++;
+            i--;
         }
     }
 
@@ -265,8 +265,6 @@ void GridCalculation::intersectLinesWithPolygon(const QList<QLineF>& lineList, c
 
 void GridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace, float gridAngle)
 {
-    gridPoints.clear();
-
     // Convert polygon to bounding rect
     QPolygonF polygon;
     for (int i=0; i<polygonPoints.count(); i++) {

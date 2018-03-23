@@ -10,12 +10,15 @@ Window {
     flags: Qt.Window
     visible: true
 
+    property var map_
+
     function onMapChanged(map) {
-        tabView.getTab(0).children[0].map = map;
+        tabView.getTab(tabView.currentIndex).item.map = map;
+        map_ = map
     }
 
     function onMapUpdate() {
-        tabView.getTab(0).children[0].onUpdate();
+        tabView.getTab(tabView.currentIndex).item.onUpdate();
     }
 
     TabView {
@@ -23,17 +26,23 @@ Window {
         width: parent.width
         height: parent.height
 
+        Tab {
+            title: "Mission"
 
+            component: MissionControlView {
+                id: missionControlView
+            }
+        }
         Tab {
             title: "Map"
 
-            MapControlView { id: mapControlView }
-        }
-        Tab {
-            id: mapControlTab
-            title: "Map1"
+            component: MapControlView {
+                id: mapControlView
+            }
 
-            Rectangle { color: "red" }
+            onActiveChanged: {
+                tabView.getTab(tabView.currentIndex).item.map = map_;
+            }
         }
         Tab {
             title: "Green"
