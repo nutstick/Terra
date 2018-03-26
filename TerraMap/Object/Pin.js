@@ -1,9 +1,5 @@
-Qt.include('/three.js')
-Qt.include('/Utility/SphericalMercator.js');
-
-var defaultSphericalMercator = new SphericalMercator({
-    size: MapSettings.basePlaneDimension
-});
+var MapSettings = require('../Core/MapSettings');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
  * Pin Class
@@ -48,17 +44,17 @@ function Pin(options) {
     if (options.position) {
         // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
-            var px= defaultSphericalMercator.px(options.position, 0);
+            var px= sphericalMercator.px(options.position, 0);
             // FIXME: y = 0 in 2D map case
             px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(options.position.latitude);
+            var meterPerPixel = sphericalMercator.mPerPixel(options.position.latitude);
 
             this.position = px;
             this.height = options.position.altitude / meterPerPixel;
         } else {
             this.position = options.position.clone();
             // Default height is 10 meters
-            this.height = options.height | 10 / defaultSphericalMercator.mPerPixel(0);
+            this.height = options.height | 10 / sphericalMercator.mPerPixel(0);
         }
     }
 
@@ -139,7 +135,7 @@ function Pin(options) {
     this.group.add(this.arrow);
 
     // TODO: Map should have addRenderingObject function instead of direct access to scene
-    this._mission._map.scene.add(this.group)
+    this._mission._map.scene.add(this.group);
 
     /**
      * Last move scale of pin
@@ -164,7 +160,7 @@ Pin.prototype.offsetHeight = function(delta) {
 
     // Update line inbetween pins
     this._mission.updatePin(this._index);
-}
+};
 
 Pin.prototype.setScale = function(scale) {
     if (this.lastScale === scale) return;
@@ -175,7 +171,7 @@ Pin.prototype.setScale = function(scale) {
     this.head.geometry.computeBoundingSphere();
     this.arrow.scale.set(scale, scale, scale);
     this.head.geometry.computeBoundingSphere();
-}
+};
 
 Pin.prototype.setPosition = function(position) {
     this.position.copy(position);
@@ -190,17 +186,19 @@ Pin.prototype.setPosition = function(position) {
 
     // TODO: line between pin update
     this._mission.updatePin(this._index);
-}
+};
 
 Object.defineProperties(Pin.prototype, {
     coordinate: {
         get: function() {
-            var ll = defaultSphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
+            var ll = sphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
                                                   this.position.z + MapSettings.basePlaneDimension / 2], 0);
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
+            var meterPerPixel = sphericalMercator.mPerPixel(ll.latitude);
             ll.altitude = this.height * meterPerPixel;
 
             return ll;
         }
     }
-})
+});
+
+module.exports = Pin;

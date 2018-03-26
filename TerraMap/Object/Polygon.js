@@ -1,9 +1,6 @@
-Qt.include('/three.js')
-Qt.include('/Object/Pin.js')
-
-var defaultSphericalMercator = new SphericalMercator({
-    size: MapSettings.basePlaneDimension
-});
+var Pin = require('./Pin');
+var MapSettings = require('../Core/MapSettings');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
  * Polygon Class
@@ -94,7 +91,7 @@ Polygon.prototype.addPin = function(position, height) {
     }
 
     return pin;
-}
+};
 
 Polygon.prototype.updatePin = function(index) {
     if (index > 0) {
@@ -115,7 +112,7 @@ Polygon.prototype.updatePin = function(index) {
             this._closeLine.geometry.verticesNeedUpdate = true;
         }
     }
-}
+};
 
 Polygon.prototype.interactableObjects = function() {
     return this.pins.reduce(function (prev, pin) {
@@ -123,7 +120,7 @@ Polygon.prototype.interactableObjects = function() {
         prev.push(pin.arrow);
         return prev;
     }, []);
-}
+};
 
 Polygon.prototype.generateGrid = function(type, gridSpace) {
     // Call C++ function to genreate flight grid
@@ -146,8 +143,8 @@ Polygon.prototype.generateGrid = function(type, gridSpace) {
         var lineGeometry = new THREE.Geometry();
         for (var i = 0; i < grid.length; i++) {
             // Passing Geocoordinate to 3D Point
-            var px = defaultSphericalMercator.px(grid[i], 0);
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(grid[i].latitude);
+            var px = sphericalMercator.px(grid[i], 0);
+            var meterPerPixel = sphericalMercator.mPerPixel(grid[i].latitude);
             // Doubling point, so it's will render consecutive line
             if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
             lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
@@ -159,7 +156,7 @@ Polygon.prototype.generateGrid = function(type, gridSpace) {
             // new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
         ));
     }
-}
+};
 
 Object.defineProperties(Polygon.prototype, {
     pinsCoordinate: {
@@ -169,4 +166,6 @@ Object.defineProperties(Polygon.prototype, {
             });
         }
     }
-})
+});
+
+module.exports = Polygon;

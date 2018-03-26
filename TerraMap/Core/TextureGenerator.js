@@ -1,6 +1,3 @@
-
-Qt.include("three.js")
-
 /**
  * TextureGenerator Class
  * @alias TextureGenerator
@@ -49,7 +46,8 @@ TextureGenerator.prototype.url = function(x, y, z) {
 
 TextureGenerator.prototype.start = function() {
     var scope = this;
-    timer.setInterval(function() {
+    // timer.
+    setInterval(function() {
         scope.load();
         if (scope._needUpdate) {
             scope._quadTree.update();
@@ -121,3 +119,5 @@ function updateLoadingProgress(textureGenerator) {
         debug.lastLow = debug.low;
     }
 }
+
+module.exports = TextureGenerator;

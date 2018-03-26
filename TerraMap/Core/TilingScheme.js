@@ -1,6 +1,3 @@
-Qt.include("/Core/DeveloperError.js");
-Qt.include("/Core/Ellipsoid.js");
-
 /**
  * TilingScheme class
  * @alias TilingScheme
@@ -32,3 +29,5 @@ TilingScheme.prototype.getNumberOfXTilesAtLevel = function (level) {
 TilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
     return this._numberOfLevelZeroTilesY << level;
 }
+
+module.exports = TilingScheme;

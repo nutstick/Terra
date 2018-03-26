@@ -1,18 +1,20 @@
-Qt.include("/Core/MapSettings.js");
-Qt.include("/Core/QuadTree.js");
-Qt.include("/Object/Mission.js");
-Qt.include("/Object/Polygon.js");
-Qt.include("/Object/Vehicle.js");
-Qt.include("/Utility/SphericalMercator.js");
-Qt.include("/three.js");
-Qt.include("/lib/OrbitControls.js");
-
-var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
+var MapSettings = require('./MapSettings');
+var sphericalMercator = require('../Utility/SphericalMercator');
+var QuadTree = require('./QuadTree');
+var Mission = require('../Object/Mission');
+var Polygon = require('../Object/Polygon');
+var Vehicle = require('../Object/Vehicle');
 
 var DState = {
     GROUND: 0,
     TAKEOFF: 1
 };
+
+/**
+ * @typedef {Object} Canvas
+ * @property {number} width
+ * @property {number} height
+ */
 
 /**
  * Map Class
@@ -23,12 +25,14 @@ var DState = {
  * @param {SceneMode} options.mode - Scene2D or Scene3D
  * @param {Canvas} options.canvas - Canvas
  * @param {eventSource} options.eventSource - EventSource
+ * @param {Renderer} options.renderer - Renderer
  */
 function Map(options) {
     if (!options) throw new Error('No option provided');
     if (!options.mode) throw new Error('No option.mode provided');
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
+    if (!options.renderer) throw new Error('No options.renderer provided');
 
     /*
     * Setup ThreeJS scene
@@ -54,8 +58,7 @@ function Map(options) {
     this.basePlane.opacity=0;
     this.scene.add(this.basePlane);
 
-    this._renderer = new THREE.Canvas3DRenderer({ canvas: options.canvas, antialias: true, devicePixelRatio: options.canvas.devicePixelRatio });
-    this._renderer.setSize(options.canvas.width, options.canvas.height);
+    this._renderer = options.renderer;
 
     /**
      * @type {QuadTree}
@@ -105,7 +108,7 @@ Map.prototype.newMission = function(type) {
     this._currentMission = (type == 'Polyline') ? new Mission({ map: this}) : new Polygon({ map: this });
     this.missions.push(this._currentMission);
     return  this._currentMission;
-}
+};
 
 Map.prototype.update = function() {
     // Quad Tree update
@@ -121,7 +124,7 @@ Map.prototype.update = function() {
             pin.setScale(scale);
         });
     });
-}
+};
 
 Map.prototype.addPin = function(picker) {
     var position = picker.intersectObject(this.basePlane)[0].point;
@@ -132,7 +135,7 @@ Map.prototype.addPin = function(picker) {
     }
 
     return this._currentMission.addPin(position);
-}
+};
 
 Map.prototype.generateGrid = function(type) {
     // FIXME: Debuging, Test Case #1
@@ -149,7 +152,7 @@ Map.prototype.generateGrid = function(type) {
     // });
 
     this._currentMission.generateGrid(type || 'opt', 4);
-}
+};
 
 Map.prototype.mouseDownOnMarkers = function(picker) {
     var intersect = picker.intersectObjects(this.currentMission.interactableObjects(), true);
@@ -159,7 +162,7 @@ Map.prototype.mouseDownOnMarkers = function(picker) {
     }
 
     return null;
-}
+};
 
 Map.prototype.setView = function(position, zoom) {
     var px = sphericalMercator.px(position, 0);
@@ -186,7 +189,7 @@ Map.prototype.setView = function(position, zoom) {
     camera.matrixWorldInverse.getInverse(this.cameraController.object.matrixWorld);
 
     this.quadTree.needUpdate = true;
-}
+};
 
 Map.prototype.resizeView = function(canvas) {
     this.camera.aspect = canvas.width / canvas.height;
@@ -194,4 +197,6 @@ Map.prototype.resizeView = function(canvas) {
 
     this._renderer.setPixelRatio(canvas.devicePixelRatio);
     this._renderer.setSize(canvas.width, canvas.height);
-}
+};
+
+module.exports = Map;

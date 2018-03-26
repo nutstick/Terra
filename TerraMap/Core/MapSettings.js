@@ -5,9 +5,13 @@
  * @property {boolean} debug
  * @property {boolean} optimize
  */
+
+/** @type {MapSettings} */
 var MapSettings = {
     basePlaneDimension: Math.pow(2, 16),
     cameraDistance: 12000,
-    debug: false,
+    debug: true,
     optimize: true
 };
+
+module.exports = MapSettings;

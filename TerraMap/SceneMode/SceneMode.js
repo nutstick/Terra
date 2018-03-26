@@ -28,3 +28,5 @@ Object.defineProperties(SceneMode.prototype, {
         }
     }
 });
+
+module.exports = SceneMode;

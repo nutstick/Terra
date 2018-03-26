@@ -1,4 +1,4 @@
-Qt.include("/Core/TextureGenerator.js");
+var TextureGenerator = require('../Core/TextureGenerator');
 
 /**
  * Scene3D Class
@@ -28,12 +28,13 @@ function Scene3D() {
 Scene3D.prototype.screenSpaceError = function(quadTree, tile) {
     var maxGeometricError = quadTree.getLevelMaximumGeometricError(tile.z);
 
-    var distance = tile.bbox.distanceFromPoint(quadTree.cameraController.object.position);
+    var distance = tile.bbox.distanceToCamera(quadTree.cameraController.object);
     var height = Math.max(quadTree.cameraController.canvas.height, quadTree.cameraController.canvas.width);
     var sseDenominator = 2 * Math.tan(quadTree.cameraController.object.fov * Math.PI / (2 * 180));
-
+    
     var error = (maxGeometricError * height) / (distance * sseDenominator);
-
+    
+    console.log(maxGeometricError, error)
     // TODO: Fof from Cesium
     // if (frameState.fog.enabled) {
     // 	error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
@@ -59,3 +60,5 @@ Object.defineProperties(Scene3D.prototype, {
         }
     }
 });
+
+module.exports = Scene3D;

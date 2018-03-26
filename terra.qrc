@@ -1,33 +1,23 @@
 <RCC>
-    <qresource prefix="/"/>
-    <qresource prefix="/Core">
-        <file>Tile.js</file>
-        <file>DeveloperError.js</file>
-        <file>TilingScheme.js</file>
-        <file>Ellipsoid.js</file>
-        <file>Map.js</file>
-        <file>TileReplacementQueue.js</file>
-        <file>Imagery.js</file>
-        <file>DebugImagery.js</file>
-        <file>MapSettings.js</file>
-        <file>AABB.js</file>
-        <file>TextureGenerator.js</file>
-        <file>QuadTree.js</file>
-    </qresource>
-    <qresource prefix="/Object">
-        <file>Pin.js</file>
-        <file>Mission.js</file>
-        <file>Polygon.js</file>
-        <file>Polyline.js</file>
-        <file>Vehicle.js</file>
-    </qresource>
-    <qresource prefix="/Utility">
-        <file>SphericalMercator.js</file>
-        <file>MapUtility.js</file>
-    </qresource>
-    <qresource prefix="/SceneMode">
-        <file>Scene3D.js</file>
-        <file>Scene2D.js</file>
-        <file>SceneMode.js</file>
+    <qresource prefix="/">
+        <file>TerraMap/Core/AABB.js</file>
+        <file>TerraMap/Core/DeveloperError.js</file>
+        <file>TerraMap/Core/Map.js</file>
+        <file>TerraMap/Core/MapSettings.js</file>
+        <file>TerraMap/Core/QuadTree.js</file>
+        <file>TerraMap/Core/TextureGenerator.js</file>
+        <file>TerraMap/Core/Tile.js</file>
+        <file>TerraMap/Core/TileReplacementQueue.js</file>
+        <file>TerraMap/Core/TilingScheme.js</file>
+        <file>TerraMap/Object/Mission.js</file>
+        <file>TerraMap/Object/Pin.js</file>
+        <file>TerraMap/Object/Polygon.js</file>
+        <file>TerraMap/Object/Polyline.js</file>
+        <file>TerraMap/Object/Vehicle.js</file>
+        <file>TerraMap/SceneMode/Scene2D.js</file>
+        <file>TerraMap/SceneMode/Scene3D.js</file>
+        <file>TerraMap/SceneMode/SceneMode.js</file>
+        <file>TerraMap/Utility/MapUtility.js</file>
+        <file>TerraMap/Utility/SphericalMercator.js</file>
     </qresource>
 </RCC>

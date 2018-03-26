@@ -1,8 +1,6 @@
-Qt.include("three.js");
-Qt.include("/Core/DeveloperError.js");
-Qt.include("/Core/TileReplacementQueue.js");
-Qt.include("/Core/MapSettings.js");
-Qt.include("/Core/AABB.js");
+var AABB = require('./AABB');
+var MapSettings = require('./MapSettings');
+var TileReplacementQueue = require('./TileReplacementQueue');
 
 var TileState = {
     Start: 0,
@@ -15,6 +13,7 @@ var TileState = {
  * Tile
  * @alias Tile
  * @constructor
+ * 
  * @param {Object} options
  * @param {number} options.x - x
  * @param {number} options.y - y
@@ -53,6 +52,11 @@ function Tile(options) {
     this._replacementNext = undefined;
 
     this._distance = 0.0;
+
+    /**
+     * @type AABB
+     * @private
+     */
     this._bbox = undefined;
 
     this.upsampledFromParent = false;
@@ -88,7 +92,7 @@ Tile.createRootTile = function(quadTree, tilingScheme) {
     }
 
     return result;
-}
+};
 
 Tile.prototype.imageryLoading = function(layerName, texture) {
     if (this._state === TileState.Failed) return;
@@ -96,7 +100,7 @@ Tile.prototype.imageryLoading = function(layerName, texture) {
     this.data[layerName] = texture;
 
     this._state = TileState.Loading;
-}
+};
 
 Tile.prototype.imageryDone = function(layerName) {
     // If the state of tile is not loading means tile is after freeResource or fail download
@@ -104,7 +108,7 @@ Tile.prototype.imageryDone = function(layerName) {
 
     var isDone = Object.keys(this.data).reduce(function (prev, key) {
         return prev && !this.data[key].loading;
-    }.bind(this), true)
+    }.bind(this), true);
 
     if (isDone) {
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
@@ -146,11 +150,11 @@ Tile.prototype.imageryDone = function(layerName) {
         // Trigger need update
         this._quadTree.needUpdate = true;
     }
-}
+};
 
 Tile.prototype.imageryFailed = function(layerName) {
     this._state = TileState.Failed;
-}
+};
 
 Object.defineProperties(Tile.prototype, {
     x: {
@@ -305,3 +309,5 @@ Tile.prototype.freeResources = function() {
         }
     }
 };
+
+module.exports = Tile;

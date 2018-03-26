@@ -109,3 +109,5 @@ TileReplacementQueue.prototype.markTileRendered = function(item) {
 
     this.head = item;
 };
+
+module.exports = TileReplacementQueue;

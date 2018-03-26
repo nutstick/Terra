@@ -1,12 +1,13 @@
-Qt.include("/Core/MapSettings.js");
-Qt.include("/Core/Tile.js");
-Qt.include("/Core/TilingScheme.js");
-Qt.include("/Core/TileReplacementQueue.js");
-Qt.include("/Core/AABB.js");
-Qt.include("/Utility/SphericalMercator.js");
+var MapSettings = require('./MapSettings');
+var Tile = require('./Tile');
+var TilingScheme = require('./TilingScheme');
+var TileReplacementQueue = require('./TileReplacementQueue');
+var AABB = require('./AABB');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
-var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
-
+function getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+    return ellipsoid * 2 * Math.PI * 0.25 / (tileImageWidth * numberOfTilesAtLevelZero);
+};
 
 /**
  * QuadTree class
@@ -69,7 +70,7 @@ function QuadTree(options) {
 
     this._lastTileLoadQueueLength = 0;
 
-    this._levelZeroMaximumGeometricError = this._tilingScheme.ellipsoid * 2 * Math.PI / (MapSettings.basePlaneDimension * 1);
+    this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 64, 1);
 
     /**
      * Need update flag
@@ -113,22 +114,24 @@ QuadTree.prototype.update = function() {
     this._activeTiles.forEach(function(tile) {
        tile.active = false;
     });
-    console.log(this.scene.children.map(function(child) {
-        if (!child.tile) return '';
-        return child.tile.stringify;
-    }));
+    // console.log(this.scene.children.map(function(child) {
+    //     if (!child.tile) return '';
+    //     return child.tile.stringify;
+    // }));
 
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function(tile) {
         tile.active = true;
     });
-    console.log(this._activeTiles.map(function(tile) {
-        return tile.stringify;
-    }));
+    // console.log(this._activeTiles.map(function(tile) {
+    //     return tile.stringify;
+    // }));
 
     processTileLoadQueue(this);
-    // updateTileLoadProgress(this);
+    updateTileLoadProgress(this);
+
+    console.log(this._tileReplacementQueue.count);
 }
 
 function clearTileLoadQueue(primative) {
@@ -243,7 +246,11 @@ function visitTile(primative, tile) {
             // Load the children even though we're (currently) not going to render them.
             // A tile that is "upsampled only" right now might change its tune once it does more loading.
             // A tile that is upsampled now and forever should also be done loading, so no harm done.
-            queueChildLoadNearToFar(primative, primative.cameraController.target.position, tile.children);
+            queueChildLoadNearToFar(
+                primative,
+                sphericalMercator.PixelToCartesian(primative.cameraController.target),
+                tile.children
+            );
 
             if (tile.needsLoading) {
                 // Rendered tile that's not waiting on children loads with medium priority.
@@ -262,7 +269,11 @@ function visitTile(primative, tile) {
     } else {
         // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
         // render this tile in the meantime.
-        queueChildLoadNearToFar(primative, primative.cameraController.target, tile.children);
+        queueChildLoadNearToFar(
+            primative,
+            sphericalMercator.PixelToCartesian(primative.cameraController.target),
+            tile.children
+        );
         addTileToRenderList(primative, tile);
 
         if (tile.needsLoading) {
@@ -276,9 +287,10 @@ function queueChildLoadNearToFar(primative, cameraPosition, children) {
     var distances = children.map(function(child) {
         return { tile: child, distance: child.bbox.distanceFromPoint(cameraPosition) };
     });
+
     distances.sort(function(a, b) {
         return a.distance - b.distance;
-    })
+    });
 
     distances.forEach(function(child, index) {
         queueChildTileLoad(primative, child.tile);
@@ -314,7 +326,6 @@ function visitVisibleChildrenNearToFar(primative, children) {
 function computeTileVisibility(primative, tile, debug) {
     var xmin, ymin, zmin, xmax, ymax, zmax;
 
-    var bbox = tile.bbox;
     var camera = primative.cameraController.object;
 
     var matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -401,3 +412,5 @@ function updateTileLoadProgress(primative) {
         }
     }
 }
+
+module.exports = QuadTree;

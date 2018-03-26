@@ -1,6 +1,6 @@
-Qt.include('/three.js')
-Qt.include('/Utility/MapUtility.js');
-
+var MapSettings = require('../Core/MapSettings');
+var MapUtility = require('../Utility/MapUtility');
+var sphericalMercator = require('../Utility/SphericalMercator');
 /**
  * Vehicle Class
  * @alias Vehicle
@@ -24,7 +24,7 @@ function Vehicle(options) {
     if (options.position) {
         // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
-            this._position = MapUtility.GeoToLtp(options.position);
+            this._position = MapUtility.CartographicToPixel(options.position);
         } else {
             this._position = options.position.clone();
             // Default height is 10 meters
@@ -102,11 +102,11 @@ Object.defineProperties(Vehicle.prototype, {
         set: function(position) {
             // Case position is a QtPositioning.coordiante
             if (position.longitude) {
-                this._position = MapUtility.GeoToLtp(position);
+                this._position = MapUtility.CartographicToPixel(position);
             } else {
                 this._position.copy(position);
                 // Default height is 10 meters
-                this._position.y = options.height | MapUtility.tenMeters();
+                this._position.y = this._position.y | MapUtility.tenMeters();
             }
 
             // Update Head position
@@ -121,7 +121,7 @@ Object.defineProperties(Vehicle.prototype, {
     },
     coordinate: {
         get: function() {
-            return MapUtility.LtpToGeo(this._position);
+            return MapUtility.PixelToCartographic(this._position);
         },
     },
     height: {
@@ -129,16 +129,16 @@ Object.defineProperties(Vehicle.prototype, {
             return this._height;
         },
         set: function(height) {
-            this._height = height
+            this._height = height;
         }
     },
     meterHeight: {
         get: function() {
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(0);
+            var meterPerPixel = sphericalMercator.mPerPixel(0);
             return this._height / meterPerPixel;
         },
         set: function(height) {
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(0);
+            var meterPerPixel = sphericalMercator.mPerPixel(0);
             this._height = height * meterPerPixel;
         }
     },
@@ -160,3 +160,4 @@ Object.defineProperties(Vehicle.prototype, {
     }
 });
 
+module.exports = Vehicle;

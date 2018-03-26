@@ -1,6 +1,3 @@
-Qt.include('/three.js')
-Qt.include('/Object/Pin.js')
-
 /**
  * Mission Class
  * @alias Mission
@@ -38,3 +35,5 @@ Mission.prototype.reindex = function(pin, index) {
 Mission.prototype.interactableObjects = function() {
     throw new Error('Not implemented');
 }
+
+module.exports = Mission;

@@ -1,4 +1,4 @@
-Qt.include("/Core/TextureGenerator.js");
+var TextureGenerator = require('../Core/TextureGenerator');
 
 /**
  * Scene3D Class
@@ -68,3 +68,5 @@ Object.defineProperties(Scene2D.prototype, {
         }
     }
 });
+
+module.exports = SceneMode;
