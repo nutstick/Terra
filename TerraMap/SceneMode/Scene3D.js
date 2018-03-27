@@ -6,7 +6,7 @@ var TextureGenerator = require('../Core/TextureGenerator');
  * @constructor
  * @extends {SceneMode}
  */
-function Scene3D() {
+function Scene3D () {
     /**
      * @type TextureGenerator
      * @private
@@ -21,27 +21,28 @@ function Scene3D() {
 
 /**
  * Screen space error calculation
- * @param {QuadTree} quadTree 
- * @param {Tile} tile 
+ * @param {QuadTree} quadTree
+ * @param {Tile} tile
  * @returns {number} screenSpaceError of tile
  */
-Scene3D.prototype.screenSpaceError = function(quadTree, tile) {
+Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
     var maxGeometricError = quadTree.getLevelMaximumGeometricError(tile.z);
 
+    console.log(tile.stringify)
     var distance = tile.bbox.distanceToCamera(quadTree.cameraController.object);
     var height = Math.max(quadTree.cameraController.canvas.height, quadTree.cameraController.canvas.width);
     var sseDenominator = 2 * Math.tan(quadTree.cameraController.object.fov * Math.PI / (2 * 180));
-    
+
     var error = (maxGeometricError * height) / (distance * sseDenominator);
-    
-    console.log(maxGeometricError, error)
+
+    console.log(maxGeometricError, error);
     // TODO: Fof from Cesium
     // if (frameState.fog.enabled) {
-    // 	error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+    //  error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
     // }
 
     return error;
-}
+};
 
 Object.defineProperties(Scene3D.prototype, {
     /**
@@ -51,10 +52,10 @@ Object.defineProperties(Scene3D.prototype, {
      * @type {QuadTree}
      */
     quadTree: {
-        get: function() {
+        get: function () {
             return this._quadTree;
         },
-        set: function(value) {
+        set: function (value) {
             this._quadTree = value;
             this._textureGenerator = new TextureGenerator({ quadTree: value });
         }

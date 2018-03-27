@@ -1,8 +1,9 @@
 var MapSettings = require('./MapSettings');
 var MapUtility = require('../Utility/MapUtility');
 var sphericalMercator = require('../Utility/SphericalMercator');
+var Cartesian = require('../Math/Cartesian');
 
-var UNIT_Z = THREE.Vector3(0.0, 0.0, 1.0);
+var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
 
 function AABB(options) {
     options = options ||  {};
@@ -19,35 +20,35 @@ function AABB(options) {
     westernMidpointCartesian.y = this.yMin;
     
     this.westNormal = new THREE.Vector3();
-    westNormal.crossVectors(westernMidpointCartesian, UNIT_Z);
-    westNormal.normalize();
+    this.westNormal.crossVectors(westernMidpointCartesian, UNIT_Z);
+    this.westNormal.normalize();
 
     var easternMidpointCartesian = new THREE.Vector3();
     easternMidpointCartesian.x = (this.xMax + this.xMin) / 2;
     easternMidpointCartesian.y = this.yMax;
 
     this.eastNormal = new THREE.Vector3();
-    eastNormal.crossVectors(easternMidpointCartesian, UNIT_Z);
-    eastNormal.normalize();
+    this.eastNormal.crossVectors(easternMidpointCartesian, UNIT_Z);
+    this.eastNormal.normalize();
 
     var northMidpointCartesian = new THREE.Vector3();
     northMidpointCartesian.x = this.xMin;
     northMidpointCartesian.y = (this.yMax + this.yMin) / 2;
 
     this.northNormal = new THREE.Vector3();
-    northNormal.crossVectors(northMidpointCartesian, UNIT_Z);
-    northNormal.normalize();
+    this.northNormal.crossVectors(northMidpointCartesian, UNIT_Z);
+    this.northNormal.normalize();
 
     var southMidpointCartesian = new THREE.Vector3();
     southMidpointCartesian.x = this.xMax;
     southMidpointCartesian.y = (this.yMax + this.yMin) / 2;
 
-    this.southhNormal = new THREE.Vector3();
-    southhNormal.crossVectors(southMidpointCartesian, UNIT_Z);
-    southhNormal.normalize();
+    this.southNormal = new THREE.Vector3();
+    this.southNormal.crossVectors(southMidpointCartesian, UNIT_Z);
+    this.southNormal.normalize();
 
-    this.northwestCornnerCartesian = new THREE.Vector3(xMin, yMin);
-    this.southeastCornnerCartesian = new THREE.Vector3(xMax, yMax);
+    this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, this.yMin);
+    this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, this.yMax);
 }
 
 Object.defineProperties(AABB.prototype, {
@@ -86,9 +87,6 @@ AABB.prototype.intersects = function(x, y, z) {
         this.zMin <= z && this.zMax >= z;
 }
 
-var temp = THREE.Vector3();
-var temp2 = THREE.Vector3();
-
 /**
  * @param {Camera} camera 
  */
@@ -96,7 +94,10 @@ AABB.prototype.distanceToCamera = function(camera) {
     var cameraCartesianPosition = camera.positionCartesian;
     var cameraCartographicPosition = camera.positionCartographic;
 
+    var temp = new THREE.Vector3();
     var result = 0.0;
+    console.log(cameraCartesianPosition, this)
+
     if (!this.intersects(cameraCartesianPosition.x, cameraCartesianPosition.y, cameraCartesianPosition.z)) {
         var northwestCornnerCartesian = this.northwestCornnerCartesian;
         var southeastCornnerCartesian = this.southeastCornnerCartesian;
@@ -143,6 +144,8 @@ AABB.prototype.distanceFromPoint = function(vector) {
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
+var temp2 = QtPositioning.coordinate();
+
 AABB.createAABBForTile = function(tile) {
     var tileSize = MapSettings.basePlaneDimension / Math.pow(2, tile.z);
     var xMin = (tile.x) * tileSize - MapSettings.basePlaneDimension / 2;
@@ -150,9 +153,17 @@ AABB.createAABBForTile = function(tile) {
     var zMin = (tile.y) * tileSize - MapSettings.basePlaneDimension / 2;
     var zMax = (tile.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
 
-    var topLeftCornner = sphericalMercator.PixelToCartesian(new THREE.Vector3(xMin, 0, zMin));
-    var bottomRightCornner = sphericalMercator.PixelToCartesian(new THREE.Vector3(xMax, 0, zMax));
+    // Converting px to cartesian
+    var topLeftCornner = new Cartesian();
+    sphericalMercator.PixelToCartographic(new THREE.Vector3(xMin, 0, zMin), temp2);
+    sphericalMercator.CartographicToCartesian(temp2, topLeftCornner);
+    
+    var bottomRightCornner = new Cartesian();
+    sphericalMercator.PixelToCartographic(new THREE.Vector3(xMax, 0, zMax), temp2);
+    sphericalMercator.CartographicToCartesian(temp2, bottomRightCornner);
+    console.log(topLeftCornner, bottomRightCornner)
 
+    // TODO: height as 10 meters
     return new AABB({
         xMin: topLeftCornner.x,
         xMax: bottomRightCornner.x,

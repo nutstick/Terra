@@ -1,6 +1,8 @@
 var MapSettings = require('./MapSettings');
 var sphericalMercator = require('../Utility/SphericalMercator');
 var QuadTree = require('./QuadTree');
+var Cartesian = require('../Math/Cartesian');
+var Camera = require('../Renderer/Camera');
 var Mission = require('../Object/Mission');
 var Polygon = require('../Object/Polygon');
 var Vehicle = require('../Object/Vehicle');
@@ -39,14 +41,18 @@ function Map(options) {
     */
    this.scene = new THREE.Scene();
    
-   this.camera = new THREE.PerspectiveCamera(70, options.canvas.width / options.canvas.height, 1/99, 100000000000000);
-   this.camera.position.z = 12000;
+   this.camera = new Camera({ canvas: options.canvas });
+   this.camera.setPosition({ z: MapSettings.cameraDistance });
    
    this.cameraController = new THREE.OrbitControls({
        map: this,
        eventSource: options.eventSource,
        canvas: options.canvas,
     });
+
+    this.cameraController.targetCartographic = QtPositioning.coordinate();
+    this.cameraController.targetCartesian = new Cartesian();
+
     // Base Plane
     this.basePlane = new THREE.Mesh(
         new THREE.PlaneBufferGeometry(MapSettings.basePlaneDimension*100, MapSettings.basePlaneDimension*100, 1, 1),

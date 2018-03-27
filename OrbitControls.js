@@ -255,6 +255,7 @@ function OrbitConstraint ( map, object ) {
             offset.applyQuaternion( quatInverse );
 
             position.copy( this.target ).add( offset );
+            this.object.updatePosition();
 
             this.object.lookAt( this.target );
 
