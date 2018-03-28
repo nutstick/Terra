@@ -6,11 +6,11 @@ var sphericalMercator = require('../Utility/SphericalMercator');
  * Polygon Class
  * @alias Polygon
  * @constructor
- * 
- * @param {Object} options 
+ *
+ * @param {Object} options
  * @param {Map} options.map
  */
-function Polygon(options) {
+function Polygon (options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
     /**
@@ -18,7 +18,7 @@ function Polygon(options) {
      * @type {Map} Map
      * @private
      */
-    this._map = map;
+    this._map = options.map;
 
     /**
      * Pin point that define polyline direction
@@ -40,9 +40,9 @@ function Polygon(options) {
 
     /**
      * Three.Line
-     * @type {THREE.LineSegments}
+     * @type {THREE.Group}
      */
-    this.gridMesh = [];
+    this.gridMesh = undefined;
 
     /**
      * Three.Line
@@ -51,7 +51,7 @@ function Polygon(options) {
     this._closeLine = undefined;
 }
 
-Polygon.prototype.addPin = function(position, height) {
+Polygon.prototype.addPin = function (position, height) {
     var index = this.pins.length;
     var pin = new Pin({
         index: index,
@@ -93,10 +93,10 @@ Polygon.prototype.addPin = function(position, height) {
     return pin;
 };
 
-Polygon.prototype.updatePin = function(index) {
+Polygon.prototype.updatePin = function (index) {
     if (index > 0) {
-        this.lines[index-1].geometry.vertices[1].copy(this.pins[index].head.position);
-        this.lines[index-1].geometry.verticesNeedUpdate = true;
+        this.lines[index - 1].geometry.vertices[1].copy(this.pins[index].head.position);
+        this.lines[index - 1].geometry.verticesNeedUpdate = true;
     }
     if (index + 1 < this.pins.length) {
         this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
@@ -114,7 +114,35 @@ Polygon.prototype.updatePin = function(index) {
     }
 };
 
-Polygon.prototype.interactableObjects = function() {
+Polygon.prototype.clearPins = function () {
+    // Clear all pins
+    for (var i = 0; i < this.pins.length; i++) {
+        this.pins[i].dispose();
+    }
+    this.pins.length = 0;
+
+    for (var i_ = 0; i_ < this.lines.length; i_++) {
+        var line = this.lines[i_];
+
+        this._map.scene.remove(line);
+
+        line.geometry.dispose();
+        line.material.dispose();
+        this.lines[i_] = undefined;
+    }
+    this.lines.length = 0;
+
+    this._map.scene.remove(this._closeLine);
+    this._closeLine.geometry.dispose();
+    this._closeLine.material.dispose();
+    this._closeLine = undefined;
+
+    this.grids = undefined;
+    this._map.scene.remove(this.gridMesh);
+    this.gridMesh = undefined;
+};
+
+Polygon.prototype.interactableObjects = function () {
     return this.pins.reduce(function (prev, pin) {
         prev.push(pin.head);
         prev.push(pin.arrow);
@@ -122,10 +150,10 @@ Polygon.prototype.interactableObjects = function() {
     }, []);
 };
 
-Polygon.prototype.generateGrid = function(type, gridSpace) {
+Polygon.prototype.generateGrid = function (type, gridSpace) {
     // Call C++ function to genreate flight grid
-    this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace) :
-                gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, 0);
+    this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace)
+        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, 0);
 
     // Redraw grid mesh
     // Remove exist mesh first
@@ -160,8 +188,8 @@ Polygon.prototype.generateGrid = function(type, gridSpace) {
 
 Object.defineProperties(Polygon.prototype, {
     pinsCoordinate: {
-        get: function() {
-            return this.pins.map(function(pin) {
+        get: function () {
+            return this.pins.map(function (pin) {
                 return pin.coordinate;
             });
         }
