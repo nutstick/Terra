@@ -1,10 +1,15 @@
+var Ellipsoid = require('../Math/Ellipsoid');
+
 /**
  * TilingScheme class
  * @alias TilingScheme
  * @constructor
  */
-function TilingScheme() {
-    this._ellipsoid = 6378137.0;// new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793);
+function TilingScheme () {
+    /**
+     * @type {Ellipsoid}
+     */
+    this._ellipsoid = new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793);
     this._numberOfLevelZeroTilesX = 1;
     this._numberOfLevelZeroTilesY = 1;
 }
@@ -16,7 +21,7 @@ Object.defineProperties(TilingScheme.prototype, {
      * @type {Ellipsoid}
      */
     ellipsoid: {
-        get : function() {
+        get: function () {
             return this._ellipsoid;
         }
     },
@@ -24,10 +29,10 @@ Object.defineProperties(TilingScheme.prototype, {
 
 TilingScheme.prototype.getNumberOfXTilesAtLevel = function (level) {
     return this._numberOfLevelZeroTilesX << level;
-}
+};
 
 TilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
     return this._numberOfLevelZeroTilesY << level;
-}
+};
 
 module.exports = TilingScheme;

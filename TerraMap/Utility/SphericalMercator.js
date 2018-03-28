@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 var Ellipsoid = require('../Math/Ellipsoid');
-var Cartesian  = require('../Math/Cartesian');
 var MapSettings = require('../Core/MapSettings');
 
 /**
@@ -27,9 +26,6 @@ var cache = {};
 var EPSLN = 1.0e-10;
 var D2R = Math.PI / 180;
 var R2D = 180 / Math.PI;
-// 900913 properties.
-var A = 6378137.0;
-var MAXEXTENT = 20037508.342789244;
 
 /**
  * SphericalMercator class
@@ -61,6 +57,8 @@ function SphericalMercator (options) {
     this.Cc = cache[this.size].Cc;
     this.zc = cache[this.size].zc;
     this.Ac = cache[this.size].Ac;
+
+    this.meterPerPixel = this.mPerPixel(0);
 }
 
 SphericalMercator.prototype.mPerPixel = function (latitude) {
@@ -133,49 +131,40 @@ SphericalMercator.prototype.CartographicToPixel = function (coordinate, px) {
 };
 
 /**
+ * Convert given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913
  * @param {QtPositioning.coordinate} coordinate
  * @param {Cartesian} cartesian
+ *
+ * @return {Cartesian}
  */
-var cartographicToCartesianNormal = new Cartesian();
-var cartographicToCartesianK = new Cartesian();
-
 SphericalMercator.prototype.CartographicToCartesian = function (cartographic, cartesian) {
     var longitude = cartographic.longitude;
     var latitude = cartographic.latitude;
-    if (longitude == null || (longitude < -180) || (longitude > 180)) {
-        throw new Error('Longitude must be in range [-180, 180).');
-    }
-    if (latitude == null || (latitude < -90) || (latitude > 90)) {
-        throw new Error('Latitude must be in range [-90, 90).');
-    }
 
-    var cosLatitude = Math.cos(latitude);
+    var mX = longitude * Ellipsoid.WGS84.a;
+    var mY = Math.log(Math.tan((90 + latitude) * D2R / 2)) * R2D;
 
-    var x = cosLatitude * Math.cos(longitude);
-    var y = cosLatitude * Math.sin(longitude);
-    var z = Math.sin(latitude);
-    
-    cartographicToCartesianNormal.x = x;
-    cartographicToCartesianNormal.y = y;
-    cartographicToCartesianNormal.z = z;
+    mY = mY * Ellipsoid.WGS84.a / 180.0;
 
-    cartographicToCartesianNormal.normalize();
+    cartesian.x = mX;
+    cartesian.y = mY;
 
-    cartographicToCartesianK.multiplyVectors(Ellipsoid.WGS84.radiiSquared, cartographicToCartesianNormal);
-    var gamma = Math.sqrt(cartographicToCartesianNormal.dot(cartographicToCartesianK));
-    cartographicToCartesianK.divideScalar(gamma);
-    cartographicToCartesianK.multiplyScalar(cartographic.altitude);
+    cartesian.height = cartographic.altitude;
 
-    cartesian.addVectors(cartographicToCartesianNormal, cartographicToCartesianK);
+    return cartesian;
 };
 
 /**
  * @param {QtPositioning.coordinate} coordinate
- * @returns {THREE.Vector3}
+ * @param {Cartesian} cartesian
+ * @returns {Cartesian}
  */
 SphericalMercator.prototype.PixelToCartesian = function (px, cartesian) {
-    cartesian.x = px.x * mPerPixel;
-    this.CartographicToCartesian(this.PixelToCartographic(px, cartesian), cartesian);
+    cartesian.x = px.x * this.meterPerPixel;
+    cartesian.y = px.z * this.meterPerPixel;
+    cartesian.z = px.y * this.meterPerPixel;
+
+    return cartesian;
 };
 
 module.exports = new SphericalMercator({ size: MapSettings.basePlaneDimension });

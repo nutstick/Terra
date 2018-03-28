@@ -1,19 +1,11 @@
 var AABB = require('./AABB');
 var MapSettings = require('./MapSettings');
-var TileReplacementQueue = require('./TileReplacementQueue');
-
-var TileState = {
-    Start: 0,
-    Loading: 1,
-    Done: 2,
-    Failed: 3
-};
 
 /**
  * Tile
  * @alias Tile
  * @constructor
- * 
+ *
  * @param {Object} options
  * @param {number} options.x - x
  * @param {number} options.y - y
@@ -21,7 +13,7 @@ var TileState = {
  * @param {QuadTree} options.quadTree - QuadTree
  * @param {Tile} options.parent - Parent
  */
-function Tile(options) {
+function Tile (options) {
     if (!options) {
         throw new Error('No option provided');
     }
@@ -37,8 +29,14 @@ function Tile(options) {
 
     // QuadTreeTile structure
     this._parent = options.parent;
+    this.TileState = {
+        Start: 0,
+        Loading: 1,
+        Done: 2,
+        Failed: 3
+    };
     // State
-    this._state = TileState.Start;
+    this._state = this.TileState.Start;
 
     this.data = {
         texture: undefined,
@@ -51,10 +49,14 @@ function Tile(options) {
     this._replacementPrevious = undefined;
     this._replacementNext = undefined;
 
+    /**
+     * @type {number}
+     * @private
+     */
     this._distance = 0.0;
 
     /**
-     * @type AABB
+     * @type {AABB}
      * @private
      */
     this._bbox = undefined;
@@ -63,12 +65,12 @@ function Tile(options) {
 }
 
 /**
- * 
- * @param {QuadTree} quadTree 
+ *
+ * @param {QuadTree} quadTree
  * @param {TilingScheme} tilingScheme
  * @return {Tile[]}
  */
-Tile.createRootTile = function(quadTree, tilingScheme) {
+Tile.createRootTile = function (quadTree, tilingScheme) {
     if (!tilingScheme) {
         throw new Error('No tiling scheme provided');
     }
@@ -82,7 +84,6 @@ Tile.createRootTile = function(quadTree, tilingScheme) {
     for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
         for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
             result[index++] = new Tile({
-                tilingScheme : tilingScheme,
                 x: x,
                 y: y,
                 z: 0,
@@ -94,17 +95,17 @@ Tile.createRootTile = function(quadTree, tilingScheme) {
     return result;
 };
 
-Tile.prototype.imageryLoading = function(layerName, texture) {
-    if (this._state === TileState.Failed) return;
+Tile.prototype.imageryLoading = function (layerName, texture) {
+    if (this._state === this.TileState.Failed) return;
 
     this.data[layerName] = texture;
 
-    this._state = TileState.Loading;
+    this._state = this.TileState.Loading;
 };
 
-Tile.prototype.imageryDone = function(layerName) {
+Tile.prototype.imageryDone = function (layerName) {
     // If the state of tile is not loading means tile is after freeResource or fail download
-    if (this._state !== TileState.Loading) return;
+    if (this._state !== this.TileState.Loading) return;
 
     var isDone = Object.keys(this.data).reduce(function (prev, key) {
         return prev && !this.data[key].loading;
@@ -113,21 +114,15 @@ Tile.prototype.imageryDone = function(layerName) {
     if (isDone) {
         var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
-        var material = MapSettings.debug ? new THREE.MeshBasicMaterial({
-           wireframe: true,
-           map: this.data.texture,
-           opacity:0
-        }) : new THREE.MeshBasicMaterial({
-            map: this.data.texture,
-        });
+        var material = this.material;
 
         var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
         geometry.vertices = [
-            new THREE.Vector3(-tileSize/2, 0, -tileSize/2),
-            new THREE.Vector3(-tileSize/2, 0, tileSize/2),
-            new THREE.Vector3(tileSize/2, 0, -tileSize/2),
-            new THREE.Vector3(tileSize/2, 0, tileSize/2)
+            new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
+            new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
+            new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
+            new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
         ];
         geometry.faces = [
             new THREE.Face3(0, 1, 2),
@@ -135,8 +130,8 @@ Tile.prototype.imageryDone = function(layerName) {
         ];
         geometry.computeFaceNormals();
 
-        var xOffset = (this._x+0.5)*tileSize - MapSettings.basePlaneDimension/2;
-        var yOffset = (this._y+0.5)*tileSize - MapSettings.basePlaneDimension/2;
+        var xOffset = (this._x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
+        var yOffset = (this._y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
 
         geometry.translate(xOffset, 0, yOffset);
 
@@ -145,40 +140,40 @@ Tile.prototype.imageryDone = function(layerName) {
 
         this._quadTree.scene.add(this._entity);
 
-        this._state = TileState.Done;
+        this._state = this.TileState.Done;
 
         // Trigger need update
         this._quadTree.needUpdate = true;
     }
 };
 
-Tile.prototype.imageryFailed = function(layerName) {
-    this._state = TileState.Failed;
+Tile.prototype.imageryFailed = function (layerName) {
+    this._state = this.TileState.Failed;
 };
 
 Object.defineProperties(Tile.prototype, {
     x: {
-        get: function() {
+        get: function () {
             return this._x;
         }
     },
     y: {
-        get: function() {
+        get: function () {
             return this._y;
         }
     },
     z: {
-        get: function() {
+        get: function () {
             return this._z;
         }
     },
     parent: {
-        get : function() {
+        get: function () {
             return this._parent;
         }
     },
     children: {
-        get : function() {
+        get: function () {
             if (typeof this._children === 'undefined') {
                 this._children = new Array(4);
                 this._children[0] = new Tile({
@@ -228,40 +223,65 @@ Object.defineProperties(Tile.prototype, {
         }
     },
     active: {
-        get: function() {
+        get: function () {
             return this._entity.visible;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._entity) {
                 this._entity.visible = value;
             }
         }
     },
+    /**
+     * Distance from camera
+     * @memberof Tile.prototype
+     *
+     * @type {number}
+     */
+    distance: {
+        get: function () {
+            return this._distance;
+        },
+        set: function (distance) {
+            this._distance = distance;
+        }
+    },
     state: {
-        get: function() {
+        get: function () {
             return this._state;
         }
     },
-    needsLoading : {
-        get: function() {
-            return this._state < TileState.Loading;
+    needsLoading: {
+        get: function () {
+            return this._state < this.TileState.Loading;
         }
     },
     renderable: {
-        get: function() {
-            return this._state >= TileState.Done;
+        get: function () {
+            return this._state >= this.TileState.Done;
         }
     },
     center: {
-        get: function() {
+        get: function () {
             var tileSize = MapSettings.basePlaneDimension / Math.pow(2, this._z);
             var xOffset = (this._x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
             var yOffset = (this._y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
             return new THREE.Vector3(xOffset, 0, yOffset);
         }
     },
+    material: {
+        get: function () {
+            if (!this.data.texture) throw new Error('Material request before texture loaded');
+            if (!this._material) {
+                this._material = new THREE.MeshBasicMaterial({
+                    map: this.data.texture,
+                });
+            }
+            return this._material;
+        }
+    },
     bbox: {
-        get: function() {
+        get: function () {
             if (!this._bbox) {
                 this._bbox = AABB.createAABBForTile(this);
             }
@@ -269,18 +289,18 @@ Object.defineProperties(Tile.prototype, {
         }
     },
     stringify: {
-        get: function() {
-            return this._x + "/" + this._y + "/" + this._z;
+        get: function () {
+            return this._x + '/' + this._y + '/' + this._z;
         }
     },
     eligibleForUnloading: {
-        get: function() {
+        get: function () {
             return true;
         }
     }
 });
 
-Tile.prototype.freeResources = function() {
+Tile.prototype.freeResources = function () {
     // Remove link betweem parent
     if (this._parent) {
         for (var i = 0; i < 4; i++) {
@@ -290,14 +310,17 @@ Tile.prototype.freeResources = function() {
         }
     }
     this._parent = undefined;
-    
-    this._state = TileState.Start;
+
+    this._state = this.TileState.Start;
 
     this.upsampledFromParent = false;
+    this.data.texture.dispose();
     this.data = {};
 
     // Remove entity from scene
     this._quadTree.scene.remove(this._entity);
+    this._entity.geometry.dispose();
+    this._entity.texture.dispose();
     this._entity = undefined;
 
     if (this._children) {

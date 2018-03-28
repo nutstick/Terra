@@ -5,8 +5,8 @@ var Cartesian = require('../Math/Cartesian');
 
 var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
 
-function AABB(options) {
-    options = options ||  {};
+function AABB (options) {
+    options = options || {};
     this.xMin = options.xMin || 0;
     this.yMin = options.yMin || 0;
     this.zMin = options.zMin || 0;
@@ -18,7 +18,7 @@ function AABB(options) {
     var westernMidpointCartesian = new THREE.Vector3();
     westernMidpointCartesian.x = (this.xMax + this.xMin) / 2;
     westernMidpointCartesian.y = this.yMin;
-    
+
     this.westNormal = new THREE.Vector3();
     this.westNormal.crossVectors(westernMidpointCartesian, UNIT_Z);
     this.westNormal.normalize();
@@ -53,28 +53,28 @@ function AABB(options) {
 
 Object.defineProperties(AABB.prototype, {
     xCenter: {
-        get: function() {
+        get: function () {
             return (this.xMax + this.xMin) / 2;
         }
     },
     yCenter: {
-        get: function() {
+        get: function () {
             return (this.yMax + this.yMin) / 2;
         }
     },
     zCenter: {
-        get: function() {
+        get: function () {
             return (this.zMax + this.zMin) / 2;
         }
     },
     center: {
-        get: function() {
+        get: function () {
             return THREE.Vector2(this.xCenter, this.yCenter, this.zCenter);
         }
     }
-})
+});
 
-AABB.prototype.intersects = function(x, y, z) {
+AABB.prototype.intersects = function (x, y, z) {
     if (x instanceof AABB) {
         var other = x;
 
@@ -85,68 +85,74 @@ AABB.prototype.intersects = function(x, y, z) {
     return this.xMin <= x && this.xMax >= x &&
         this.yMin <= y && this.yMax >= y &&
         this.zMin <= z && this.zMax >= z;
-}
+};
+
+AABB.prototype.onRect = function (x, y) {
+    return this.xMin <= x && this.xMax >= x &&
+        this.yMin <= y && this.yMax >= y;
+};
 
 /**
- * @param {Camera} camera 
+ * @param {Camera} camera
  */
-AABB.prototype.distanceToCamera = function(camera) {
+AABB.prototype.distanceToCamera = function (camera) {
     var cameraCartesianPosition = camera.positionCartesian;
-    var cameraCartographicPosition = camera.positionCartographic;
+    // var cameraCartographicPosition = camera.positionCartographic;
 
-    var temp = new THREE.Vector3();
-    var result = 0.0;
-    console.log(cameraCartesianPosition, this)
+    return this.distanceFromPoint(cameraCartesianPosition);
 
-    if (!this.intersects(cameraCartesianPosition.x, cameraCartesianPosition.y, cameraCartesianPosition.z)) {
-        var northwestCornnerCartesian = this.northwestCornnerCartesian;
-        var southeastCornnerCartesian = this.southeastCornnerCartesian;
-        var westNormal = this.westNormal;
-        var southNormal = this.southNormal;
-        var eastNormal = this.eastNormal;
-        var northNormal = this.northNormal;
+    // var temp = new THREE.Vector3();
+    // var result = 0.0;
 
-        var vectorFromNorthwestCorner = temp.subVectors(cameraCartesianPosition, northwestCornnerCartesian);
-        var distanceToWestPlane = vectorFromNorthwestCorner.dot(westNormal);
-        var distanceToNorthPlane = vectorFromNorthwestCorner.dot(northNormal);
+    // if (!this.onRect(cameraCartesianPosition.x, cameraCartesianPosition.y)) {
+    //     var northwestCornnerCartesian = this.northwestCornnerCartesian;
+    //     var southeastCornnerCartesian = this.southeastCornnerCartesian;
+    //     var westNormal = this.westNormal;
+    //     var southNormal = this.southNormal;
+    //     var eastNormal = this.eastNormal;
+    //     var northNormal = this.northNormal;
 
-        var vectorFromSoutheastCorner = temp.subVectors(cameraCartesianPosition, southeastCornnerCartesian);
-        var distanceToEastPlane = vectorFromSoutheastCorner.dot(eastNormal);
-        var distanceToSouthPlane = vectorFromSoutheastCorner.dot(southNormal);
+    //     var vectorFromNorthwestCorner = temp.subVectors(cameraCartesianPosition, northwestCornnerCartesian);
+    //     var distanceToWestPlane = vectorFromNorthwestCorner.dot(westNormal);
+    //     var distanceToNorthPlane = vectorFromNorthwestCorner.dot(northNormal);
 
-        if (distanceToWestPlane > 0.0) {
-            result += distanceToWestPlane * distanceToWestPlane;
-        } else if (distanceToEastPlane > 0.0) {
-            result += distanceToEastPlane * distanceToEastPlane;
-        }
+    //     var vectorFromSoutheastCorner = temp.subVectors(cameraCartesianPosition, southeastCornnerCartesian);
+    //     var distanceToEastPlane = vectorFromSoutheastCorner.dot(eastNormal);
+    //     var distanceToSouthPlane = vectorFromSoutheastCorner.dot(southNormal);
 
-        if (distanceToSouthPlane > 0.0) {
-            result += distanceToSouthPlane * distanceToSouthPlane;
-        } else if (distanceToNorthPlane > 0.0) {
-            result += distanceToNorthPlane * distanceToNorthPlane;
-        }
-    }
+    //     if (distanceToWestPlane > 0.0) {
+    //         result += distanceToWestPlane * distanceToWestPlane;
+    //     } else if (distanceToEastPlane > 0.0) {
+    //         result += distanceToEastPlane * distanceToEastPlane;
+    //     }
 
-    var cameraHeight = cameraCartographicPosition.altitude;
+    //     if (distanceToSouthPlane > 0.0) {
+    //         result += distanceToSouthPlane * distanceToSouthPlane;
+    //     } else if (distanceToNorthPlane > 0.0) {
+    //         result += distanceToNorthPlane * distanceToNorthPlane;
+    //     }
+    // }
 
-    var distanceFromTop = cameraHeight;
-    if (distanceFromTop > 0.0) {
-        result += distanceFromTop * distanceFromTop;
-    }
+    // var cameraHeight = cameraCartographicPosition.altitude;
 
-    return Math.sqrt(result);
-}
+    // var distanceFromTop = cameraHeight;
+    // if (distanceFromTop > 0.0) {
+    //     result += distanceFromTop * distanceFromTop;
+    // }
 
-AABB.prototype.distanceFromPoint = function(vector) {
+    // return Math.sqrt(result);
+};
+
+AABB.prototype.distanceFromPoint = function (vector) {
     var dx = Math.max(this.xMin - vector.x, vector.x - this.xMax);
     var dy = Math.max(this.yMin - vector.y, vector.y - this.yMax);
     var dz = Math.max(this.zMin - vector.z, vector.z - this.zMax);
-    return Math.sqrt(dx*dx + dy*dy + dz*dz);
-}
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+};
 
-var temp2 = QtPositioning.coordinate();
+var corner = new THREE.Vector3();
 
-AABB.createAABBForTile = function(tile) {
+AABB.createAABBForTile = function (tile) {
     var tileSize = MapSettings.basePlaneDimension / Math.pow(2, tile.z);
     var xMin = (tile.x) * tileSize - MapSettings.basePlaneDimension / 2;
     var xMax = (tile.x + 1) * tileSize - MapSettings.basePlaneDimension / 2;
@@ -154,14 +160,16 @@ AABB.createAABBForTile = function(tile) {
     var zMax = (tile.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
 
     // Converting px to cartesian
+    // North West Cornner
+    corner.x = xMin;
+    corner.z = zMin;
     var topLeftCornner = new Cartesian();
-    sphericalMercator.PixelToCartographic(new THREE.Vector3(xMin, 0, zMin), temp2);
-    sphericalMercator.CartographicToCartesian(temp2, topLeftCornner);
-    
+    sphericalMercator.PixelToCartesian(corner, topLeftCornner);
+    // South East Corner
+    corner.x = xMax;
+    corner.z = zMax;
     var bottomRightCornner = new Cartesian();
-    sphericalMercator.PixelToCartographic(new THREE.Vector3(xMax, 0, zMax), temp2);
-    sphericalMercator.CartographicToCartesian(temp2, bottomRightCornner);
-    console.log(topLeftCornner, bottomRightCornner)
+    sphericalMercator.PixelToCartesian(corner, bottomRightCornner);
 
     // TODO: height as 10 meters
     return new AABB({
@@ -172,6 +180,6 @@ AABB.createAABBForTile = function(tile) {
         zMin: 0,
         zMax: 10
     });
-}
+};
 
 module.exports = AABB;

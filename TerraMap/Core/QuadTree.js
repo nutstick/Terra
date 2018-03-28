@@ -1,11 +1,5 @@
-var Tile = require('./Tile');
-var TilingScheme = require('./TilingScheme');
 var TileReplacementQueue = require('./TileReplacementQueue');
 var sphericalMercator = require('../Utility/SphericalMercator');
-
-function getEstimatedLevelZeroGeometricErrorForAHeightmap (ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
-    return ellipsoid * 2 * Math.PI * 0.25 / (tileImageWidth * numberOfTilesAtLevelZero);
-};
 
 /**
  * QuadTree class
@@ -24,19 +18,13 @@ function QuadTree (options) {
     this.scene = options.map.scene;
     this.cameraController = options.map.cameraController;
 
+    this._rootTile = undefined;
     /**
      * Scene mode
      * @type {SceneMode}
      */
     this.mode = options.mode;
     this.mode.quadTree = this;
-
-    /**
-     * TilingScheme
-     * @type {TilingScheme}
-     */
-    this._tilingScheme = new TilingScheme();
-    this._rootTile = Tile.createRootTile(this, this._tilingScheme);
 
     /**
      * Active tiles on screen
@@ -67,8 +55,6 @@ function QuadTree (options) {
     this.tileCacheSize = options.tileCacheSize || 128;
 
     this._lastTileLoadQueueLength = 0;
-
-    this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 64, 1);
 
     /**
      * Need update flag
@@ -106,7 +92,7 @@ QuadTree.prototype.update = function () {
 
     // Update Camera
     sphericalMercator.PixelToCartographic(this.cameraController.target, this.cameraController.targetCartographic);
-    sphericalMercator.CartographicToCartesian(this.cameraController.targetCartographic, this.cameraController.targetCartesian);
+    sphericalMercator.PixelToCartesian(this.cameraController.target, this.cameraController.targetCartesian);
 
     clearTileLoadQueue(this);
     // FIXME: Need this?
@@ -116,24 +102,17 @@ QuadTree.prototype.update = function () {
     this._activeTiles.forEach(function (tile) {
         tile.active = false;
     });
-    // console.log(this.scene.children.map(function(child) {
-    //     if (!child.tile) return '';
-    //     return child.tile.stringify;
-    // }));
 
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function (tile) {
         tile.active = true;
     });
-    // console.log(this._activeTiles.map(function(tile) {
-    //     return tile.stringify;
-    // }));
 
     processTileLoadQueue(this);
     updateTileLoadProgress(this);
 
-    console.log(this._tileReplacementQueue.count);
+    this.cameraController.object.updatedLastFrame = false;
 };
 
 function clearTileLoadQueue (primative) {
@@ -148,10 +127,6 @@ function clearTileLoadQueue (primative) {
     primative._tileLoadQueueMedium.length = 0;
     primative._tileLoadQueueLow.length = 0;
 }
-
-QuadTree.prototype.getLevelMaximumGeometricError = function (level) {
-    return this._levelZeroMaximumGeometricError / (1 << level);
-};
 
 function selectTilesForRendering (primative) {
     var debug = primative._debug;

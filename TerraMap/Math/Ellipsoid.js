@@ -1,6 +1,6 @@
 var Cartesian = require('./Cartesian');
 
-function initialize(ellipsoid, x, y, z) {
+function initialize (ellipsoid, x, y, z) {
     x = x || 0.0;
     y = y || 0.0;
     z = z || 0.0;
@@ -12,12 +12,12 @@ function initialize(ellipsoid, x, y, z) {
     ellipsoid._radiiToTheFourth = new Cartesian({ x: x * x * x * x, y: y * y * y * y, z: z * z * z * z });
 
     ellipsoid._oneOverRadii = new Cartesian({ x: x === 0.0 ? 0.0 : 1.0 / x,
-                                        y: y === 0.0 ? 0.0 : 1.0 / y,
-                                        z: z === 0.0 ? 0.0 : 1.0 / z });
+        y: y === 0.0 ? 0.0 : 1.0 / y,
+        z: z === 0.0 ? 0.0 : 1.0 / z });
 
     ellipsoid._oneOverRadiiSquared = new Cartesian({ x: x === 0.0 ? 0.0 : 1.0 / (x * x),
-                                               y: y === 0.0 ? 0.0 : 1.0 / (y * y),
-                                               z: z === 0.0 ? 0.0 : 1.0 / (z * z) });
+        y: y === 0.0 ? 0.0 : 1.0 / (y * y),
+        z: z === 0.0 ? 0.0 : 1.0 / (z * z) });
 
     ellipsoid._minimumRadius = Math.min(x, y, z);
 
@@ -50,7 +50,7 @@ function initialize(ellipsoid, x, y, z) {
  * @see Ellipsoid.WGS84
  * @see Ellipsoid.UNIT_SPHERE
  */
-function Ellipsoid(x, y, z) {
+function Ellipsoid (x, y, z) {
     this._radii = undefined;
     this._radiiSquared = undefined;
     this._radiiToTheFourth = undefined;
@@ -71,8 +71,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Cartesian3}
      * @readonly
      */
-    radii : {
-        get: function() {
+    radii: {
+        get: function () {
             return this._radii;
         }
     },
@@ -82,8 +82,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Cartesian3}
      * @readonly
      */
-    radiiSquared : {
-        get : function() {
+    radiiSquared: {
+        get: function () {
             return this._radiiSquared;
         }
     },
@@ -93,8 +93,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Cartesian3}
      * @readonly
      */
-    radiiToTheFourth : {
-        get : function() {
+    radiiToTheFourth: {
+        get: function () {
             return this._radiiToTheFourth;
         }
     },
@@ -104,8 +104,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Cartesian3}
      * @readonly
      */
-    oneOverRadii : {
-        get : function() {
+    oneOverRadii: {
+        get: function () {
             return this._oneOverRadii;
         }
     },
@@ -115,8 +115,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Cartesian3}
      * @readonly
      */
-    oneOverRadiiSquared : {
-        get : function() {
+    oneOverRadiiSquared: {
+        get: function () {
             return this._oneOverRadiiSquared;
         }
     },
@@ -126,8 +126,8 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Number}
      * @readonly
      */
-    minimumRadius : {
-        get : function() {
+    minimumRadius: {
+        get: function () {
             return this._minimumRadius;
         }
     },
@@ -137,9 +137,14 @@ Object.defineProperties(Ellipsoid.prototype, {
      * @type {Number}
      * @readonly
      */
-    maximumRadius : {
-        get : function() {
+    maximumRadius: {
+        get: function () {
             return this._maximumRadius;
+        }
+    },
+    a: {
+        get: function () {
+            return Math.PI * this._maximumRadius;
         }
     }
 });

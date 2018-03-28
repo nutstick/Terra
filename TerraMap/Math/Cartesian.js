@@ -1,6 +1,6 @@
 /**
  * Cartesian class
- * Coordinate system on metres base [x, y, hegiht]
+ * Coordinate system EPSG:900913 on metres base [x, y, hegiht]
  * @alias Cartesian
  * @constructor
  *

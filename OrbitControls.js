@@ -81,12 +81,14 @@ function OrbitConstraint ( map, object ) {
 
     this.rotateLeft = function ( angle ) {
         thetaDelta -= angle;
-        compass.update();
+        // TODO:
+        // compass.update();
     };
 
     this.rotateUp = function ( angle ) {
         phiDelta -= angle;
-        compass.update();
+        // TODO:
+        // compass.update();
     };
 
     // pass in distance in world space to move left
@@ -520,12 +522,19 @@ THREE.OrbitControls = function (options) {
 
     }
 
+    function compare (modifiers) {
+        if (typeof Qt === 'object') {
+            return modifiers & Qt.ControlModifier;
+        }
+        
+        return modifiers;
+    }
+
     function onMouseDown(x, y, button, modifiers) {
 
         if ( scope.enabled === false ) return;
 
-        if ( button === scope.mouseButtons.ORBIT ||
-            typeof Qt === 'object' ? modifiers & Qt.ControlModifier : modifiers) {
+        if ( button === scope.mouseButtons.ORBIT || compare(modifiers) ) {
 
             if ( scope.enableRotate === false ) return;
 
@@ -571,8 +580,6 @@ THREE.OrbitControls = function (options) {
             } else if ( scope.enablePan === true ) {
 
                 state = STATE.PAN;
-
-                moveMap();
 
             }
 
@@ -688,7 +695,6 @@ THREE.OrbitControls = function (options) {
         }
         scope.dispatchEvent( endEvent );
         state = STATE.NONE;
-        stopMap();
     }
     
     function onMouseUp_(event) {
@@ -770,15 +776,6 @@ THREE.OrbitControls = function (options) {
     function onKeyUp(event){
         timer.clearInterval(scope.keyDown);
         scope.keyDown = false;
-        stopMap();
-    }
-
-    function moveMap(){
-    }
-
-    function stopMap(){
-        timer.clearInterval(scope.moving);
-        scope.moving = false;
     }
 
     /* function touchstart( event ) {

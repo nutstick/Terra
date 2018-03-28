@@ -15,7 +15,6 @@
   <script src="./OrbitControls.js"></script>
   <script src="./require.js"></script>
   <script defer="defer">
-    console.log(THREE)
     var QtPositioning = {
       coordinate: function(x, y, z) {
         return {
@@ -27,13 +26,18 @@
     }
     var Map = require('./TerraMap/Core/Map');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
+    var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
 
     var renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
+    renderer.domElement.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+    }, false);
+
     map = new Map({
-        mode: new Scene3D(),
+        mode: new DebugScene3D(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
         renderer: renderer
@@ -52,6 +56,10 @@
     };
 
     animate();
+
+    window.addEventListener('resize', function () {
+      map.resizeView({ width: window.innerWidth, height: window.innerHeight })
+    });
   </script>
 </body>
 </html>
