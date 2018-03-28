@@ -29,10 +29,13 @@ function DebugTile (options) {
 
     this._entity = new THREE.Mesh(geometry, material);
     this._entity.tile = this;
+    this._entity.name = this.stringify;
 
-    this._quadTree.scene.add(this._entity);
+    this._quadTree.tiles.add(this._entity);
 
     this._state = this.TileState.Done;
+
+    this.active = false;
 
     // Trigger need update
     this._quadTree.needUpdate = true;
@@ -64,6 +67,9 @@ DebugTile.createRootTile = function (quadTree, tilingScheme) {
 };
 
 DebugTile.prototype = Object.create(Tile.prototype);
+
+DebugTile.prototype.freeResources = function () {
+};
 
 Object.defineProperties(DebugTile.prototype, {
     material: {

@@ -138,9 +138,11 @@ Tile.prototype.imageryDone = function (layerName) {
         this._entity = new THREE.Mesh(geometry, material);
         this._entity.tile = this;
 
-        this._quadTree.scene.add(this._entity);
+        this._quadTree.tiles.add(this._entity);
 
         this._state = this.TileState.Done;
+
+        this.active = false;
 
         // Trigger need update
         this._quadTree.needUpdate = true;
@@ -222,19 +224,48 @@ Object.defineProperties(Tile.prototype, {
             return this._children;
         }
     },
+
+    /**
+     * Previous Tile in Replacement Queue
+     * @memberOf Tile.prototype
+     *
+     * @type {Tile}
+     */
+    replacementPrevious: {
+        get: function () {
+            return this._replacementPrevious;
+        },
+        set: function (tile) {
+            this._replacementPrevious = tile;
+        }
+    },
+
+    /**
+     * Next Tile in Replacement Queue
+     * @memberOf Tile.prototype
+     *
+     * @type {Tile}
+     */
+    replacementNext: {
+        get: function () {
+            return this._replacementNext;
+        },
+        set: function (tile) {
+            this._replacementNext = tile;
+        }
+    },
+
     active: {
         get: function () {
             return this._entity.visible;
         },
         set: function (value) {
-            if (this._entity) {
-                this._entity.visible = value;
-            }
+            this._entity.visible = value;
         }
     },
     /**
      * Distance from camera
-     * @memberof Tile.prototype
+     * @memberof {Tile.prototype}
      *
      * @type {number}
      */
@@ -246,6 +277,20 @@ Object.defineProperties(Tile.prototype, {
             this._distance = distance;
         }
     },
+    bbox: {
+        get: function () {
+            if (!this._bbox) {
+                this._bbox = AABB.createAABBForTile(this);
+            }
+            return this._bbox;
+        }
+    },
+
+    // State Handling
+    /**
+     * Tile State
+     * @memberOf Tile
+     */
     state: {
         get: function () {
             return this._state;
@@ -261,14 +306,12 @@ Object.defineProperties(Tile.prototype, {
             return this._state >= this.TileState.Done;
         }
     },
-    center: {
+    eligibleForUnloading: {
         get: function () {
-            var tileSize = MapSettings.basePlaneDimension / Math.pow(2, this._z);
-            var xOffset = (this._x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
-            var yOffset = (this._y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
-            return new THREE.Vector3(xOffset, 0, yOffset);
+            return true;
         }
     },
+
     material: {
         get: function () {
             if (!this.data.texture) throw new Error('Material request before texture loaded');
@@ -280,22 +323,10 @@ Object.defineProperties(Tile.prototype, {
             return this._material;
         }
     },
-    bbox: {
-        get: function () {
-            if (!this._bbox) {
-                this._bbox = AABB.createAABBForTile(this);
-            }
-            return this._bbox;
-        }
-    },
+
     stringify: {
         get: function () {
             return this._x + '/' + this._y + '/' + this._z;
-        }
-    },
-    eligibleForUnloading: {
-        get: function () {
-            return true;
         }
     }
 });
@@ -314,20 +345,24 @@ Tile.prototype.freeResources = function () {
     this._state = this.TileState.Start;
 
     this.upsampledFromParent = false;
-    this.data.texture.dispose();
+    if (this.data.texture) {
+        this.data.texture.dispose();
+    }
     this.data = {};
 
     // Remove entity from scene
-    this._quadTree.scene.remove(this._entity);
-    this._entity.geometry.dispose();
-    this._entity.texture.dispose();
-    this._entity = undefined;
+    if (this._entity) {
+        this._quadTree.tiles.remove(this._entity);
+        this._entity.geometry.dispose();
+        this._entity.material.dispose();
+        this._entity = undefined;
+    }
 
     if (this._children) {
-        for (var i = 0; i < 4; ++i) {
-            if (this._children[i]) {
-                this._children[i].freeResources();
-                this._children[i] = undefined;
+        for (var j = 0; j < 4; ++j) {
+            if (this._children[j]) {
+                this._children[j].freeResources();
+                this._children[j] = undefined;
             }
         }
     }

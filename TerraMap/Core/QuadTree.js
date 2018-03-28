@@ -16,6 +16,14 @@ function QuadTree (options) {
     if (!options.mode) throw new Error('No options.mode provided');
 
     this.scene = options.map.scene;
+    /**
+     * Tile group
+     * @type {THREE.Group}
+     */
+    this.tiles = new THREE.Group();
+    this.tiles.name = 'Tiles';
+    this.scene.add(this.tiles);
+
     this.cameraController = options.map.cameraController;
 
     this._rootTile = undefined;
@@ -25,6 +33,7 @@ function QuadTree (options) {
      */
     this.mode = options.mode;
     this.mode.quadTree = this;
+    // console.log(this.tiles.children.map((t) => t.tile.stringify));
 
     /**
      * Active tiles on screen
@@ -53,6 +62,8 @@ function QuadTree (options) {
     this.maximumScreenSpaceError = options.maximumScreenSpaceError || 2;
 
     this.tileCacheSize = options.tileCacheSize || 128;
+
+    this.maxDepth = 30;
 
     this._lastTileLoadQueueLength = 0;
 
@@ -87,22 +98,21 @@ QuadTree.prototype.suspendLodUpdate = function (value) {
 
 QuadTree.prototype.update = function () {
     // If not thing need to update, do noting
-    if (!this.needUpdate) return;
+    if (!this.needUpdate || this.updating) return;
     this.needUpdate = false;
+    this.updating = true;
 
     // Update Camera
     sphericalMercator.PixelToCartographic(this.cameraController.target, this.cameraController.targetCartographic);
     sphericalMercator.PixelToCartesian(this.cameraController.target, this.cameraController.targetCartesian);
 
     clearTileLoadQueue(this);
-    // FIXME: Need this?
+
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    // TODO: Performance fixing on in active tile method
     this._activeTiles.forEach(function (tile) {
         tile.active = false;
     });
-
     selectTilesForRendering(this);
 
     this._activeTiles.forEach(function (tile) {
@@ -113,6 +123,9 @@ QuadTree.prototype.update = function () {
     updateTileLoadProgress(this);
 
     this.cameraController.object.updatedLastFrame = false;
+    this.updating = false;
+
+    console.log(this._tileReplacementQueue.count)
 };
 
 function clearTileLoadQueue (primative) {
@@ -265,6 +278,10 @@ function queueChildLoadNearToFar (primative, cameraPosition, children) {
 }
 
 function queueChildTileLoad (primative, childTile) {
+    if (childTile.z > primative.maxDepth) {
+        return;
+    }
+
     primative._tileReplacementQueue.markTileRendered(childTile);
     if (childTile.needsLoading) {
         if (childTile.renderable) {
@@ -327,9 +344,9 @@ function processTileLoadQueue (primative) {
     var tileLoadQueueMedium = primative._tileLoadQueueMedium;
     var tileLoadQueueLow = primative._tileLoadQueueLow;
 
-    if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
-        return;
-    }
+    // if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
+    //     return;
+    // }
 
     // Remove any tiles that were not used this frame beyond the number
     // we're allowed to keep.
