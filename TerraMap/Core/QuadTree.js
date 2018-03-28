@@ -1,12 +1,5 @@
-Qt.include("/Core/MapSettings.js");
-Qt.include("/Core/Tile.js");
-Qt.include("/Core/TilingScheme.js");
-Qt.include("/Core/TileReplacementQueue.js");
-Qt.include("/Core/AABB.js");
-Qt.include("/Utility/SphericalMercator.js");
-
-var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimension });
-
+var TileReplacementQueue = require('./TileReplacementQueue');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
  * QuadTree class
@@ -17,27 +10,30 @@ var sphericalMercator = new SphericalMercator({ size: MapSettings.basePlaneDimen
  * @param {Map} options.map - Map
  * @param {SceneMode} options.mode - Scene2D | Scene3D
  */
-function QuadTree(options) {
+function QuadTree (options) {
     if (!options) throw new Error('No option provided');
     if (!options.map) throw new Error('No option.map provided');
     if (!options.mode) throw new Error('No options.mode provided');
 
     this.scene = options.map.scene;
+    /**
+     * Tile group
+     * @type {THREE.Group}
+     */
+    this.tiles = new THREE.Group();
+    this.tiles.name = 'Tiles';
+    this.scene.add(this.tiles);
+
     this.cameraController = options.map.cameraController;
 
+    this._rootTile = undefined;
     /**
      * Scene mode
      * @type {SceneMode}
      */
     this.mode = options.mode;
     this.mode.quadTree = this;
-
-    /**
-     * TilingScheme
-     * @type {TilingScheme}
-     */
-    this._tilingScheme = new TilingScheme();
-    this._rootTile = Tile.createRootTile(this, this._tilingScheme);
+    // console.log(this.tiles.children.map((t) => t.tile.stringify));
 
     /**
      * Active tiles on screen
@@ -67,9 +63,9 @@ function QuadTree(options) {
 
     this.tileCacheSize = options.tileCacheSize || 128;
 
-    this._lastTileLoadQueueLength = 0;
+    this.maxDepth = 30;
 
-    this._levelZeroMaximumGeometricError = this._tilingScheme.ellipsoid * 2 * Math.PI / (MapSettings.basePlaneDimension * 1);
+    this._lastTileLoadQueueLength = 0;
 
     /**
      * Need update flag
@@ -78,60 +74,61 @@ function QuadTree(options) {
     this.needUpdate = true;
 
     this._debug = {
-        enableDebugOutput : true,
+        enableDebugOutput: true,
 
-        maxDepth : 0,
-        tilesVisited : 0,
-        tilesCulled : 0,
-        tilesRendered : 0,
-        tilesWaitingForChildren : 0,
+        maxDepth: 0,
+        tilesVisited: 0,
+        tilesCulled: 0,
+        tilesRendered: 0,
+        tilesWaitingForChildren: 0,
 
-        lastMaxDepth : -1,
-        lastTilesVisited : -1,
-        lastTilesCulled : -1,
-        lastTilesRendered : -1,
-        lastTilesWaitingForChildren : -1,
+        lastMaxDepth: -1,
+        lastTilesVisited: -1,
+        lastTilesCulled: -1,
+        lastTilesRendered: -1,
+        lastTilesWaitingForChildren: -1,
 
-        suspendLodUpdate : false
+        suspendLodUpdate: false
     };
 }
 
-QuadTree.prototype.suspendLodUpdate = function(value) {
+QuadTree.prototype.suspendLodUpdate = function (value) {
     this._debug.suspendLodUpdate = value;
-}
+};
 
-QuadTree.prototype.update = function() {
+QuadTree.prototype.update = function () {
     // If not thing need to update, do noting
-    if (!this.needUpdate) return;
+    if (!this.needUpdate || this.updating) return;
     this.needUpdate = false;
+    this.updating = true;
+
+    // Update Camera
+    sphericalMercator.PixelToCartographic(this.cameraController.target, this.cameraController.targetCartographic);
+    sphericalMercator.PixelToCartesian(this.cameraController.target, this.cameraController.targetCartesian);
 
     clearTileLoadQueue(this);
-    // FIXME: Need this?
+
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    // TODO: Performance fixing on in active tile method
-    this._activeTiles.forEach(function(tile) {
-       tile.active = false;
+    this._activeTiles.forEach(function (tile) {
+        tile.active = false;
     });
-    console.log(this.scene.children.map(function(child) {
-        if (!child.tile) return '';
-        return child.tile.stringify;
-    }));
-
     selectTilesForRendering(this);
 
-    this._activeTiles.forEach(function(tile) {
+    this._activeTiles.forEach(function (tile) {
         tile.active = true;
     });
-    console.log(this._activeTiles.map(function(tile) {
-        return tile.stringify;
-    }));
 
     processTileLoadQueue(this);
-    // updateTileLoadProgress(this);
-}
+    updateTileLoadProgress(this);
 
-function clearTileLoadQueue(primative) {
+    this.cameraController.object.updatedLastFrame = false;
+    this.updating = false;
+
+    console.log(this._tileReplacementQueue.count)
+};
+
+function clearTileLoadQueue (primative) {
     var debug = primative._debug;
     debug.maxDepth = 0;
     debug.tilesVisited = 0;
@@ -144,12 +141,7 @@ function clearTileLoadQueue(primative) {
     primative._tileLoadQueueLow.length = 0;
 }
 
-
-QuadTree.prototype.getLevelMaximumGeometricError = function(level) {
-    return this._levelZeroMaximumGeometricError / (1 << level);
-}
-
-function selectTilesForRendering(primative) {
+function selectTilesForRendering (primative) {
     var debug = primative._debug;
     if (debug.suspendLodUpdate) {
         return;
@@ -160,7 +152,7 @@ function selectTilesForRendering(primative) {
     tilesToRender.length = 0;
 
     // We can't render anything before the level zero tiles exist.
-    var tileProvider = primative._tileProvider;
+    // var tileProvider = primative._tileProvider;
 
     var tile;
     var rootTiles = primative._rootTile;
@@ -208,11 +200,10 @@ function selectTilesForRendering(primative) {
 }
 
 /**
- * 
  * @param {QuadTree} primative - QuadTree
  * @param {Tile} tile - Tile
  */
-function visitTile(primative, tile) {
+function visitTile (primative, tile) {
     var debug = primative._debug;
 
     ++debug.tilesVisited;
@@ -233,8 +224,8 @@ function visitTile(primative, tile) {
         return;
     }
     var allAreRenderable = tile.children[0].renderable && tile.children[1].renderable && tile.children[2].renderable && tile.children[3].renderable;
-    var allAreUpsampled = tile.children[0].upsampledFromParent && tile.children[1].upsampledFromParent
-    && tile.children[2].upsampledFromParent && tile.children[3].upsampledFromParent;
+    var allAreUpsampled = tile.children[0].upsampledFromParent && tile.children[1].upsampledFromParent &&
+        tile.children[2].upsampledFromParent && tile.children[3].upsampledFromParent;
     if (allAreRenderable) {
         if (allAreUpsampled) {
             // No point in rendering the children because they're all upsampled.  Render this tile instead.
@@ -243,7 +234,7 @@ function visitTile(primative, tile) {
             // Load the children even though we're (currently) not going to render them.
             // A tile that is "upsampled only" right now might change its tune once it does more loading.
             // A tile that is upsampled now and forever should also be done loading, so no harm done.
-            queueChildLoadNearToFar(primative, primative.cameraController.target.position, tile.children);
+            queueChildLoadNearToFar(primative, primative.cameraController.targetCartesian, tile.children);
 
             if (tile.needsLoading) {
                 // Rendered tile that's not waiting on children loads with medium priority.
@@ -262,7 +253,7 @@ function visitTile(primative, tile) {
     } else {
         // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
         // render this tile in the meantime.
-        queueChildLoadNearToFar(primative, primative.cameraController.target, tile.children);
+        queueChildLoadNearToFar(primative, primative.cameraController.targetCartesian, tile.children);
         addTileToRenderList(primative, tile);
 
         if (tile.needsLoading) {
@@ -272,20 +263,25 @@ function visitTile(primative, tile) {
     }
 }
 
-function queueChildLoadNearToFar(primative, cameraPosition, children) {
-    var distances = children.map(function(child) {
+function queueChildLoadNearToFar (primative, cameraPosition, children) {
+    var distances = children.map(function (child) {
         return { tile: child, distance: child.bbox.distanceFromPoint(cameraPosition) };
     });
-    distances.sort(function(a, b) {
-        return a.distance - b.distance;
-    })
 
-    distances.forEach(function(child, index) {
+    distances.sort(function (a, b) {
+        return a.distance - b.distance;
+    });
+
+    distances.forEach(function (child, index) {
         queueChildTileLoad(primative, child.tile);
     });
 }
 
-function queueChildTileLoad(primative, childTile) {
+function queueChildTileLoad (primative, childTile) {
+    if (childTile.z > primative.maxDepth) {
+        return;
+    }
+
     primative._tileReplacementQueue.markTileRendered(childTile);
     if (childTile.needsLoading) {
         if (childTile.renderable) {
@@ -297,24 +293,21 @@ function queueChildTileLoad(primative, childTile) {
     }
 }
 
-function visitVisibleChildrenNearToFar(primative, children) {
+function visitVisibleChildrenNearToFar (primative, children) {
     var cameraPosition = primative.cameraController.target;
-    var distances = children.map(function(child) {
+    var distances = children.map(function (child) {
         return { tile: child, distance: child.bbox.distanceFromPoint(cameraPosition) };
     });
-    distances.sort(function(a, b) {
+    distances.sort(function (a, b) {
         return a.distance - b.distance;
-    })
+    });
 
     for (var i = 0; i < distances.length; ++i) {
         visitIfVisible(primative, distances[i].tile);
     };
 }
 
-function computeTileVisibility(primative, tile, debug) {
-    var xmin, ymin, zmin, xmax, ymax, zmax;
-
-    var bbox = tile.bbox;
+function computeTileVisibility (primative, tile, debug) {
     var camera = primative.cameraController.object;
 
     var matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -324,7 +317,7 @@ function computeTileVisibility(primative, tile, debug) {
     return frustum.intersectsObject(tile._entity);
 }
 
-function visitIfVisible(primative, tile) {
+function visitIfVisible (primative, tile) {
     if (computeTileVisibility(primative, tile)) {
         visitTile(primative, tile);
     } else {
@@ -340,20 +333,20 @@ function visitIfVisible(primative, tile) {
     }
 }
 
-function addTileToRenderList(primative, tile) {
+function addTileToRenderList (primative, tile) {
     primative._activeTiles.push(tile);
 
     ++primative._debug.tilesRendered;
 }
 
-function processTileLoadQueue(primative) {
+function processTileLoadQueue (primative) {
     var tileLoadQueueHigh = primative._tileLoadQueueHigh;
     var tileLoadQueueMedium = primative._tileLoadQueueMedium;
     var tileLoadQueueLow = primative._tileLoadQueueLow;
 
-    if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
-        return;
-    }
+    // if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
+    //     return;
+    // }
 
     // Remove any tiles that were not used this frame beyond the number
     // we're allowed to keep.
@@ -366,7 +359,7 @@ function processTileLoadQueue(primative) {
     processSinglePriorityLoadQueue(primative, endTime, tileLoadQueueLow);
 }
 
-function processSinglePriorityLoadQueue(primative, endTime, loadQueue) {
+function processSinglePriorityLoadQueue (primative, endTime, loadQueue) {
     for (var i = 0, len = loadQueue.length; i < len && Date.now() < endTime; ++i) {
         var tile = loadQueue[i];
         primative._tileReplacementQueue.markTileRendered(tile);
@@ -376,7 +369,7 @@ function processSinglePriorityLoadQueue(primative, endTime, loadQueue) {
     }
 }
 
-function updateTileLoadProgress(primative) {
+function updateTileLoadProgress (primative) {
     var currentLoadQueueLength = primative._tileLoadQueueHigh.length + primative._tileLoadQueueMedium.length + primative._tileLoadQueueLow.length;
 
     if (currentLoadQueueLength !== primative._lastTileLoadQueueLength) {
@@ -384,13 +377,12 @@ function updateTileLoadProgress(primative) {
     }
 
     var debug = primative._debug;
-    if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
+    if (debug.enableDebugOutput && !debug.suspendLodUpdate) {
         if (debug.tilesVisited !== debug.lastTilesVisited ||
             debug.tilesRendered !== debug.lastTilesRendered ||
             debug.tilesCulled !== debug.lastTilesCulled ||
             debug.maxDepth !== debug.lastMaxDepth ||
             debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-
             console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
             debug.lastTilesVisited = debug.tilesVisited;
@@ -401,3 +393,5 @@ function updateTileLoadProgress(primative) {
         }
     }
 }
+
+module.exports = QuadTree;

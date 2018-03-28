@@ -81,12 +81,14 @@ function OrbitConstraint ( map, object ) {
 
     this.rotateLeft = function ( angle ) {
         thetaDelta -= angle;
-        compass.update();
+        // TODO:
+        // compass.update();
     };
 
     this.rotateUp = function ( angle ) {
         phiDelta -= angle;
-        compass.update();
+        // TODO:
+        // compass.update();
     };
 
     // pass in distance in world space to move left
@@ -255,6 +257,7 @@ function OrbitConstraint ( map, object ) {
             offset.applyQuaternion( quatInverse );
 
             position.copy( this.target ).add( offset );
+            this.object.updatePosition();
 
             this.object.lookAt( this.target );
 
@@ -388,10 +391,14 @@ THREE.OrbitControls = function (options) {
     this.enableMoveMarker = true;
 
     // The four arrow keys
-    this.keys = { LEFT: Qt.LeftArrow, UP: Qt.UpArrow, RIGHT: Qt.RightArrow, BOTTOM: Qt.DownArrow };//{ LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
+    this.keys = typeof Qt === 'object' ?
+        { LEFT: Qt.LeftArrow, UP: Qt.UpArrow, RIGHT: Qt.RightArrow, BOTTOM: Qt.DownArrow } :
+        { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
 
     // Mouse buttons
-    this.mouseButtons = { ORBIT: Qt.RightButton, ZOOM: Qt.MiddleButton, PAN: Qt.LeftButton };
+    this.mouseButtons = typeof Qt === 'object' ?
+        { ORBIT: Qt.RightButton, ZOOM: Qt.MiddleButton, PAN: Qt.LeftButton } :
+        { ORBIT: THREE.MOUSE.RIGHT, ZOOM: THREE.MOUSE.MIDDLE, PAN: THREE.MOUSE.LEFT };
 
     ////////////
     // internals
@@ -515,11 +522,19 @@ THREE.OrbitControls = function (options) {
 
     }
 
+    function compare (modifiers) {
+        if (typeof Qt === 'object') {
+            return modifiers & Qt.ControlModifier;
+        }
+        
+        return modifiers;
+    }
+
     function onMouseDown(x, y, button, modifiers) {
 
         if ( scope.enabled === false ) return;
 
-        if ( button === scope.mouseButtons.ORBIT || modifiers & Qt.ControlModifier) {
+        if ( button === scope.mouseButtons.ORBIT || compare(modifiers) ) {
 
             if ( scope.enableRotate === false ) return;
 
@@ -538,6 +553,7 @@ THREE.OrbitControls = function (options) {
         } else if ( button === scope.mouseButtons.PAN ) {
 
             // Checking mouse down on marker
+            // TODO: Use mission method to handle object
             var selectedObject = map.mouseDownOnMarkers(pickerFromScreen(x, y));
 
             panStart.set( x, y );
@@ -565,8 +581,6 @@ THREE.OrbitControls = function (options) {
 
                 state = STATE.PAN;
 
-                moveMap();
-
             }
 
             lastClick = now;
@@ -575,14 +589,23 @@ THREE.OrbitControls = function (options) {
 
         if ( state !== STATE.NONE ) {
 
-            // document.addEventListener( 'mousemove', onMouseMove, false );
-            // document.addEventListener( 'mouseup', onMouseUp, false );
-            eventSource.mouseMove.connect(onMouseMove)
-            eventSource.mouseUp.connect(onMouseUp)
+            if (typeof Qt === 'object') {
+                eventSource.mouseMove.connect(onMouseMove)
+                eventSource.mouseUp.connect(onMouseUp)
+            } else {
+                document.addEventListener( 'mousemove', onMouseMove_, false );
+                document.addEventListener( 'mouseup', onMouseUp_, false );
+            }
             scope.dispatchEvent( startEvent );
 
         }
 
+    }
+
+    function onMouseDown_( event ) {
+        event.preventDefault();
+
+        onMouseDown(event.clientX, event.clientY, event.button, event.ctrlKey)
     }
 
     function onMouseMove(x, y) {
@@ -654,15 +677,29 @@ THREE.OrbitControls = function (options) {
 
     }
 
+    function onMouseMove_(event) {
+        event.preventDefault();
+        onMouseMove(event.clientX, event.clientY);
+    }
+
     function onMouseUp(x, y) {
 
         if ( scope.enabled === false ) return;
 
-        eventSource.mouseMove.disconnect(onMouseMove)
-        eventSource.mouseUp.disconnect(onMouseUp)
+        if (typeof Qt === 'object') {
+            eventSource.mouseMove.disconnect(onMouseMove)
+            eventSource.mouseUp.disconnect(onMouseUp)
+        } else {
+			document.removeEventListener( 'mousemove', onMouseMove_, false );
+			document.removeEventListener( 'mouseup', onMouseUp_, false );
+        }
         scope.dispatchEvent( endEvent );
         state = STATE.NONE;
-        stopMap();
+    }
+    
+    function onMouseUp_(event) {
+        event.preventDefault();
+        onMouseUp(event.clientX, event.clientY);
     }
 
     function onMouseWheel(x, y, wheelX, wheelY) {
@@ -681,6 +718,27 @@ THREE.OrbitControls = function (options) {
         if (scope.object.position.y>=scope.maxDistance) return;
         var direction = -delta*0.001001001;
         pan(direction*(x - scope.canvas.width / 2), direction*(y - scope.canvas.height / 2))
+    }
+
+    function onMouseWheel_( event ) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if ( event.wheelDelta !== undefined ) {
+
+            // WebKit / Opera / Explorer 9
+
+            onMouseWheel( event.clientX, event.clientY, 0, event.wheelDelta );
+
+        } else if ( event.detail !== undefined ) {
+
+            // Firefox
+
+            onMouseWheel( event.clientX, event.clientY, 0, - event.detail );
+
+        }
+        
     }
 
     function onKeyDown( event ) {
@@ -718,15 +776,6 @@ THREE.OrbitControls = function (options) {
     function onKeyUp(event){
         timer.clearInterval(scope.keyDown);
         scope.keyDown = false;
-        stopMap();
-    }
-
-    function moveMap(){
-    }
-
-    function stopMap(){
-        timer.clearInterval(scope.moving);
-        scope.moving = false;
     }
 
     /* function touchstart( event ) {
@@ -865,32 +914,40 @@ THREE.OrbitControls = function (options) {
 
     this.dispose = function() {
 
-        // this.eventSource.disconnect( 'contextmenu', contextmenu, false );
-        this.eventSource.mouseDown.disconnect(onMouseDown);
-        this.eventSource.mouseWheel.disconnect(onMouseWheel);
+        if (typeof Qt === 'object') {
+            // this.eventSource.disconnect( 'contextmenu', contextmenu, false );
+            this.eventSource.mouseDown.disconnect(onMouseDown);
+            this.eventSource.mouseWheel.disconnect(onMouseWheel);
+            
+            // this.eventSource.removeEventListener( 'touchstart', touchstart, false );
+            // this.eventSource.removeEventListener( 'touchend', touchend, false );
+            // this.eventSource.removeEventListener( 'touchmove', touchmove, false );
 
-        // this.eventSource.removeEventListener( 'touchstart', touchstart, false );
-        // this.eventSource.removeEventListener( 'touchend', touchend, false );
-        // this.eventSource.removeEventListener( 'touchmove', touchmove, false );
+            this.eventSource.keyDown.disconnect(onKeyDown);
+        } else {
+            document.removeEventListener( 'mousedown', onMouseDown_, false );
+            document.removeEventListener( 'mousewheel', onMouseWheel_, false );
+        }
 
-        this.eventSource.mouseMove.disconnect(onMouseMove);
-        this.eventSource.mouseUp.disconnect(onMouseUp);
-
-        this.eventSource.keyDown.disconnect(onKeyDown);
 
     }
 
     // this.domElement.addEventListener( 'contextmenu', contextmenu, false );
 
-    this.eventSource.mouseDown.connect(onMouseDown);
-    this.eventSource.mouseWheel.connect(onMouseWheel);
+    if (typeof Qt === 'object') {
+        this.eventSource.mouseDown.connect(onMouseDown);
+        this.eventSource.mouseWheel.connect(onMouseWheel);
 
-    // this.domElement.addEventListener( 'touchstart', touchstart, false );
-    // this.domElement.addEventListener( 'touchend', touchend, false );
-    // this.domElement.addEventListener( 'touchmove', touchmove, false );
+        this.eventSource.keyDown.connect(onKeyDown);
+        this.eventSource.keyUp.connect(onKeyUp);
+    } else {
+        document.addEventListener( 'mousedown', onMouseDown_, false );
+        document.addEventListener( 'mousewheel', onMouseWheel_, false );
 
-    this.eventSource.keyDown.connect(onKeyDown);
-    this.eventSource.keyUp.connect(onKeyUp);
+        // this.domElement.addEventListener( 'touchstart', touchstart, false );
+        // this.domElement.addEventListener( 'touchend', touchend, false );
+        // this.domElement.addEventListener( 'touchmove', touchmove, false );
+    }
 
     // force an update at start
     this.update();

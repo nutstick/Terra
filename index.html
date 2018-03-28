@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>TerraMap</title>
+  <style>
+    body { margin: 0; }
+    canvas { width: 100%; height: 100% }
+  </style>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
+  <script src="./OrbitControls.js"></script>
+  <script src="./require.js"></script>
+  <script defer="defer">
+    var QtPositioning = {
+      coordinate: function(x, y, z) {
+        return {
+          latitude: x,
+          longitude: y,
+          altitude: z
+        };
+      }
+    }
+    var Map = require('./TerraMap/Core/Map');
+    var Scene3D = require('./TerraMap/SceneMode/Scene3D');
+    var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
+
+    var renderer = new THREE.WebGLRenderer();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    renderer.domElement.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+    }, false);
+
+    map = new Map({
+        mode: new DebugScene3D(),
+        canvas: { width: window.innerWidth, height: window.innerHeight },
+        eventSource: {},
+        renderer: renderer
+    });
+    
+    map.update();
+
+    map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
+
+    var animate = function () {
+      requestAnimationFrame( animate );
+
+      map.update();
+
+      renderer.render(map.scene, map.camera);
+    };
+
+    animate();
+
+    window.addEventListener('resize', function () {
+      map.resizeView({ width: window.innerWidth, height: window.innerHeight })
+    });
+  </script>
+</body>
+</html>

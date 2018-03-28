@@ -1,0 +1,15 @@
+{
+  "extends": "standard",
+  "env": {
+    "browser": true
+  },
+  "rules": {
+      "semi": ["error", "always"],
+      "comma-dangle": 0,
+      "indent": ["error", 4]
+  },
+  "globals": {
+    "THREE": true,
+    "QtPositioning": true
+  }
+}

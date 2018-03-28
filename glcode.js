@@ -1,12 +1,20 @@
-Qt.include("/Core/Map.js");
-Qt.include("/SceneMode/Scene3D.js");
+Qt.include('./three.js');
+Qt.include("/lib/OrbitControls.js");
 
-var map;
+Qt.include('./require.js');
+var Map = require('./TerraMap/Core/Map');
+var Scene3D = require('./TerraMap/SceneMode/Scene3D');
+
+var map, renderer;
 function initializeGL(canvas, eventSource) {
+    renderer = new THREE.Canvas3DRenderer({ canvas: canvas, antialias: true, devicePixelRatio: canvas.devicePixelRatio });
+    renderer.setSize(canvas.width, canvas.height);
+
     map = new Map({
         mode: new Scene3D(),
         canvas: canvas,
-        eventSource: eventSource
+        eventSource: eventSource,
+        renderer: renderer
     });
 
     map.update();
@@ -23,5 +31,5 @@ function paintGL(canvas) {
     // Trigger debug update
     controlWindow.onMapUpdate();
 
-    map._renderer.render(map.scene, map.camera);
+    renderer.render(map.scene, map.camera);
 }

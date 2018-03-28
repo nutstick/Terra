@@ -9,6 +9,7 @@
         <file>MapControlView.qml</file>
         <file>MissionControlView.qml</file>
         <file>PinItemView.qml</file>
+        <file>require.js</file>
     </qresource>
     <qresource prefix="/worker">
         <file>updatetile.js</file>

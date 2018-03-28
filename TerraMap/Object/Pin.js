@@ -1,22 +1,18 @@
-Qt.include('/three.js')
-Qt.include('/Utility/SphericalMercator.js');
-
-var defaultSphericalMercator = new SphericalMercator({
-    size: MapSettings.basePlaneDimension
-});
+var MapSettings = require('../Core/MapSettings');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
  * Pin Class
  * @alias Pin
  * @constructor
- * 
- * @param {Object} options 
+ *
+ * @param {Object} options
  * @param {Mission} options.mission
  * @param {number} options.index
  * @param {THREE.Vector2 | QtPositioning.coordinate} [options.position] - Initial position
  * @param {number} options.height
  */
-function Pin(options) {
+function Pin (options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.mission === 'undefined') throw new Error('No options.mission provided');
     /**
@@ -48,17 +44,21 @@ function Pin(options) {
     if (options.position) {
         // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
-            var px= defaultSphericalMercator.px(options.position, 0);
+            var px = sphericalMercator.px(options.position, 0);
             // FIXME: y = 0 in 2D map case
-            px = { x: px.x - MapSettings.basePlaneDimension / 2, y: 0, z: px.y - MapSettings.basePlaneDimension / 2};
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(options.position.latitude);
+            px = {
+                x: px.x - MapSettings.basePlaneDimension / 2,
+                y: 0,
+                z: px.y - MapSettings.basePlaneDimension / 2
+            };
+            var meterPerPixel = sphericalMercator.mPerPixel(options.position.latitude);
 
             this.position = px;
             this.height = options.position.altitude / meterPerPixel;
         } else {
             this.position = options.position.clone();
             // Default height is 10 meters
-            this.height = options.height | 10 / defaultSphericalMercator.mPerPixel(0);
+            this.height = options.height | 10 / sphericalMercator.mPerPixel(0);
         }
     }
 
@@ -66,7 +66,7 @@ function Pin(options) {
      * Pin's head geomtry
      * @type {THREE.CylinderGeometry}
      */
-    this.headGeometry = new THREE.CylinderGeometry( 3, 3, 8, 8, 1 );
+    this.headGeometry = new THREE.CylinderGeometry(3, 3, 8, 8, 1);
     // Recalculate centroid of mesh offset by 8
     for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
         this.headGeometry.vertices[i].y += 8;
@@ -104,10 +104,10 @@ function Pin(options) {
      * Pin's arrow geometry
      * @type {THREE.CylinderGeometry}
      */
-    this.arrowGeometry = new THREE.CylinderGeometry( 4, 0, 6, 6, 1 );
+    this.arrowGeometry = new THREE.CylinderGeometry(4, 0, 6, 6, 1);
     // Recalculate centroid
-    for (var i = 0, len = this.arrowGeometry.vertices.length; i < len; i++) {
-        this.arrowGeometry.vertices[i].y += 3;
+    for (var i_ = 0, len_ = this.arrowGeometry.vertices.length; i_ < len_; i_++) {
+        this.arrowGeometry.vertices[i_].y += 3;
     }
     this.arrowGeometry.computeBoundingSphere();
     /**
@@ -139,7 +139,7 @@ function Pin(options) {
     this.group.add(this.arrow);
 
     // TODO: Map should have addRenderingObject function instead of direct access to scene
-    this._mission._map.scene.add(this.group)
+    this._mission._map.scene.add(this.group);
 
     /**
      * Last move scale of pin
@@ -150,10 +150,37 @@ function Pin(options) {
 }
 
 /**
- * Moving head with offset height
- * @param {number} delta 
+ * Free memory and remove pin from rendering
  */
-Pin.prototype.offsetHeight = function(delta) {
+Pin.prototype.dispose = function () {
+    this._mission._map.scene.remove(this.group);
+    this.group = undefined;
+    this._mission = undefined;
+
+    this.position = undefined;
+
+    // Clear Meshes
+    this.head.geometry.dispose();
+    this.head.material.dispose();
+    this.headGeometry = undefined;
+    this.head = undefined;
+
+    this.line.geometry.dispose();
+    this.line.material.dispose();
+    this.lineGeometry = undefined;
+    this.line = undefined;
+
+    this.arrow.geometry.dispose();
+    this.arrow.material.dispose();
+    this.arrowGeometry = undefined;
+    this.arrow = undefined;
+};
+
+/**
+ * Moving head with offset height
+ * @param {number} delta
+ */
+Pin.prototype.offsetHeight = function (delta) {
     this.height += delta;
     // Update Head position
     this.head.position.copy(this.position);
@@ -164,9 +191,9 @@ Pin.prototype.offsetHeight = function(delta) {
 
     // Update line inbetween pins
     this._mission.updatePin(this._index);
-}
+};
 
-Pin.prototype.setScale = function(scale) {
+Pin.prototype.setScale = function (scale) {
     if (this.lastScale === scale) return;
 
     this.lastScale = scale;
@@ -175,9 +202,9 @@ Pin.prototype.setScale = function(scale) {
     this.head.geometry.computeBoundingSphere();
     this.arrow.scale.set(scale, scale, scale);
     this.head.geometry.computeBoundingSphere();
-}
+};
 
-Pin.prototype.setPosition = function(position) {
+Pin.prototype.setPosition = function (position) {
     this.position.copy(position);
 
     // Update Head position
@@ -190,17 +217,19 @@ Pin.prototype.setPosition = function(position) {
 
     // TODO: line between pin update
     this._mission.updatePin(this._index);
-}
+};
 
 Object.defineProperties(Pin.prototype, {
     coordinate: {
-        get: function() {
-            var ll = defaultSphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
-                                                  this.position.z + MapSettings.basePlaneDimension / 2], 0);
-            var meterPerPixel = defaultSphericalMercator.mPerPixel(ll.latitude);
+        get: function () {
+            var ll = sphericalMercator.ll([this.position.x + MapSettings.basePlaneDimension / 2,
+                this.position.z + MapSettings.basePlaneDimension / 2], 0);
+            var meterPerPixel = sphericalMercator.mPerPixel(ll.latitude);
             ll.altitude = this.height * meterPerPixel;
 
             return ll;
         }
     }
-})
+});
+
+module.exports = Pin;

@@ -3,7 +3,7 @@
  * @alias TileReplacementQueue
  * @constructor
  */
-function TileReplacementQueue() {
+function TileReplacementQueue () {
     this.head = undefined;
     this.tail = undefined;
     this.count = 0;
@@ -14,7 +14,7 @@ function TileReplacementQueue() {
  * Marks the start of the render frame.  Tiles before (closer to the head) this tile in the
  * list were used last frame and must not be unloaded.
  */
-TileReplacementQueue.prototype.markStartOfRenderFrame = function() {
+TileReplacementQueue.prototype.markStartOfRenderFrame = function () {
     this._lastBeforeStartOfFrame = this.head;
 };
 
@@ -25,13 +25,14 @@ TileReplacementQueue.prototype.markStartOfRenderFrame = function() {
  *
  * @param {Number} maximumTiles The maximum number of tiles in the queue.
  */
-TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
+TileReplacementQueue.prototype.trimTiles = function (maximumTiles) {
     var tileToTrim = this.tail;
     var keepTrimming = true;
     while (keepTrimming &&
            typeof this._lastBeforeStartOfFrame !== 'undefined' &&
            this.count > maximumTiles &&
            typeof tileToTrim !== 'undefined') {
+        console.log(this.count > maximumTiles, typeof tileToTrim !== 'undefined', typeof this._lastBeforeStartOfFrame !== 'undefined')
         // Stop trimming after we process the last tile not used in the
         // current frame.
         keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
@@ -39,6 +40,7 @@ TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
         var previous = tileToTrim.replacementPrevious;
 
         if (tileToTrim.eligibleForUnloading) {
+            console.log(tileToTrim)
             tileToTrim.freeResources();
             remove(this, tileToTrim);
         }
@@ -47,7 +49,7 @@ TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
     }
 };
 
-function remove(tileReplacementQueue, item) {
+function remove (tileReplacementQueue, item) {
     var previous = item.replacementPrevious;
     var next = item.replacementNext;
 
@@ -79,7 +81,7 @@ function remove(tileReplacementQueue, item) {
  *
  * @param {TileReplacementQueue} item The tile that was rendered.
  */
-TileReplacementQueue.prototype.markTileRendered = function(item) {
+TileReplacementQueue.prototype.markTileRendered = function (item) {
     var head = this.head;
     if (head === item) {
         if (item === this._lastBeforeStartOfFrame) {
@@ -109,3 +111,5 @@ TileReplacementQueue.prototype.markTileRendered = function(item) {
 
     this.head = item;
 };
+
+module.exports = TileReplacementQueue;

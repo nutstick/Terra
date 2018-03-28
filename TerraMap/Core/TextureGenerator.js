@@ -1,6 +1,3 @@
-
-Qt.include("three.js")
-
 /**
  * TextureGenerator Class
  * @alias TextureGenerator
@@ -9,7 +6,7 @@ Qt.include("three.js")
  * @param {QuadTree} options.quadTree - QuadTree
  * @param {number} [options.maxLoad=50] - Max loading thread
  */
-function TextureGenerator(options) {
+function TextureGenerator (options) {
     if (!options) throw new Error('No options provided');
 
     if (!options.quadTree) throw new Error('No options.quadTree provided');
@@ -34,35 +31,36 @@ function TextureGenerator(options) {
 }
 
 /**
- * 
- * @param {number} x 
- * @param {number} y 
- * @param {number} z 
+ *
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
  * @returns {string} - Url
  */
-TextureGenerator.prototype.url = function(x, y, z) {
-    var serverIndex = 2*(x%2)+y%2
-    var server = ['a','b','c','d'][serverIndex]
-    return 'https://'+server+'.tiles.mapbox.com/v4/mapbox.satellite/'+z+'/'+x+'/'+y
-        +'@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
-}
+TextureGenerator.prototype.url = function (x, y, z) {
+    var serverIndex = 2 * (x % 2) + y % 2;
+    var server = ['a', 'b', 'c', 'd'][serverIndex];
+    return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.satellite/' + z + '/' + x + '/' + y+
+        '@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
+};
 
-TextureGenerator.prototype.start = function() {
+TextureGenerator.prototype.start = function () {
     var scope = this;
-    timer.setInterval(function() {
+    // timer.
+    setInterval(function () {
         scope.load();
         if (scope._needUpdate) {
             scope._quadTree.update();
             scope._needUpdate = false;
         }
     }, 500);
-}
+};
 
 /**
- * 
+ *
  * @param {Tile} tile
  */
-TextureGenerator.prototype.loadTile = function(tile) {
+TextureGenerator.prototype.loadTile = function (tile) {
     if (this._loadingThisTick <= 0) return;
     if (!tile.needsLoading) return;
 
@@ -73,23 +71,25 @@ TextureGenerator.prototype.loadTile = function(tile) {
     var texture = new THREE.TextureLoader()
         .load(
             this.url(tile._x, tile._y, tile._z),
-            function(resp) {
+            function (resp) {
                 scope._needUpdate = true;
                 tile.imageryDone('texture');
                 scope._loading--;
             },
-            function() {},
-            function(err) {
-                tile.imageryFailed('texture');
-                scope._loading--;
-                console.error('Error loading texture' + tile.stringify);
+            function () {},
+            function (err) {
+                if (err) {
+                    tile.imageryFailed('texture');
+                    scope._loading--;
+                    console.error('Error loading texture' + tile.stringify);
+                }
             }
         );
 
     tile.imageryLoading('texture', texture);
-}
+};
 
-TextureGenerator.prototype.load = function() {
+TextureGenerator.prototype.load = function () {
     // Print out debug
     // updateLoadingProgress(this);
 
@@ -103,9 +103,9 @@ TextureGenerator.prototype.load = function() {
     for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
-}
+};
 
-function updateLoadingProgress(textureGenerator) {
+function updateLoadingProgress (textureGenerator) {
     var debug = textureGenerator.debug;
     debug.high = textureGenerator._quadTree._tileLoadQueueHigh.length;
     debug.medium = textureGenerator._quadTree._tileLoadQueueMedium.length;
@@ -114,10 +114,11 @@ function updateLoadingProgress(textureGenerator) {
     if (debug.high !== debug.lastHigh ||
         debug.medium !== debug.lastMedium ||
         debug.low !== debug.lastLow) {
-        
         console.log('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
         debug.lastHigh = debug.high;
         debug.lastMedium = debug.medium;
         debug.lastLow = debug.low;
     }
 }
+
+module.exports = TextureGenerator;

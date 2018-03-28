@@ -3,18 +3,18 @@
  * @alias SceneMode
  * @constructor
  */
-function SceneMode() {
+function SceneMode () {
     throw new Error('Implementation error SceneMode is abstract class');
 }
 
 /**
- * @param {QuadTree} quadTree 
- * @param {Tile} tile 
+ * @param {QuadTree} quadTree
+ * @param {Tile} tile
  * @returns {number} screenSpaceError of tile
  */
-SceneMode.prototype.screenSpaceError = function(quadTree, tile) {
+SceneMode.prototype.screenSpaceError = function (quadTree, tile) {
     throw new Error('Implementation error SceneMode is abstract class');
-}
+};
 
 Object.defineProperties(SceneMode.prototype, {
     /**
@@ -23,8 +23,10 @@ Object.defineProperties(SceneMode.prototype, {
      * @type {QuadTree}
      */
     quadTree: {
-        get: function() {
+        get: function () {
             throw new Error('Implementation error SceneMode.quadTree is abstract class');
         }
     }
 });
+
+module.exports = SceneMode;

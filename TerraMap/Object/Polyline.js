@@ -73,3 +73,5 @@ Polyline.prototype.interactableObjects = function() {
         return prev;
     }, []);
 }
+
+module.exports = Polyline;
