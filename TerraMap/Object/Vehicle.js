@@ -21,33 +21,80 @@ function Vehicle (options) {
     this._map = options.map;
 
     /**
+     * Point at Ground
+     * @type {THREE.Vector3}
+     * @private
+     */
+    this._groundPosition = new THREE.Vector3(0, 0, 0);
+
+    /**
      * Position
      * @type {THREE.Vector3}
      * @private
      */
     this._position = new THREE.Vector3(0, 0, 0);
 
+    /**
+     * Head angle from North (0, -1, 0)
+     * @type {number}
+     * @private
+     */
+    this._headAngle = 0.0;
+
     // Initialize pin position
     if (options.position) {
         // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
             this._position = MapUtility.CartographicToPixel(options.position);
+            // Set ground TODO: y as 0
+            this._groundPosition.x = this._position.x;
+            this._groundPosition.y = 0;
+            this._groundPosition.z = this._position.z;
         } else {
             this._position = options.position.clone();
             // Default height is 10 meters
             this._position.y = options.height | MapUtility.tenMeters();
+
+            // Set ground TODO: y as 0
+            this._groundPosition.x = this._position.x;
+            this._groundPosition.y = 0;
+            this._groundPosition.z = this._position.z;
         }
     }
 
     /**
      * Pin's head geomtry
-     * @type {THREE.CylinderGeometry}
+     * @type {THREE.TetrahedronGeometry}
      */
-    this.headGeometry = new THREE.CylinderGeometry(3, 3, 8, 8, 1);
+    this.headGeometry = new THREE.Geometry();
+
+    var radius = 7.5;
+    var x = radius * 2.0 / 3.0;
+    var offset = radius / 3.0;
+
+    this.headGeometry.vertices = [
+        new THREE.Vector3(0.0, 0.0, 0.0 + offset),
+        new THREE.Vector3(-x * Math.sqrt(3), x, x + offset),
+        new THREE.Vector3(x * Math.sqrt(3), x, x + offset),
+        new THREE.Vector3(0.0, x * 2.0 / 3.0, 0.0 + offset),
+        new THREE.Vector3(0.0, 0.0, -2 * x + offset)
+    ];
+    this.headGeometry.faces = [
+        new THREE.Face3(0, 2, 3),
+        new THREE.Face3(0, 3, 1),
+        new THREE.Face3(0, 4, 2),
+        new THREE.Face3(0, 1, 4),
+        new THREE.Face3(3, 4, 1),
+        new THREE.Face3(3, 2, 4)
+    ];
+    this.headGeometry.computeFaceNormals();
+
+    this.headGeometry.rotateX(20 / 180 * Math.PI);
+
     // Recalculate centroid of mesh offset by 8
-    for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
-        this.headGeometry.vertices[i].y += 8;
-    }
+    // for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
+    //     this.headGeometry.vertices[i].y += 8;
+    // }
 
     /**
      * Pin's head mesh
@@ -65,8 +112,8 @@ function Vehicle (options) {
      * @type {THREE.Geometry}
      */
     this.lineGeometry = new THREE.Geometry();
-    this.lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-    this.lineGeometry.vertices.push(new THREE.Vector3(0, 8, 0));
+    this.lineGeometry.vertices.push(this._groundPosition);
+    this.lineGeometry.vertices.push(this._position);
     /**
      * ine between head and arrow
      * @type {THREE.LineSegments}
@@ -78,11 +125,7 @@ function Vehicle (options) {
     this.line.name = 'Line';
 
     // Update position
-    this.head.position.copy(this._position);
-    this.head.position.y += this._height;
-    this.line.position.copy(this._position);
-    this.line.geometry.vertices[1].y = this._height;
-    this.line.geometry.verticesNeedUpdate = true;
+    this.head.position = this._position;
 
     /**
      * Pack of all mesh in pin (head, line, arrow)
@@ -98,7 +141,7 @@ function Vehicle (options) {
      * Scale
      * @type {number}
      */
-    this.lastScale = undefined;
+    this.lastScale = 1.0;
 }
 
 Object.defineProperties(Vehicle.prototype, {
@@ -149,6 +192,22 @@ Object.defineProperties(Vehicle.prototype, {
             this._height = height * meterPerPixel;
         }
     },
+    /**
+     * Head angle of Vehicle in degree clockwise
+     * @memberof Vehicle.prototype
+     *
+     * @type {number}
+     */
+    headAngle: {
+        get: function () {
+            return -this._headAngle * 180 / Math.PI;
+        },
+        set: function (angle) {
+            var angle_ = -angle * Math.PI / 180;
+            this.headGeometry.rotateY(angle_ - this._headAngle);
+            this._headAngle = angle_;
+        }
+    },
     scale: {
         get: function () {
             return this.lastScale;
@@ -156,13 +215,10 @@ Object.defineProperties(Vehicle.prototype, {
         set: function (scale) {
             if (this.lastScale === scale) return;
 
+            console.log(this.head.geometry)
+            this.head.geometry.scale(scale / this.lastScale, scale / this.lastScale, scale / this.lastScale);
             this.lastScale = scale;
-
-            this.head.scale.set(scale, scale, scale);
-            // FIXME: computeBoundingSphere
-            // this.head.geometry.computeBoundingSphere();
-            // this.arrow.scale.set(scale, scale, scale);
-            // this.arrow.geometry.computeBoundingSphere();
+            console.log(this.head.geometry)
         }
     }
 });
