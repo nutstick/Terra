@@ -3,6 +3,7 @@ var sphericalMercator = require('../Utility/SphericalMercator');
 var QuadTree = require('./QuadTree');
 var Cartesian = require('../Math/Cartesian');
 var Camera = require('../Renderer/Camera');
+var OrbitControls = require('../Renderer/OrbitControls');
 var Mission = require('../Object/Mission');
 var Polygon = require('../Object/Polygon');
 var Vehicle = require('../Object/Vehicle');
@@ -39,12 +40,14 @@ function Map (options) {
     /*
     * Setup ThreeJS scene
     */
+    this._renderer = options.renderer;
+
     this.scene = new THREE.Scene();
 
     this.camera = new Camera({ canvas: options.canvas });
     this.camera.setPosition({ z: MapSettings.cameraDistance });
 
-    this.cameraController = new THREE.OrbitControls({
+    this.cameraController = new OrbitControls({
         map: this,
         eventSource: options.eventSource,
         canvas: options.canvas,
@@ -63,8 +66,6 @@ function Map (options) {
     this.basePlane.rotation.x = -0.5 * Math.PI;
     this.basePlane.opacity = 0;
     this.scene.add(this.basePlane);
-
-    this._renderer = options.renderer;
 
     /**
      * @type {QuadTree}
@@ -178,7 +179,7 @@ Map.prototype.setView = function (position, zoom) {
     this.cameraController.target.y = 0;
     this.cameraController.target.z = px.z;
 
-    var distance = Math.pow(0.5, (zoom - 4)) * MapSettings.cameraDistance;
+    var distance = Math.pow(0.5, zoom) * MapSettings.cameraDistance;
 
     var c = new THREE.Vector3();
     var bearing = this.cameraController.getAzimuthalAngle();

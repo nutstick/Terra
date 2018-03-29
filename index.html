@@ -12,7 +12,7 @@
 </head>
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
-  <script src="./OrbitControls.js"></script>
+  <!-- <script src="./OrbitControls.js"></script> -->
   <script src="./require.js"></script>
   <script defer="defer">
     var QtPositioning = {
@@ -27,6 +27,7 @@
     var Map = require('./TerraMap/Core/Map');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
     var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
+    var DebugTile = require('./TerraMap/Core/DebugTile');
 
     var renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -46,6 +47,8 @@
     map.update();
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
+
+    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
     var animate = function () {
       requestAnimationFrame( animate );

@@ -10,6 +10,7 @@
   },
   "globals": {
     "THREE": true,
-    "QtPositioning": true
+    "QtPositioning": true,
+    "Qt": true
   }
 }
