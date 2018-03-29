@@ -123,11 +123,11 @@ SphericalMercator.prototype.CartographicToPixel = function (coordinate, px) {
     // if (x < 0) x = 0;
     // if (y < 0) y = 0;
 
-    return new THREE.Vector3(
-        x - MapSettings.basePlaneDimension / 2,
-        coordinate.altitude / this.mPerPixel(0),
-        y - MapSettings.basePlaneDimension / 2
-    );
+    px.x = x - MapSettings.basePlaneDimension / 2;
+    px.y = coordinate.altitude / this.mPerPixel(0);
+    px.z = y - MapSettings.basePlaneDimension / 2;
+
+    return px;
 };
 
 /**
