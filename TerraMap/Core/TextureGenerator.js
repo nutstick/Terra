@@ -46,7 +46,7 @@ TextureGenerator.prototype.url = function (x, y, z) {
 
 TextureGenerator.prototype.start = function () {
     var scope = this;
-    // timer.
+    // TIMER: timer.
     setInterval(function () {
         scope.load();
         if (scope._needUpdate) {

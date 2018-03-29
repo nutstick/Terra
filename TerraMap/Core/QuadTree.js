@@ -102,7 +102,7 @@ QuadTree.prototype.update = function () {
     this.needUpdate = false;
     this.updating = true;
 
-    // Update Camera
+    // Update Camera target position
     sphericalMercator.PixelToCartographic(this.cameraController.target, this.cameraController.targetCartographic);
     sphericalMercator.PixelToCartesian(this.cameraController.target, this.cameraController.targetCartesian);
 
@@ -124,8 +124,6 @@ QuadTree.prototype.update = function () {
 
     this.cameraController.object.updatedLastFrame = false;
     this.updating = false;
-
-    console.log(this._tileReplacementQueue.count)
 };
 
 function clearTileLoadQueue (primative) {
@@ -294,9 +292,9 @@ function queueChildTileLoad (primative, childTile) {
 }
 
 function visitVisibleChildrenNearToFar (primative, children) {
-    var cameraPosition = primative.cameraController.target;
+    var targetPositionCartesian = primative.cameraController.targetCartesian;
     var distances = children.map(function (child) {
-        return { tile: child, distance: child.bbox.distanceFromPoint(cameraPosition) };
+        return { tile: child, distance: child.bbox.distanceFromPoint(targetPositionCartesian) };
     });
     distances.sort(function (a, b) {
         return a.distance - b.distance;

@@ -32,7 +32,6 @@ TileReplacementQueue.prototype.trimTiles = function (maximumTiles) {
            typeof this._lastBeforeStartOfFrame !== 'undefined' &&
            this.count > maximumTiles &&
            typeof tileToTrim !== 'undefined') {
-        console.log(this.count > maximumTiles, typeof tileToTrim !== 'undefined', typeof this._lastBeforeStartOfFrame !== 'undefined')
         // Stop trimming after we process the last tile not used in the
         // current frame.
         keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
@@ -40,7 +39,6 @@ TileReplacementQueue.prototype.trimTiles = function (maximumTiles) {
         var previous = tileToTrim.replacementPrevious;
 
         if (tileToTrim.eligibleForUnloading) {
-            console.log(tileToTrim)
             tileToTrim.freeResources();
             remove(this, tileToTrim);
         }
