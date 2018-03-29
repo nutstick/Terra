@@ -1,5 +1,4 @@
 Qt.include('./three.js');
-Qt.include("/lib/OrbitControls.js");
 
 Qt.include('./require.js');
 var Map = require('./TerraMap/Core/Map');
@@ -20,6 +19,8 @@ function initializeGL(canvas, eventSource) {
     map.update();
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
+
+    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 }
 
 function resizeGL(canvas) {

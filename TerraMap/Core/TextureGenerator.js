@@ -47,13 +47,23 @@ TextureGenerator.prototype.url = function (x, y, z) {
 TextureGenerator.prototype.start = function () {
     var scope = this;
     // TIMER: timer.
-    setInterval(function () {
-        scope.load();
-        if (scope._needUpdate) {
-            scope._quadTree.update();
-            scope._needUpdate = false;
-        }
-    }, 500);
+    if (typeof Qt === 'object') {
+        timer.setInterval(function () {
+            scope.load();
+            if (scope._needUpdate) {
+                scope._quadTree.update();
+                scope._needUpdate = false;
+            }
+        }, 500);
+    } else {
+        setInterval(function () {
+            scope.load();
+            if (scope._needUpdate) {
+                scope._quadTree.update();
+                scope._needUpdate = false;
+            }
+        }, 500);
+    }
 };
 
 /**

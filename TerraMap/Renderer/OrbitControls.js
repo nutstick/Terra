@@ -1,3 +1,5 @@
+var MapSettings = require('../Core/MapSettings');
+
 /**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
@@ -30,7 +32,7 @@ function OrbitConstraint (map, object) {
 
     // Limits to how far you can dolly in and out ( PerspectiveCamera only )
     this.minDistance = 0;
-    this.maxDistance = 12000 * Math.pow(2, 8);
+    this.maxDistance = MapSettings.maxCameraDistance;
 
     // Limits to how far you can zoom in and out ( OrthographicCamera only )
     this.minZoom = 0;
@@ -445,7 +447,11 @@ THREE.OrbitControls = function (options) {
         this.target.copy(coords);
         this.object.position.copy({x: coords.x, y: currentHeight, z: coords.z});
         // TIMER: timer.
-        setTimeout(function () { map.quadTree.needUpdate = true; }, 10);
+        if (typeof Qt === 'object') {
+            timer.setTimeout(function () { map.quadTree.needUpdate = true; }, 10);
+        } else {
+            setTimeout(function () { map.quadTree.needUpdate = true; }, 10);
+        }
     };
 
     function getAutoRotationAngle () {
@@ -523,7 +529,7 @@ THREE.OrbitControls = function (options) {
         if (state !== STATE.NONE) {
             if (typeof Qt === 'object') {
                 // eventSource.mouseMove.connect(onMouseMove)
-                this.eventSource.mouseUp.connect(onMouseUp);
+                scope.eventSource.mouseUp.connect(onMouseUp);
             } else {
                 // document.addEventListener( 'mousemove', onMouseMove_, false );
                 document.addEventListener('mouseup', onMouseUp_, false);
@@ -607,7 +613,7 @@ THREE.OrbitControls = function (options) {
 
         if (typeof Qt === 'object') {
             // eventSource.mouseMove.disconnect(onMouseMove)
-            this.eventSource.mouseUp.disconnect(onMouseUp);
+            scope.eventSource.mouseUp.disconnect(onMouseUp);
         } else {
             // document.removeEventListener( 'mousemove', onMouseMove_, false );
             document.removeEventListener('mouseup', onMouseUp_, false);
@@ -684,7 +690,12 @@ THREE.OrbitControls = function (options) {
 
     function onKeyUp (event) {
         // TIMER: timer.
-        clearInterval(scope.keyDown);
+        if (typeof Qt === 'object') {
+            timer.clearInterval(scope.keyDown);
+        } else {
+            clearInterval(scope.keyDown);
+        }
+
         scope.keyDown = false;
     }
 
@@ -811,15 +822,15 @@ THREE.OrbitControls = function (options) {
     this.dispose = function () {
         if (typeof Qt === 'object') {
             // this.eventSource.disconnect( 'contextmenu', contextmenu, false );
-            this.eventSource.mouseDown.disconnect(onMouseDown);
-            this.eventSource.mouseMove.disconnect(onMouseMove);
-            this.eventSource.mouseWheel.disconnect(onMouseWheel);
+            scope.eventSource.mouseDown.disconnect(onMouseDown);
+            scope.eventSource.mouseMove.disconnect(onMouseMove);
+            scope.eventSource.mouseWheel.disconnect(onMouseWheel);
 
             // this.eventSource.removeEventListener( 'touchstart', touchstart, false );
             // this.eventSource.removeEventListener( 'touchend', touchend, false );
             // this.eventSource.removeEventListener( 'touchmove', touchmove, false );
 
-            this.eventSource.keyDown.disconnect(onKeyDown);
+            scope.eventSource.keyDown.disconnect(onKeyDown);
         } else {
             document.removeEventListener('mousedown', onMouseDown_, false);
             document.removeEventListener('mousemove', onMouseMove_, false);

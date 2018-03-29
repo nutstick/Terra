@@ -11,15 +11,9 @@
         <file>PinItemView.qml</file>
         <file>require.js</file>
     </qresource>
-    <qresource prefix="/worker">
-        <file>updatetile.js</file>
-        <file>parseelevation.js</file>
-    </qresource>
-    <qresource lang="js" prefix="/lib">
+    <qresource prefix="/worker"/>
+    <qresource prefix="/lib" lang="js">
         <file>sm.js</file>
-        <file>tilecover.js</file>
-        <file alias="utilities.js">utilities.js</file>
-        <file alias="OrbitControls.js">OrbitControls.js</file>
         <file>image.js</file>
     </qresource>
 </RCC>

@@ -215,10 +215,8 @@ Object.defineProperties(Vehicle.prototype, {
         set: function (scale) {
             if (this.lastScale === scale) return;
 
-            console.log(this.head.geometry)
             this.head.geometry.scale(scale / this.lastScale, scale / this.lastScale, scale / this.lastScale);
             this.lastScale = scale;
-            console.log(this.head.geometry)
         }
     }
 });

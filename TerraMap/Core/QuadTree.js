@@ -98,7 +98,7 @@ QuadTree.prototype.suspendLodUpdate = function (value) {
 
 QuadTree.prototype.update = function () {
     // If not thing need to update, do noting
-    if (!this.needUpdate || this.updating) return;
+    if (!this.needUpdate || this.updating || this._debug.suspendLodUpdate) return;
     this.needUpdate = false;
     this.updating = true;
 
@@ -143,9 +143,6 @@ function clearTileLoadQueue (primative) {
 
 function selectTilesForRendering (primative) {
     var debug = primative._debug;
-    if (debug.suspendLodUpdate) {
-        return;
-    }
 
     // Clear the render list.
     var tilesToRender = primative._activeTiles;

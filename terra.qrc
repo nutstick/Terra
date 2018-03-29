@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>TerraMap/Core/AABB.js</file>
+        <file>TerraMap/Core/DebugTile.js</file>
         <file>TerraMap/Core/DeveloperError.js</file>
         <file>TerraMap/Core/Map.js</file>
         <file>TerraMap/Core/MapSettings.js</file>
@@ -9,15 +10,21 @@
         <file>TerraMap/Core/Tile.js</file>
         <file>TerraMap/Core/TileReplacementQueue.js</file>
         <file>TerraMap/Core/TilingScheme.js</file>
+        <file>TerraMap/Math/Cartesian.js</file>
+        <file>TerraMap/Math/Ellipsoid.js</file>
         <file>TerraMap/Object/Mission.js</file>
         <file>TerraMap/Object/Pin.js</file>
         <file>TerraMap/Object/Polygon.js</file>
         <file>TerraMap/Object/Polyline.js</file>
         <file>TerraMap/Object/Vehicle.js</file>
+        <file>TerraMap/Renderer/Camera.js</file>
+        <file>TerraMap/Renderer/OrbitControls.js</file>
+        <file>TerraMap/SceneMode/DebugScene3D.js</file>
         <file>TerraMap/SceneMode/Scene2D.js</file>
         <file>TerraMap/SceneMode/Scene3D.js</file>
         <file>TerraMap/SceneMode/SceneMode.js</file>
         <file>TerraMap/Utility/MapUtility.js</file>
         <file>TerraMap/Utility/SphericalMercator.js</file>
+        <file>TerraMap/.eslintrc.json</file>
     </qresource>
 </RCC>
