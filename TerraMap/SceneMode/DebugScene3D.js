@@ -21,13 +21,6 @@ Object.defineProperties(DebugScene3D.prototype, {
         set: function (value) {
             this._quadTree = value;
             this._quadTree._rootTile = DebugTile.createRootTile(this._quadTree, this._tilingScheme);
-
-            // var scope = this;
-            // timer.
-            // setInterval(function () {
-            //     scope._quadTree.needUpdate = true;
-            //     scope._quadTree.update();
-            // }, 100);
         }
     }
 });

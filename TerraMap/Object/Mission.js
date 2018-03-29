@@ -14,7 +14,7 @@ function Mission (options) {
      * @type {Map} Map
      * @private
      */
-    this._map = map;
+    this._map = options.map;
 
     throw new Error('Not implemented');
 }

@@ -5,13 +5,20 @@ var sphericalMercator = require('../Utility/SphericalMercator');
  * Vehicle Class
  * @alias Vehicle
  * @constructor
- * 
+ *
  * @param {Object} options
  * @param {Map} options.map - Map
  */
-function Vehicle(options) {
+function Vehicle (options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
+
+    /**
+     * Map
+     * @type {Map}
+     * @private
+     */
+    this._map = options.map;
 
     /**
      * Position
@@ -36,7 +43,7 @@ function Vehicle(options) {
      * Pin's head geomtry
      * @type {THREE.CylinderGeometry}
      */
-    this.headGeometry = new THREE.CylinderGeometry( 3, 3, 8, 8, 1 );
+    this.headGeometry = new THREE.CylinderGeometry(3, 3, 8, 8, 1);
     // Recalculate centroid of mesh offset by 8
     for (var i = 0, len = this.headGeometry.vertices.length; i < len; i++) {
         this.headGeometry.vertices[i].y += 8;
@@ -96,10 +103,10 @@ function Vehicle(options) {
 
 Object.defineProperties(Vehicle.prototype, {
     position: {
-        get: function() {
+        get: function () {
             return this._position;
         },
-        set: function(position) {
+        set: function (position) {
             // Case position is a QtPositioning.coordiante
             if (position.longitude) {
                 this._position = MapUtility.CartographicToPixel(position);
@@ -120,37 +127,37 @@ Object.defineProperties(Vehicle.prototype, {
         }
     },
     coordinate: {
-        get: function() {
+        get: function () {
             return MapUtility.PixelToCartographic(this._position);
         },
     },
     height: {
-        get: function() {
+        get: function () {
             return this._height;
         },
-        set: function(height) {
+        set: function (height) {
             this._height = height;
         }
     },
     meterHeight: {
-        get: function() {
+        get: function () {
             var meterPerPixel = sphericalMercator.mPerPixel(0);
             return this._height / meterPerPixel;
         },
-        set: function(height) {
+        set: function (height) {
             var meterPerPixel = sphericalMercator.mPerPixel(0);
             this._height = height * meterPerPixel;
         }
     },
     scale: {
-        get: function() {
+        get: function () {
             return this.lastScale;
         },
-        set: function(scale) {
+        set: function (scale) {
             if (this.lastScale === scale) return;
-        
+
             this.lastScale = scale;
-        
+
             this.head.scale.set(scale, scale, scale);
             // FIXME: computeBoundingSphere
             // this.head.geometry.computeBoundingSphere();

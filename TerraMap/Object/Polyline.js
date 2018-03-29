@@ -1,12 +1,14 @@
+var Pin = require('./Pin');
+
 /**
  * Polyline Class
  * @alias Polyline
  * @constructor
- * 
- * @param {Object} options 
+ *
+ * @param {Object} options
  * @param {Map} options.map
  */
-function Polyline(options) {
+function Polyline (options) {
     if (!options) throw new Error('No options provided');
     if (typeof options.map === 'undefined') throw new Error('No options.map provided');
     /**
@@ -14,7 +16,7 @@ function Polyline(options) {
      * @type {Map} Map
      * @private
      */
-    this._map = map;
+    this._map = options.map;
 
     /**
      * Pin point that define polyline direction
@@ -29,7 +31,7 @@ function Polyline(options) {
     this.lines = [];
 }
 
-Polyline.prototype.addPin = function(position, height) {
+Polyline.prototype.addPin = function (position, height) {
     var index = this.pins.length;
     var pin = new Pin({
         index: index,
@@ -53,25 +55,25 @@ Polyline.prototype.addPin = function(position, height) {
     }
 
     return pin;
-}
+};
 
-Polyline.prototype.updatePin = function(index) {
+Polyline.prototype.updatePin = function (index) {
     if (index > 0) {
-        this.lines[index-1].geometry.vertices[1].copy(this.pins[index].head.position);
-        this.lines[index-1].geometry.verticesNeedUpdate = true;
+        this.lines[index - 1].geometry.vertices[1].copy(this.pins[index].head.position);
+        this.lines[index - 1].geometry.verticesNeedUpdate = true;
     }
     if (index + 1 < this.pins.length) {
         this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
         this.lines[index].geometry.verticesNeedUpdate = true;
     }
-}
+};
 
-Polyline.prototype.interactableObjects = function() {
+Polyline.prototype.interactableObjects = function () {
     return this.pins.reduce(function (prev, pin) {
         prev.push(pin.head);
         prev.push(pin.arrow);
         return prev;
     }, []);
-}
+};
 
 module.exports = Polyline;
