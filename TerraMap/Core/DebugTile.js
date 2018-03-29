@@ -10,21 +10,22 @@ function DebugTile (options) {
 
     var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
-    geometry.vertices = [
-        new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
-        new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
-        new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
-        new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
-    ];
-    geometry.faces = [
-        new THREE.Face3(0, 1, 2),
-        new THREE.Face3(1, 3, 2)
-    ];
-    geometry.computeFaceNormals();
+    // geometry.vertices = [
+    //     new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
+    //     new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
+    //     new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
+    //     new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
+    // ];
+    // geometry.faces = [
+    //     new THREE.Face3(0, 1, 2),
+    //     new THREE.Face3(1, 3, 2)
+    // ];
+    // geometry.computeFaceNormals();
 
     var xOffset = (this._x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
     var yOffset = (this._y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
 
+    geometry.rotateX(Math.PI / 2);
     geometry.translate(xOffset, 0, yOffset);
 
     this._entity = new THREE.Mesh(geometry, material);

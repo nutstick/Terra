@@ -543,8 +543,8 @@ THREE.OrbitControls = function (options) {
 
         if (state === STATE.NONE) {
             // FIXME: Debug
-            pickerFromScreen(x, y, picker);
-            console.log(picker.intersectObjects(map.quadTree.tiles.children).map(function (k) { return k.object.tile.stringify; }));
+            // pickerFromScreen(x, y, picker);
+            // console.log(picker.intersectObjects(map.quadTree.tiles.children).map(function (k) { return k.object.tile.stringify; }));
         } else if (state === STATE.ROTATE) {
             if (scope.enableRotate === false) return;
 

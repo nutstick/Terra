@@ -102,6 +102,8 @@ QuadTree.prototype.update = function () {
     this.needUpdate = false;
     this.updating = true;
 
+    const tiles = this.tiles;
+
     // Update Camera target position
     sphericalMercator.PixelToCartographic(this.cameraController.target, this.cameraController.targetCartographic);
     sphericalMercator.PixelToCartesian(this.cameraController.target, this.cameraController.targetCartesian);
@@ -110,13 +112,13 @@ QuadTree.prototype.update = function () {
 
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    this._activeTiles.forEach(function (tile) {
-        tile.active = false;
-    });
+    tiles.children.length = 0;
+
     selectTilesForRendering(this);
 
+    // Rnedering tile
     this._activeTiles.forEach(function (tile) {
-        tile.active = true;
+        tiles.add(tile._entity);
     });
 
     processTileLoadQueue(this);

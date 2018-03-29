@@ -29,6 +29,7 @@ function Tile (options) {
 
     // QuadTreeTile structure
     this._parent = options.parent;
+
     this.TileState = {
         Start: 0,
         Loading: 1,
@@ -138,11 +139,7 @@ Tile.prototype.imageryDone = function (layerName) {
         this._entity = new THREE.Mesh(geometry, material);
         this._entity.tile = this;
 
-        this._quadTree.tiles.add(this._entity);
-
         this._state = this.TileState.Done;
-
-        this.active = false;
 
         // Trigger need update
         this._quadTree.needUpdate = true;
@@ -227,7 +224,7 @@ Object.defineProperties(Tile.prototype, {
 
     /**
      * Previous Tile in Replacement Queue
-     * @memberOf Tile.prototype
+     * @memberof Tile.prototype
      *
      * @type {Tile}
      */
@@ -242,7 +239,7 @@ Object.defineProperties(Tile.prototype, {
 
     /**
      * Next Tile in Replacement Queue
-     * @memberOf Tile.prototype
+     * @memberf Tile.prototype
      *
      * @type {Tile}
      */
@@ -252,15 +249,6 @@ Object.defineProperties(Tile.prototype, {
         },
         set: function (tile) {
             this._replacementNext = tile;
-        }
-    },
-
-    active: {
-        get: function () {
-            return this._entity.visible;
-        },
-        set: function (value) {
-            this._entity.visible = value;
         }
     },
     /**
@@ -289,7 +277,7 @@ Object.defineProperties(Tile.prototype, {
     // State Handling
     /**
      * Tile State
-     * @memberOf Tile
+     * @memberof Tile
      */
     state: {
         get: function () {

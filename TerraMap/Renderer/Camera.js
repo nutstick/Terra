@@ -54,6 +54,7 @@ Camera.prototype.setPosition = function (position) {
 
     this.updatedLastFrame = true;
 };
+
 Camera.prototype.updatePosition = function () {
     sphericalMercator.PixelToCartographic(this.position, this._positionCartographic);
 
