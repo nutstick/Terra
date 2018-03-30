@@ -14,10 +14,6 @@ Column {
     property var gridLength: 0
     property var optimizeGridLength: 0
 
-    function calculateLength(grids) {
-
-    }
-
     function vector3toString(x) {
         return 'x: ' + x.x + ', y: ' + x.y + ', z: ' + x.z;
     }
@@ -128,6 +124,10 @@ Column {
                 id: row4
                 width: parent.width
                 height: 26
+
+                function calculateLength(grids) {
+
+                }
 
                 Text {
                     id: gridText

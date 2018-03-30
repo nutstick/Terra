@@ -77,7 +77,7 @@ function Map (options) {
 
     // Mission
     this.missions = [];
-    this._currentMission = undefined;
+    this.newMission();
 
     /**
      * @type {Vehicle}

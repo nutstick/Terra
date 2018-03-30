@@ -28,7 +28,7 @@ function Scene3D () {
 
     this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(
         this._tilingScheme.ellipsoid,
-        32,
+        45,
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
 }

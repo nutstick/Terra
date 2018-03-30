@@ -10,6 +10,8 @@ public:
 
     Q_INVOKABLE QList<QVariant> genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle = 0);
 private:
+    int mMaxRegions;
+
     static double calculateArea(QList<QPointF> &polygon);
 
     static qreal linePointDist(QPointF A, QPointF B, QPointF C, bool isSegment);

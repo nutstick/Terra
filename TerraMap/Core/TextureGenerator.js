@@ -62,7 +62,7 @@ TextureGenerator.prototype.start = function () {
                 scope._quadTree.update();
                 scope._needUpdate = false;
             }
-        }, 500);
+        }, 400);
     }
 };
 

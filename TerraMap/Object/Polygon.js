@@ -151,10 +151,10 @@ Polygon.prototype.interactableObjects = function () {
     }, []);
 };
 
-Polygon.prototype.generateGrid = function (type, gridSpace) {
+Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
     // Call C++ function to genreate flight grid
     this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace)
-        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, 0);
+        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle);
 
     // Redraw grid mesh
     // Remove exist mesh first
@@ -185,6 +185,8 @@ Polygon.prototype.generateGrid = function (type, gridSpace) {
             // new THREE.LineBasicMaterial({ color: 0x00e500, linewidth: 3, transparent: true, opacity: 0.8 })
         ));
     }
+
+    return this.grids;
 };
 
 Object.defineProperties(Polygon.prototype, {

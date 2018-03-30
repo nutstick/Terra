@@ -59,6 +59,7 @@ QPointF distanceToPoint(QList<QPointF> polygonPoints, QList<qreal> distanceEachP
 
 OptimizeGridCalculation::OptimizeGridCalculation(qreal maxDistancePerFlight, QObject *parent)
     : GridCalculation(maxDistancePerFlight, parent)
+    , mMaxRegions(50)
 {
 }
 
@@ -139,7 +140,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
     int regions = 1;
-    while (regions) {
+    while (regions < this->mMaxRegions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
 
@@ -208,6 +209,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 a << seperatePoints[j];
 
                 qDebug() << "area : " << calculateArea(a);
+                Q_ASSERT(calculateArea(a) >= 0);
 
                 // Grid generator
                 QList<QPointF> b;
@@ -219,7 +221,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                     drawable = false;
                     break;
                 }
-                qDebug() << b;
+                // qDebug() << b;
                 returnValue << LtpListToGeoList(tangentOrigin, b);
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();
@@ -232,6 +234,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
         }
         if (drawable) {
             qDebug() << "area : " << calculateArea(a);
+            Q_ASSERT(calculateArea(a) >= 0);
 
             QList<QPointF> b;
             b << takeoffPoint;
