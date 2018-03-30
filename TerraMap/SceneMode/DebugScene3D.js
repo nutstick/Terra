@@ -1,5 +1,6 @@
 var Scene3D = require('./Scene3D');
 var DebugTile = require('../Core/DebugTile');
+var DebugGenerator = require('../Core/DebugGenerator');
 
 function DebugScene3D () {
     Scene3D.call(this);
@@ -21,6 +22,8 @@ Object.defineProperties(DebugScene3D.prototype, {
         set: function (value) {
             this._quadTree = value;
             this._quadTree._rootTile = DebugTile.createRootTile(this._quadTree, this._tilingScheme);
+
+            this.debugGenerator = new DebugGenerator({ quadTree: value });
         }
     }
 });

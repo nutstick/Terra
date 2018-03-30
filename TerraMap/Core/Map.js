@@ -134,7 +134,7 @@ Map.prototype.update = function () {
 };
 
 Map.prototype.addPin = function (picker) {
-    var position = picker.intersectObject(this.basePlane)[0].point;
+    var position = picker.intersectObjects(this.quadTree.tiles.children)[0].point;
 
     if (typeof this._currentMission === 'undefined') {
         this._currentMission = new Polygon({ map: this });

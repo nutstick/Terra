@@ -1,5 +1,4 @@
 var MapSettings = require('./MapSettings');
-var MapUtility = require('../Utility/MapUtility');
 var sphericalMercator = require('../Utility/SphericalMercator');
 var Cartesian = require('../Math/Cartesian');
 
@@ -42,7 +41,6 @@ function AABB (options) {
     this.eastNormal = new THREE.Vector3();
     this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Z);
     this.eastNormal.normalize();
-
 
     var northMidpointCartesian = new THREE.Vector3();
     northMidpointCartesian.x = this.xMin;

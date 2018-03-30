@@ -59,6 +59,7 @@ Polygon.prototype.addPin = function (position, height) {
         position: position,
         height: height
     });
+
     this.pins.push(pin);
 
     if (this.pins.length > 1) {

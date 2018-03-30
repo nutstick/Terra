@@ -3,6 +3,19 @@ var MapSettings = require('./MapSettings');
 
 function DebugTile (options) {
     Tile.call(this, options);
+}
+
+DebugTile.prototype = Object.create(Tile.prototype);
+
+DebugTile.prototype.imageryLoading = function (layerName, texture) {
+    if (this._state === this.TileState.Failed) return;
+
+    this._state = this.TileState.Loading;
+};
+
+DebugTile.prototype.imageryDone = function (layerName) {
+    // If the state of tile is not loading means tile is after freeResource or fail download
+    if (this._state !== this.TileState.Loading) return;
 
     var tileSize = MapSettings.basePlaneDimension / (Math.pow(2, this._z));
 
@@ -10,64 +23,35 @@ function DebugTile (options) {
 
     var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
-    // geometry.vertices = [
-    //     new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
-    //     new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
-    //     new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
-    //     new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
-    // ];
-    // geometry.faces = [
-    //     new THREE.Face3(0, 1, 2),
-    //     new THREE.Face3(1, 3, 2)
-    // ];
-    // geometry.computeFaceNormals();
+    geometry.vertices = [
+        new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
+        new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
+        new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
+        new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
+    ];
+    geometry.faces = [
+        new THREE.Face3(0, 1, 2),
+        new THREE.Face3(1, 3, 2)
+    ];
+    geometry.computeFaceNormals();
 
     var xOffset = (this._x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
     var yOffset = (this._y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2;
 
-    geometry.rotateX(Math.PI / 2);
     geometry.translate(xOffset, 0, yOffset);
 
     this._entity = new THREE.Mesh(geometry, material);
     this._entity.tile = this;
-    this._entity.name = this.stringify;
-
-    this._quadTree.tiles.add(this._entity);
 
     this._state = this.TileState.Done;
 
-    this.active = false;
-
     // Trigger need update
     this._quadTree.needUpdate = true;
-}
-
-DebugTile.createRootTile = function (quadTree, tilingScheme) {
-    if (!tilingScheme) {
-        throw new Error('No tiling scheme provided');
-    }
-
-    var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-    var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
-
-    var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-    var index = 0;
-    for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-        for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-            result[index++] = new DebugTile({
-                x: x,
-                y: y,
-                z: 0,
-                quadTree: quadTree
-            });
-        }
-    }
-
-    return result;
 };
 
-DebugTile.prototype = Object.create(Tile.prototype);
+DebugTile.prototype.imageryFailed = function (layerName) {
+    this._state = this.TileState.Start;
+};
 
 DebugTile.prototype.freeResources = function () {
 };
@@ -135,5 +119,30 @@ Object.defineProperties(DebugTile.prototype, {
         }
     },
 });
+
+DebugTile.createRootTile = function (quadTree, tilingScheme) {
+    if (!tilingScheme) {
+        throw new Error('No tiling scheme provided');
+    }
+
+    var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+    var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+
+    var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+
+    var index = 0;
+    for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+        for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+            result[index++] = new DebugTile({
+                x: x,
+                y: y,
+                z: 0,
+                quadTree: quadTree
+            });
+        }
+    }
+
+    return result;
+};
 
 module.exports = DebugTile;

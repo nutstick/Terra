@@ -57,7 +57,7 @@ Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
     var maxGeometricError = this.getLevelMaximumGeometricError(tile.z);
 
     // Update distance of tile from camera
-    if (camera.updatedLastFrame) {
+    if (camera.updatedLastFrame || !tile.distance) {
         tile.distance = tile.bbox.distanceToCamera(quadTree.cameraController.object);
     }
 

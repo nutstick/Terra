@@ -54,7 +54,7 @@ function Tile (options) {
      * @type {number}
      * @private
      */
-    this._distance = 0.0;
+    this._distance = undefined;
 
     /**
      * @type {AABB}
@@ -147,7 +147,7 @@ Tile.prototype.imageryDone = function (layerName) {
 };
 
 Tile.prototype.imageryFailed = function (layerName) {
-    this._state = this.TileState.Failed;
+    this._state = this.TileState.Start;
 };
 
 Object.defineProperties(Tile.prototype, {
@@ -305,7 +305,7 @@ Object.defineProperties(Tile.prototype, {
             if (!this.data.texture) throw new Error('Material request before texture loaded');
             if (!this._material) {
                 this._material = new THREE.MeshBasicMaterial({
-                    map: this.data.texture,
+                    map: this.data.texture
                 });
             }
             return this._material;
@@ -320,6 +320,7 @@ Object.defineProperties(Tile.prototype, {
 });
 
 Tile.prototype.freeResources = function () {
+    console.log(this.stringify)
     // Remove link betweem parent
     if (this._parent) {
         for (var i = 0; i < 4; i++) {
@@ -332,6 +333,8 @@ Tile.prototype.freeResources = function () {
 
     this._state = this.TileState.Start;
 
+    this._bbox = undefined;
+
     this.upsampledFromParent = false;
     if (this.data.texture) {
         this.data.texture.dispose();
@@ -343,6 +346,7 @@ Tile.prototype.freeResources = function () {
         this._quadTree.tiles.remove(this._entity);
         this._entity.geometry.dispose();
         this._entity.material.dispose();
+        this._material = false;
         this._entity = undefined;
     }
 
