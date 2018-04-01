@@ -37,7 +37,6 @@ protected:
             GeoToLtp(pt, tangentOrigin, &y, &x, &down);
             points << QPointF(x, -y);
         }
-        qDebug() << points;
         return points;
     }
     static QList<QGeoCoordinate> LtpListToGeoList(QGeoCoordinate tangentOrigin, QList<QPointF> points) {

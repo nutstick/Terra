@@ -9,8 +9,8 @@
 /** @type {MapSettings} */
 var MapSettings = {
     basePlaneDimension: Math.pow(2, 16),
-    cameraDistance: 12000,// * Math.pow(2, 16),
-    maxCameraDistance: 12000,// * Math.pow(2, 24),
+    cameraDistance: 12000, // * Math.pow(2, 16),
+    maxCameraDistance: 12000, // * Math.pow(2, 24),
     debug: true,
     optimize: true
 };

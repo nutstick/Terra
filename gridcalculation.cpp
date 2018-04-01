@@ -50,11 +50,9 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant t
     // Generate grid
     gridGenerator(polygonPoints, gridPoints, gridSpace, gridAngle);
 
-    qDebug() << gridPoints;
-
     // Sperate grid to Array<grid> by maxDistancePerFlight
     QList<QList<QGeoCoordinate>> returnValue;
-    
+
     QList<QPointF> flight;
     // Next start point in case last reachable point not in polygon vertex
     bool haveNextStartPoint = false;
@@ -86,7 +84,7 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant t
             nextStartPoint = (remainingDistance / nextMoveDistance) * AB + A;
 
             flight << nextStartPoint;
-            
+
             returnValue << LtpListToGeoList(tangentOrigin, flight);
 
             // so nextStartPoint to gird[i+1] still > maxDistance
@@ -102,10 +100,7 @@ QVariantList GridCalculation::genGridInsideBound(QVariantList bound_, QVariant t
         }
     }
 
-    qDebug() << flight;
     returnValue << LtpListToGeoList(tangentOrigin, flight);
-
-    qDebug() << returnValue;
 
     // Converting List<List<geoCoor>> to QVariantList
     QList<QVariant> output;
@@ -281,6 +276,11 @@ void GridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<Q
     boundPolygon << rotatePoint(smallBoundRect.bottomRight(),   center, gridAngle);
     boundPolygon << rotatePoint(smallBoundRect.bottomLeft(),    center, gridAngle);
     boundPolygon << boundPolygon[0];
+
+    // FIXME: Debug
+    for (int i=0;i<boundPolygon.count();i++) gridPoints << boundPolygon[i];
+    return;
+
     QRectF largeBoundRect = boundPolygon.boundingRect();
     //qDebug() << "Rotated bounding rect" << largeBoundRect.topLeft().x() << largeBoundRect.topLeft().y() << largeBoundRect.bottomRight().x() << largeBoundRect.bottomRight().y();
 

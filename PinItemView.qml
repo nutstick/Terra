@@ -6,9 +6,10 @@ Row {
     height: 26
     spacing: 10
 
-    property int index: -1
+    property int index
 
     onIndexChanged: {
+        console.log(index)
         idText.text = qsTr("#" + index + " : ")
     }
 

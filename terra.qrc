@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>TerraMap/Core/AABB.js</file>
+        <file>TerraMap/Core/DebugGenerator.js</file>
         <file>TerraMap/Core/DebugTile.js</file>
         <file>TerraMap/Core/DeveloperError.js</file>
         <file>TerraMap/Core/Map.js</file>
@@ -25,6 +26,5 @@
         <file>TerraMap/SceneMode/SceneMode.js</file>
         <file>TerraMap/Utility/MapUtility.js</file>
         <file>TerraMap/Utility/SphericalMercator.js</file>
-        <file>TerraMap/.eslintrc.json</file>
     </qresource>
 </RCC>

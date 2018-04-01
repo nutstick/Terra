@@ -44,6 +44,9 @@ function Pin (options) {
     if (options.position) {
         // Case position is a QtPositioning.coordiante
         if (options.position.longitude) {
+            // Default set altitude to 10
+            options.position.altitude = options.position.altitude || 10;
+
             var px = sphericalMercator.px(options.position, 0);
             // FIXME: y = 0 in 2D map case
             px = {

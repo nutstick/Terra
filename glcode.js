@@ -3,6 +3,7 @@ Qt.include('./three.js');
 Qt.include('./require.js');
 var Map = require('./TerraMap/Core/Map');
 var Scene3D = require('./TerraMap/SceneMode/Scene3D');
+var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
 
 var map, renderer;
 function initializeGL(canvas, eventSource) {
@@ -10,7 +11,7 @@ function initializeGL(canvas, eventSource) {
     renderer.setSize(canvas.width, canvas.height);
 
     map = new Map({
-        mode: new Scene3D(),
+        mode: new DebugScene3D(),
         canvas: canvas,
         eventSource: eventSource,
         renderer: renderer

@@ -42,6 +42,7 @@ Window {
 
             onActiveChanged: {
                 tabView.getTab(tabView.currentIndex).item.map = map_;
+                tabView.getTab(tabView.currentIndex).item.map.currentMission.debug = { updated: false }
             }
         }
         Tab {

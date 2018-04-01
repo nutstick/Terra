@@ -49,6 +49,10 @@ function Polygon (options) {
      * @type {THREE.LineSegments}
      */
     this._closeLine = undefined;
+
+    this.debug = {
+        updated: false
+    };
 }
 
 Polygon.prototype.addPin = function (position, height) {
@@ -89,6 +93,10 @@ Polygon.prototype.addPin = function (position, height) {
             this._closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
             this._closeLine.geometry.verticesNeedUpdate = true;
         }
+    }
+
+    if (MapSettings.debug) {
+        this.debug = { updated: true };
     }
 
     return pin;
@@ -133,14 +141,19 @@ Polygon.prototype.clearPins = function () {
     }
     this.lines.length = 0;
 
-    this._map.scene.remove(this._closeLine);
-    this._closeLine.geometry.dispose();
-    this._closeLine.material.dispose();
-    this._closeLine = undefined;
+    if (this._closeLine) {
+        this._map.scene.remove(this._closeLine);
+
+        this._closeLine.geometry.dispose();
+        this._closeLine.material.dispose();
+        this._closeLine = undefined;
+    }
 
     this.grids = undefined;
-    this._map.scene.remove(this.gridMesh);
-    this.gridMesh = undefined;
+    if (this.gridMesh) {
+        this._map.scene.remove(this.gridMesh);
+        this.gridMesh = undefined;
+    }
 };
 
 Polygon.prototype.interactableObjects = function () {
@@ -154,7 +167,7 @@ Polygon.prototype.interactableObjects = function () {
 Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
     // Call C++ function to genreate flight grid
     this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace)
-        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle);
+        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle || 0);
 
     // Redraw grid mesh
     // Remove exist mesh first

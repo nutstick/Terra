@@ -75,7 +75,9 @@ function Map (options) {
         mode: options.mode
     });
 
-    // Mission
+    /**
+     * @type Mission[]
+    */
     this.missions = [];
     this.newMission();
 
@@ -145,19 +147,6 @@ Map.prototype.addPin = function (picker) {
 };
 
 Map.prototype.generateGrid = function (type) {
-    // FIXME: Debuging, Test Case #1
-    // this.newMission();
-    // var pts = [
-    //     QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10),
-    //     QtPositioning.coordinate(13.739013102055642, 100.53072382364125, 10),
-    //     QtPositioning.coordinate(13.738934237108017, 100.53124540615603, 10),
-    //     QtPositioning.coordinate(13.73829834824066, 100.53111367933914, 10)
-    // ];
-    // var scope = this;
-    // pts.forEach(function(pt) {
-    //     scope.currentMission.addPin(pt);
-    // });
-
     this._currentMission.generateGrid(type || 'opt', 4);
 };
 

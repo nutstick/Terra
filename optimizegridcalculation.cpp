@@ -1,6 +1,7 @@
 #include "optimizegridcalculation.h"
 
 static const qreal eps_ = 1e-6;
+#define PREV(i, count) (i + count - 1) % count
 #define NEXT(i, count) (i + 1) % count
 
 qreal dot(QPointF A, QPointF B, QPointF C)
@@ -28,13 +29,37 @@ qreal cross(QPointF A, QPointF B, QPointF C)
     return cross;
 }
 
+QPointF projectPointToLineSegment(QPointF A, QPointF B, QPointF p) {
+    // vector from A to B
+    QPointF AB = B - A;
+    // squared distance from A to B
+    qreal ABsquared = QPointF::dotProduct(AB, AB);
+
+    if (ABsquared == 0) {
+        // A and B are the same point
+        return A;
+    } else {
+        // vector from A to p
+        QPointF Ap = p - A;
+        
+        qreal t = QPointF::dotProduct(Ap, AB) / ABsquared;
+        if (t < 0.0)  {
+            // "Before" A on the line, just return A
+            return A;
+        } else if (t > 1.0) {
+            //"After" B on the line, just return B
+            return B;
+        } else {
+            // projection lines "inbetween" A and B on the line
+            return A + t * AB;
+        }
+    }
+}
+
 QPointF projectPointToLine(QPointF A, QPointF B, QPointF C, bool isSegment)
 {
     if(isSegment){
-        // int dot1 = dot(A,B,C);
-        // if(dot1 > 0) return B;
-        int dot2 = dot(B,A,C);
-        if(dot2 > 0) return A;
+        return projectPointToLineSegment(A, B, C);
     }
     QPointF AC = C - A;
     QPointF AB = B - A;
@@ -86,6 +111,9 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
     QList<QList<QGeoCoordinate>> returnValue;
 
+    // Sort polygon
+    sortPolygonPointOrder(polygonPoints);
+
     int countPolygonPoints = polygonPoints.count();
 
     // Calculate covered area
@@ -112,7 +140,10 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Rearrange polygon with new closest point
     QList<QPointF> polygonPoints_;
     // Case: closestPoint is not a polygon point, start from closest point
-    if (closestPoint != polygonPoints[nearestLineIndex]) {
+    if (closestPoint == polygonPoints[nearestLineIndex]) {
+    } else if (closestPoint == polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)]) {
+        nearestLineIndex = (nearestLineIndex + 1) % countPolygonPoints;
+    } else {
         polygonPoints_ << closestPoint;
         nearestLineIndex = (nearestLineIndex + 1) % countPolygonPoints;
     }
@@ -135,11 +166,11 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
         totalDistance += distanceFromPointToPoint(polygonPoints[i], polygonPoints[(i+1)%countPolygonPoints]);
         distanceEachPoints << totalDistance;
     }
-    qDebug() << "Distance : " << distanceEachPoints;
+    // qDebug() << "Distance : " << distanceEachPoints;
 
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
-    int regions = 1;
+    int regions = 3;
     while (regions < this->mMaxRegions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
@@ -201,15 +232,16 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
         bool drawable = true;
         QList<QPointF> a;
-        a << polygonPoints[0];
+
         int i = 1, j = 0;
         while(i < countPolygonPoints || j < seperatePoints.count()) {
             // Seperate point j is on line i-1
             if (j < seperatePoints.count() && distanceOfSeperatePoints[j] < distanceEachPoints[i]) {
                 a << seperatePoints[j];
 
-                qDebug() << "area : " << calculateArea(a);
+                sortPolygonPointOrder(a);
                 Q_ASSERT(calculateArea(a) >= 0);
+                a.prepend(polygonPoints[0]);
 
                 // Grid generator
                 QList<QPointF> b;
@@ -225,7 +257,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 returnValue << LtpListToGeoList(tangentOrigin, b);
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();
-                a << polygonPoints[0] << seperatePoints[j];
+                a << seperatePoints[j];
                 j++;
             } else {
                 a << polygonPoints[i];
@@ -233,8 +265,9 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
             }
         }
         if (drawable) {
-            qDebug() << "area : " << calculateArea(a);
+            sortPolygonPointOrder(a);
             Q_ASSERT(calculateArea(a) >= 0);
+            a.prepend(polygonPoints[0]);
 
             QList<QPointF> b;
             b << takeoffPoint;
@@ -277,6 +310,20 @@ double OptimizeGridCalculation::calculateArea(QList<QPointF> &polygon)
     return coveredArea;
 }
 
+void OptimizeGridCalculation::sortPolygonPointOrder(QList<QPointF> &polygon, bool reverseOrder)
+{
+    // TODO: Convex sorting
+    if (calculateArea(polygon) * (reverseOrder ? -1 : 1) < 0.0) {
+        QList<QPointF> temp;
+        int i = 0, count = polygon.count();
+        do {
+            temp << polygon[i];
+            i = PREV(i, count);
+        } while (i!=0);
+        polygon = temp;
+    }
+}
+
 qreal OptimizeGridCalculation::linePointDist(QPointF A, QPointF B, QPointF C, bool isSegment)
 {
     qreal dist = cross(A,B,C) / distanceFromPointToPoint(A,B);
@@ -289,22 +336,93 @@ qreal OptimizeGridCalculation::linePointDist(QPointF A, QPointF B, QPointF C, bo
     return abs(dist);
 }
 
+qreal lengthToOrigin(QPointF p) {
+    return qSqrt(p.x() * p.x() + p.y() * p.y());
+}
+
 void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace)
 {
     QList<QPointF> a = polygonPoints;
     // Choose flying direction from longest side
     // Case reverese direction is better
-    if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
-        // Reverse vertex order
-        QList<QPointF> b;
-        for (int ii=0; ii<a.count(); ++ii) {
-                b << a[a.count() - 1 - ii];
-        }
-        a = b;
-    }
     QPointF ab = a[1] - a[0];
+    float angleDirection;
+    qDebug() << a << distanceFromPointToPoint(a[0], a[1]) << distanceFromPointToPoint(a[0], a.last());
+    if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
+        qDebug() << a.last() << a[0];
+        ab = a.last() - a[0];
+        angleDirection = -1;
+    }
+    QPointF ac(1.0, 0.0);
+    qDebug() << ab << lengthToOrigin(ab) << lengthToOrigin(ac);
     // FIXME: QPointF(0.0, 1.0) or QPointF(1.0, 0.0)?
-    qreal angle = qAcos(QPointF::dotProduct(ab, QPointF(0.0, 1.0)) / ab.manhattanLength()) / M_PI * 180.0;
+    qreal angle = qAcos( QPointF::dotProduct(ab, ac) / lengthToOrigin(ab) / lengthToOrigin(ac) ) / M_PI * 180.0;
+    qDebug() << angle;
 
-    gridGenerator(a, gridPoints, gridSpace, angle);
+    gridGenerator(a, gridPoints, gridSpace, 33 * angleDirection);
+}
+
+
+void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace, float gridAngle)
+{
+    // Convert polygon to bounding rect
+    QPolygonF polygon;
+    for (int i=0; i<polygonPoints.count(); i++) {
+        polygon << polygonPoints[i];
+    }
+    polygon << polygonPoints[0];
+    QRectF smallBoundRect = polygon.boundingRect();
+    QPointF center = smallBoundRect.center();
+
+    // Rotate the bounding rect around it's center to generate the larger bounding rect
+    QPolygonF boundPolygon;
+    boundPolygon << rotatePoint(smallBoundRect.topLeft(),       polygonPoints[0], -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.topRight(),      polygonPoints[0], -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.bottomRight(),   polygonPoints[0], -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.bottomLeft(),    polygonPoints[0], -gridAngle);
+    boundPolygon << boundPolygon[0];
+
+    // FIXME: Debug
+    
+    for (int i=0;i<boundPolygon.count();i++) gridPoints << boundPolygon[i];
+    return;
+    QRectF largeBoundRect = boundPolygon.boundingRect();
+    //qDebug() << "Rotated bounding rect" << largeBoundRect.topLeft().x() << largeBoundRect.topLeft().y() << largeBoundRect.bottomRight().x() << largeBoundRect.bottomRight().y();
+
+    // Create set of rotated parallel lines within the expanded bounding rect. Make the lines larger than the
+    // bounding box to guarantee intersection.
+    QList<QLineF> lineList;
+    float x = largeBoundRect.bottomRight().x();
+    float gridSpacing = -gridSpace;
+    while (x > largeBoundRect.topLeft().x()) {
+        float yTop =    largeBoundRect.topLeft().y() - 100.0;
+        float yBottom = largeBoundRect.bottomRight().y() + 100.0;
+
+        lineList += QLineF(rotatePoint(QPointF(x, yTop), center, gridAngle), rotatePoint(QPointF(x, yBottom), center, gridAngle));
+        x += gridSpacing;
+    }
+
+
+    // Now intersect the lines with the polygon
+    QList<QLineF> intersectLines;
+    intersectLinesWithPolygon(lineList, polygon, intersectLines);
+
+    // This is handy for debugging grid problems, not for release
+    //intersectLines = lineList;
+
+    // Make sure all lines are going to same direction. Polygon intersection leads to line which
+    // can be in varied directions depending on the order of the intesecting sides.
+    QList<QLineF> resultLines;
+
+    adjustLineDirection(intersectLines, resultLines);
+
+    // Turn into a path
+    for (int i=0; i<resultLines.count(); i++) {
+        const QLineF& line = resultLines[i];
+        if (i & 1) {
+            gridPoints << line.p2() << line.p1();
+        } else {
+            gridPoints << line.p1() << line.p2();
+        }
+    }
 }
