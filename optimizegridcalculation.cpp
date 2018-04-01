@@ -225,7 +225,6 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
             seperatePoints << midPoint;
             distanceOfSeperatePoints << mid;
-            // qDebug() << midPoint << mid;
             referenceDistance = mid;
             referencePoint = midPoint;
         }
@@ -253,7 +252,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                     drawable = false;
                     break;
                 }
-                // qDebug() << b;
+
                 returnValue << LtpListToGeoList(tangentOrigin, b);
                 // Initialize new Area with start point and lastest seperate point
                 a.clear();
@@ -346,20 +345,13 @@ void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygo
     // Choose flying direction from longest side
     // Case reverese direction is better
     QPointF ab = a[1] - a[0];
-    float angleDirection;
-    qDebug() << a << distanceFromPointToPoint(a[0], a[1]) << distanceFromPointToPoint(a[0], a.last());
     if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
-        qDebug() << a.last() << a[0];
         ab = a.last() - a[0];
-        angleDirection = -1;
     }
-    QPointF ac(1.0, 0.0);
-    qDebug() << ab << lengthToOrigin(ab) << lengthToOrigin(ac);
-    // FIXME: QPointF(0.0, 1.0) or QPointF(1.0, 0.0)?
+    QPointF ac(0.0, 1.0);
     qreal angle = qAcos( QPointF::dotProduct(ab, ac) / lengthToOrigin(ab) / lengthToOrigin(ac) ) / M_PI * 180.0;
-    qDebug() << angle;
 
-    gridGenerator(a, gridPoints, gridSpace, 33 * angleDirection);
+    gridGenerator(a, gridPoints, gridSpace, -angle);
 }
 
 
@@ -376,16 +368,12 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
 
     // Rotate the bounding rect around it's center to generate the larger bounding rect
     QPolygonF boundPolygon;
-    boundPolygon << rotatePoint(smallBoundRect.topLeft(),       polygonPoints[0], -gridAngle);
-    boundPolygon << rotatePoint(smallBoundRect.topRight(),      polygonPoints[0], -gridAngle);
-    boundPolygon << rotatePoint(smallBoundRect.bottomRight(),   polygonPoints[0], -gridAngle);
-    boundPolygon << rotatePoint(smallBoundRect.bottomLeft(),    polygonPoints[0], -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.topLeft(),       center, -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.topRight(),      center, -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.bottomRight(),   center, -gridAngle);
+    boundPolygon << rotatePoint(smallBoundRect.bottomLeft(),    center, -gridAngle);
     boundPolygon << boundPolygon[0];
 
-    // FIXME: Debug
-    
-    for (int i=0;i<boundPolygon.count();i++) gridPoints << boundPolygon[i];
-    return;
     QRectF largeBoundRect = boundPolygon.boundingRect();
     //qDebug() << "Rotated bounding rect" << largeBoundRect.topLeft().x() << largeBoundRect.topLeft().y() << largeBoundRect.bottomRight().x() << largeBoundRect.bottomRight().y();
 
@@ -394,14 +382,14 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     QList<QLineF> lineList;
     float x = largeBoundRect.bottomRight().x();
     float gridSpacing = -gridSpace;
-    while (x > largeBoundRect.topLeft().x()) {
-        float yTop =    largeBoundRect.topLeft().y() - 100.0;
-        float yBottom = largeBoundRect.bottomRight().y() + 100.0;
 
+    float yTop =    largeBoundRect.topLeft().y() - 100.0;
+    float yBottom = largeBoundRect.bottomRight().y() + 100.0;
+
+    while (x > largeBoundRect.topLeft().x()) {
         lineList += QLineF(rotatePoint(QPointF(x, yTop), center, gridAngle), rotatePoint(QPointF(x, yBottom), center, gridAngle));
         x += gridSpacing;
     }
-
 
     // Now intersect the lines with the polygon
     QList<QLineF> intersectLines;
@@ -414,15 +402,44 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     // can be in varied directions depending on the order of the intesecting sides.
     QList<QLineF> resultLines;
 
-    adjustLineDirection(intersectLines, resultLines);
+    // Sort list of line by closest to initial point of polygon
+    float d1 = distanceFromPointToPoint(polygon[0], intersectLines[0].p1());
+    float d2 = distanceFromPointToPoint(polygon[0], intersectLines[0].p2());
+    float d3 = distanceFromPointToPoint(polygon[0], intersectLines.last().p1());
+    float d4 = distanceFromPointToPoint(polygon[0], intersectLines.last().p2());
+    float minD = qMin(d1, qMin(d2, qMin(d3, d4)));
+
+    if (minD == d2 || minD == d4) {
+        for (int i=0; i<intersectLines.count(); i++) {
+            const QLineF& line = intersectLines[i];
+            QLineF adjustedLine;
+            adjustedLine.setP1(line.p2());
+            adjustedLine.setP2(line.p1());
+
+            resultLines += adjustedLine;
+        }
+    } else {
+        resultLines = intersectLines;
+    }
 
     // Turn into a path
-    for (int i=0; i<resultLines.count(); i++) {
-        const QLineF& line = resultLines[i];
-        if (i & 1) {
-            gridPoints << line.p2() << line.p1();
-        } else {
-            gridPoints << line.p1() << line.p2();
+    if (minD == d1 || minD == d2) {
+        for (int i=0; i<resultLines.count(); i++) {
+            const QLineF& line = resultLines[i];
+            if (i & 1) {
+                gridPoints << line.p2() << line.p1();
+            } else {
+                gridPoints << line.p1() << line.p2();
+            }
+        }
+    } else {
+        for (int i=resultLines.count()-1; i>=0; i--) {
+            const QLineF& line = resultLines[i];
+            if (i & 1) {
+                gridPoints << line.p2() << line.p1();
+            } else {
+                gridPoints << line.p1() << line.p2();
+            }
         }
     }
 }
