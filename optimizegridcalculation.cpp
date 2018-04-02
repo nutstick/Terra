@@ -82,8 +82,8 @@ QPointF distanceToPoint(QList<QPointF> polygonPoints, QList<qreal> distanceEachP
     return result;
 }
 
-OptimizeGridCalculation::OptimizeGridCalculation(qreal maxDistancePerFlight, QObject *parent)
-    : GridCalculation(maxDistancePerFlight, parent)
+OptimizeGridCalculation::OptimizeGridCalculation(qreal speed, qreal minute, QObject *parent)
+    : GridCalculation(speed, minute, parent)
     , mMaxRegions(50)
 {
 }
@@ -170,7 +170,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
-    int regions = 3;
+    int regions = 1;
     while (regions < this->mMaxRegions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
@@ -248,6 +248,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 gridOptimizeGenerator(a, b, gridSpace);
                 
                 // If total length of grid > maxDistance, should divinded into more region
+                qDebug() << calculateLength(b);
                 if (calculateLength(b) > mMaxDistancePerFlight) {
                     drawable = false;
                     break;
@@ -272,6 +273,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
             b << takeoffPoint;
             gridOptimizeGenerator(a, b, gridSpace);
             // If total length of grid > maxDistance, should divinded into more region
+            qDebug() << calculateLength(b);
             if (calculateLength(b) > mMaxDistancePerFlight) {
                 drawable = false;
             }

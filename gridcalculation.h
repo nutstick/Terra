@@ -18,9 +18,21 @@ class GridCalculation : public QObject
 {
     Q_OBJECT
 public:
-    explicit GridCalculation(qreal maxDistancePerFlight, QObject *parent = nullptr);
+    explicit GridCalculation(qreal speed, qreal minute, QObject *parent = nullptr);
     Q_INVOKABLE QVariantList genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle);
     Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
+
+    qreal speed() { return mSpeed; }
+    void setSpeed(const qreal speed) {
+        mSpeed = speed;
+        mMaxDistancePerFlight = mSpeed * mMinute * 60;
+    }
+
+    qreal minute() { return mMinute; }
+    void setMinute(const qreal minute) {
+        mMinute = minute;
+        mMaxDistancePerFlight = mSpeed * mMinute * 60;
+    }
 //    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
 
 protected:
@@ -55,6 +67,8 @@ protected:
     static QPointF rotatePoint(const QPointF& point, const QPointF& origin, double angle);
     static void adjustLineDirection(const QList<QLineF>& lineList, QList<QLineF>& resultLines);
 
+    qreal mSpeed;
+    qreal mMinute;
     qreal mMaxDistancePerFlight;
 };
 

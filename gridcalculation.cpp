@@ -7,9 +7,11 @@ qreal GridCalculation::distanceFromPointToPoint(QPointF A, QPointF B)
     return qSqrt((A.x() - B.x()) * (A.x() - B.x()) + (A.y() - B.y()) * (A.y() - B.y()));
 }
 
-GridCalculation::GridCalculation(qreal maxDistancePerFlight, QObject *parent)
+GridCalculation::GridCalculation(qreal speed, qreal minute, QObject *parent)
     : QObject(parent)
-    , mMaxDistancePerFlight(maxDistancePerFlight)
+    , mSpeed(speed)
+    , mMinute(minute)
+    , mMaxDistancePerFlight(speed * minute * 60)
 {
 }
 
@@ -276,10 +278,6 @@ void GridCalculation::gridGenerator(const QList<QPointF> &polygonPoints, QList<Q
     boundPolygon << rotatePoint(smallBoundRect.bottomRight(),   center, gridAngle);
     boundPolygon << rotatePoint(smallBoundRect.bottomLeft(),    center, gridAngle);
     boundPolygon << boundPolygon[0];
-
-    // FIXME: Debug
-    for (int i=0;i<boundPolygon.count();i++) gridPoints << boundPolygon[i];
-    return;
 
     QRectF largeBoundRect = boundPolygon.boundingRect();
     //qDebug() << "Rotated bounding rect" << largeBoundRect.topLeft().x() << largeBoundRect.topLeft().y() << largeBoundRect.bottomRight().x() << largeBoundRect.bottomRight().y();

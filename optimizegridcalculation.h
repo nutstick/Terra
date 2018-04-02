@@ -6,7 +6,7 @@ class OptimizeGridCalculation : public GridCalculation
 {
     Q_OBJECT
 public:
-    explicit OptimizeGridCalculation(qreal maxDistancePerFlight, QObject *parent = nullptr);
+    explicit OptimizeGridCalculation(qreal speed, qreal minute, QObject *parent = nullptr);
 
     Q_INVOKABLE QList<QVariant> genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle = 0);
 private:

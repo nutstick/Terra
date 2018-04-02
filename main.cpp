@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
     // app.setStyleSheet("Component#markersDelegate { border-bottom: 1px solid grey; }");
 
     JSTimer* timer = new JSTimer();
-    GridCalculation* g = new GridCalculation(5/*m*/ * 10/*min*/ * 60);
-    OptimizeGridCalculation* opg = new OptimizeGridCalculation(5/*m*/ * 10/*min*/ * 60);
+    GridCalculation* g = new GridCalculation(5, 10);
+    OptimizeGridCalculation* opg = new OptimizeGridCalculation(5, 10);
 
     const auto screens = QGuiApplication::screens();
     for (QScreen *screen : screens)
