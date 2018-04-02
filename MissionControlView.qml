@@ -255,7 +255,13 @@ Column {
 
         ComboBox {
             id: testCaseComboBox
-            model: [ "1", "2", "3", "4" ]
+            model: ListModel {
+                id: testCaseCbItems
+                ListElement { text: "1" }
+                ListElement { text: "2" }
+                ListElement { text: "3" }
+                ListElement { text: "4" }
+            }
         }
 
         Button {

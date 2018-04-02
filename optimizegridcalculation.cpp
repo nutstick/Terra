@@ -157,6 +157,9 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     polygonPoints = polygonPoints_;
     countPolygonPoints = polygonPoints.count();
 
+    // Flag
+    qDebug() << cross(polygonPoints[0], polygonPoints[1], takeoffPoint);
+
     // Calculate distance from start point to each polygon vertex following the rounded line
     QList<qreal> distanceEachPoints;
 
@@ -171,6 +174,8 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Brute force number of seperate regions
     // TODO: binary searching number of regions
     int regions = 1;
+    bool error = false;
+
     while (regions < this->mMaxRegions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
@@ -247,6 +252,11 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 b << takeoffPoint;
                 gridOptimizeGenerator(a, b, gridSpace);
                 
+                // No point retern
+                if (b.count() == 0) {
+                    qDebug() << 'Error on optimize grid';
+                    error = true;
+                }
                 // If total length of grid > maxDistance, should divinded into more region
                 qDebug() << calculateLength(b);
                 if (calculateLength(b) > mMaxDistancePerFlight) {
@@ -272,6 +282,12 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
             QList<QPointF> b;
             b << takeoffPoint;
             gridOptimizeGenerator(a, b, gridSpace);
+
+            // No point retern
+            if (b.count() == 0) {
+                qDebug() << 'Error on optimize grid';
+                error = true;
+            }
             // If total length of grid > maxDistance, should divinded into more region
             qDebug() << calculateLength(b);
             if (calculateLength(b) > mMaxDistancePerFlight) {
@@ -285,6 +301,10 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
         } else {
             regions++;
         }
+    }
+
+    if (error) {
+        return GridCalculation::genGridInsideBound(bound_, takeoffPoint_, gridSpace, 0);
     }
 
     QList<QVariant> output;
@@ -353,6 +373,7 @@ void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygo
     QPointF ac(0.0, 1.0);
     qreal angle = qAcos( QPointF::dotProduct(ab, ac) / lengthToOrigin(ab) / lengthToOrigin(ac) ) / M_PI * 180.0;
 
+    // TODO: If
     gridGenerator(a, gridPoints, gridSpace, -angle);
 }
 
@@ -403,6 +424,8 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     // Make sure all lines are going to same direction. Polygon intersection leads to line which
     // can be in varied directions depending on the order of the intesecting sides.
     QList<QLineF> resultLines;
+
+    if (intersectLines.count() == 0) return;
 
     // Sort list of line by closest to initial point of polygon
     float d1 = distanceFromPointToPoint(polygon[0], intersectLines[0].p1());
