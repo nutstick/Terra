@@ -60,6 +60,14 @@ Column {
             id: missionComboBox
         }
 
+        Button {
+            id: missionClear
+            text: qsTr("Clear Pin")
+            onClicked: {
+                map.currentMission.clearPins();
+            }
+        }
+
     }
 
     Row {
