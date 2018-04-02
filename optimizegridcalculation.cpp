@@ -133,6 +133,8 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
     // Nearest line should assign
     Q_ASSERT(nearestLineIndex != -1);
+
+    qDebug() << polygonPoints << nearestLineIndex;
     
     // project snap start point to closest point on rounded line
     QPointF closestPoint = projectPointToLine(polygonPoints[nearestLineIndex], polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)], takeoffPoint, true);
@@ -370,11 +372,12 @@ void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygo
     if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
         ab = a.last() - a[0];
     }
-    QPointF ac(0.0, 1.0);
+    QPointF ac(0.0, ab.y() / qAbs(ab.y()));
     qreal angle = qAcos( QPointF::dotProduct(ab, ac) / lengthToOrigin(ab) / lengthToOrigin(ac) ) / M_PI * 180.0;
 
     // TODO: If
     gridGenerator(a, gridPoints, gridSpace, -angle);
+    // qreal f1 = calculateLength(gridPoints);
 }
 
 
