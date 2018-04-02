@@ -320,7 +320,6 @@ Object.defineProperties(Tile.prototype, {
 });
 
 Tile.prototype.freeResources = function () {
-    console.log(this.stringify)
     // Remove link betweem parent
     if (this._parent) {
         for (var i = 0; i < 4; i++) {

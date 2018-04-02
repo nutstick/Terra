@@ -13,11 +13,11 @@ function AABB (options) {
     this.yMax = options.yMax || 0;
     this.zMax = options.zMax || 0;
 
-    /**
-     * @type Tile
-     * @private
-     */
-    this._tile = options.tile;
+    // /**
+    //  * @type Tile
+    //  * @private
+    //  */
+    // this._tile = options.tile;
 
     // Compute the normal of the plane on the western edge of the tile.
     var midPoint = new THREE.Vector3();
