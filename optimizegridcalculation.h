@@ -15,7 +15,7 @@ private:
     static double calculateArea(QList<QPointF> &polygon);
 
     static void sortPolygonPointOrder(QList<QPointF> &polygon, bool reverseOrder = false);
-    static qreal linePointDist(QPointF A, QPointF B, QPointF C, bool isSegment);
+    static qreal linePointDist(QPointF A, QPointF B, QPointF p, bool isSegment);
     // static double calculateLength(QList<QPointF> &polygon);
     // static void GeoToLtp(QGeoCoordinate in, QGeoCoordinate ref, double* x, double* y, double* z);
     // static void LtpToGeo(double x, double y, double z, QGeoCoordinate ref, QGeoCoordinate *out);

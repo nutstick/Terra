@@ -134,8 +134,6 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Nearest line should assign
     Q_ASSERT(nearestLineIndex != -1);
 
-    qDebug() << polygonPoints << nearestLineIndex;
-    
     // project snap start point to closest point on rounded line
     QPointF closestPoint = projectPointToLine(polygonPoints[nearestLineIndex], polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)], takeoffPoint, true);
 
@@ -347,15 +345,13 @@ void OptimizeGridCalculation::sortPolygonPointOrder(QList<QPointF> &polygon, boo
     }
 }
 
-qreal OptimizeGridCalculation::linePointDist(QPointF A, QPointF B, QPointF C, bool isSegment)
+qreal OptimizeGridCalculation::linePointDist(QPointF A, QPointF B, QPointF p, bool isSegment)
 {
-    qreal dist = cross(A,B,C) / distanceFromPointToPoint(A,B);
     if (isSegment) {
-        //int dot1 = dot(A,B,C);
-        //if(dot1 > 0)return distance(B,C);
-        int dot2 = dot(B,A,C);
-        if (dot2 > 0) return distanceFromPointToPoint(A,C);
+        QPointF proj = projectPointToLineSegment(A, B, p);
+        return distanceFromPointToPoint(proj, p);
     }
+    qreal dist = cross(A,B,p) / distanceFromPointToPoint(A,B);
     return abs(dist);
 }
 
