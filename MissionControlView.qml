@@ -263,12 +263,14 @@ Column {
 
         ComboBox {
             id: testCaseComboBox
+            currentIndex: 4
             model: ListModel {
                 id: testCaseCbItems
-                ListElement { text: "1" }
-                ListElement { text: "2" }
-                ListElement { text: "3" }
-                ListElement { text: "4" }
+                ListElement { text: qsTr("#1") }
+                ListElement { text: qsTr("#2") }
+                ListElement { text: qsTr("#3") }
+                ListElement { text: qsTr("#4") }
+                ListElement { text: qsTr("#5") }
             }
         }
 
@@ -310,7 +312,15 @@ Column {
                         QtPositioning.coordinate(13.737194398888425, 100.53198953507547, 10),
                         QtPositioning.coordinate(13.735909747141678, 100.53198953507547, 10),
                         QtPositioning.coordinate(13.735909747141678, 100.5306670470161, 10)
-                    ]
+                    ];
+                    break;
+                case 4:
+                    pts = [
+                        QtPositioning.coordinate(13.73925493, 100.52986422, 10),
+                        QtPositioning.coordinate(13.739478775, 100.53169984, 10),
+                        QtPositioning.coordinate(13.741596218, 100.53167014, 10),
+                        QtPositioning.coordinate(13.741475306, 100.5291726, 10)
+                    ];
                     break;
                 }
 
