@@ -111,7 +111,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Translate Lat-Long base to metries base
     QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
     QList<QList<QGeoCoordinate>> returnValue;
-    // QList<qreal> angles;
+    QList<qreal> angles;
 
     // Sort polygon
     sortPolygonPointOrder(polygonPoints);

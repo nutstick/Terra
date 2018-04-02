@@ -17,6 +17,10 @@ static const float eps = std::numeric_limits<double>::epsilon();
 class GridCalculation : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged)
+    Q_PROPERTY(qreal minute READ minute WRITE setMinute NOTIFY minuteChanged)
+    Q_PROPERTY(qreal maxDistancePerFlight READ maxDistancePerFlight NOTIFY maxDistancePerFlightChanged)
+    
 public:
     explicit GridCalculation(qreal speed, qreal minute, QObject *parent = nullptr);
     Q_INVOKABLE QVariantList genGridInsideBound(QVariantList bound_, QVariant takeoffPoint_, float gridSpace, float gridAngle);
@@ -26,15 +30,27 @@ public:
     void setSpeed(const qreal speed) {
         mSpeed = speed;
         mMaxDistancePerFlight = mSpeed * mMinute * 60;
+
+        emit speedChanged();
+        emit maxDistancePerFlightChanged();
     }
 
     qreal minute() { return mMinute; }
     void setMinute(const qreal minute) {
         mMinute = minute;
         mMaxDistancePerFlight = mSpeed * mMinute * 60;
-    }
-//    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
 
+        emit minuteChanged();
+        emit maxDistancePerFlightChanged();
+    }
+
+    qreal maxDistancePerFlight() { return mMaxDistancePerFlight; }
+//    Q_INVOKABLE QList<QGeoCoordinate> genGridInsideBound(QList<QGeoCoordinate> bound, float gridSpace, float gridAngle);
+signals:
+    void speedChanged();
+    void minuteChanged();
+    void maxDistancePerFlightChanged();
+    
 protected:
     static qreal distanceFromPointToPoint(QPointF A, QPointF B);
     static double calculateLength(QList<QPointF> &polygon);

@@ -169,9 +169,16 @@ Polygon.prototype.interactableObjects = function () {
     }, []);
 };
 
-Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
+Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute) {
     // Call C++ function to genreate flight grid
     if (type === 'opt') {
+        if (speed) {
+            optimizeGridCalculation.speed = speed;
+        }
+        if (minute) {
+            optimizeGridCalculation.minute = minute;
+        }
+
         var res = optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace);
         this.grids = res.map(function (x) {
             return x.grid;
@@ -181,6 +188,13 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
             return x.angle;
         });
     } else {
+        if (speed) {
+            gridcalculation.speed = speed;
+        }
+        if (minute) {
+            gridcalculation.minute = minute;
+        }
+
         this.grids = gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle || 0);
     }
 
