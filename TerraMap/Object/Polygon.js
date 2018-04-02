@@ -31,6 +31,11 @@ function Polygon (options) {
      * @type {QtPositioning.coordinate[][]}
      */
     this.grids = [];
+    /**
+     * Array of List of angle if generate using optimization grid
+     * @type {number[]}
+     */
+    this.angles = [];
 
     /**
      * Three.Line
@@ -166,8 +171,18 @@ Polygon.prototype.interactableObjects = function () {
 
 Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
     // Call C++ function to genreate flight grid
-    this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace)
-        : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle || 0);
+    if (type === 'opt') {
+        var res = optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace);
+        this.grids = res.map(function (x) {
+            return x.grid;
+        });
+
+        this.angles = res.map(function (x) {
+            return x.angle;
+        });
+    } else {
+        this.grids = gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle || 0);
+    }
 
     // Redraw grid mesh
     // Remove exist mesh first
@@ -188,7 +203,7 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
             var px = sphericalMercator.px(grid[i], 0);
             var meterPerPixel = sphericalMercator.mPerPixel(grid[i].latitude);
             // Doubling point, so it's will render consecutive line
-            if (i != 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+            if (i !== 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
             lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
         }
 
@@ -209,7 +224,7 @@ Object.defineProperties(Polygon.prototype, {
                 return pin.coordinate;
             });
         }
-    }
+    },
 });
 
 module.exports = Polygon;

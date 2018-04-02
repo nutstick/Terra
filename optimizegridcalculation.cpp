@@ -98,6 +98,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     }
     // Convert takeoff point
     QGeoCoordinate tangentOrigin = takeoffPoint_.value<QGeoCoordinate>();
+    // qDebug() << bound;
     QPointF takeoffPoint(0.0, 0.0);
 
     // If least than 2 point in line return empty list
@@ -110,6 +111,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     // Translate Lat-Long base to metries base
     QList<QPointF> polygonPoints = GeoListToLtpList(tangentOrigin, bound);
     QList<QList<QGeoCoordinate>> returnValue;
+    // QList<qreal> angles;
 
     // Sort polygon
     sortPolygonPointOrder(polygonPoints);
@@ -157,8 +159,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     polygonPoints = polygonPoints_;
     countPolygonPoints = polygonPoints.count();
 
-    // Flag
-    qDebug() << cross(polygonPoints[0], polygonPoints[1], takeoffPoint);
+    // qDebug() << polygonPoints;
 
     // Calculate distance from start point to each polygon vertex following the rounded line
     QList<qreal> distanceEachPoints;
@@ -179,6 +180,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     while (regions < this->mMaxRegions) {
         qDebug() << "Region: " << regions;
         returnValue.clear();
+        angles.clear();
 
         qreal area = coveredArea / regions;
         QList<QPointF> seperatePoints;
@@ -250,15 +252,15 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 // Grid generator
                 QList<QPointF> b;
                 b << takeoffPoint;
-                gridOptimizeGenerator(a, b, gridSpace);
+                angles << gridOptimizeGenerator(a, b, gridSpace);
                 
                 // No point retern
                 if (b.count() == 0) {
-                    qDebug() << 'Error on optimize grid';
+                    qDebug
+                    () << "Error on optimize grid";
                     error = true;
                 }
                 // If total length of grid > maxDistance, should divinded into more region
-                qDebug() << calculateLength(b);
                 if (calculateLength(b) > mMaxDistancePerFlight) {
                     drawable = false;
                     break;
@@ -281,15 +283,14 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
             QList<QPointF> b;
             b << takeoffPoint;
-            gridOptimizeGenerator(a, b, gridSpace);
+            angles << gridOptimizeGenerator(a, b, gridSpace);
 
             // No point retern
             if (b.count() == 0) {
-                qDebug() << 'Error on optimize grid';
+                qDebug() << "Error on optimize grid";
                 error = true;
             }
             // If total length of grid > maxDistance, should divinded into more region
-            qDebug() << calculateLength(b);
             if (calculateLength(b) > mMaxDistancePerFlight) {
                 drawable = false;
             }
@@ -308,12 +309,17 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     }
 
     QList<QVariant> output;
-    foreach (auto polygon, returnValue) {
+    for (int i = 0; i < returnValue.count(); ++i) {
+        const QList<QGeoCoordinate> &polygon = returnValue[i];
+        QVariantMap obj;
+        obj.insert("angle", angles[i]);
         QList<QVariant> list;
         foreach (auto coor, polygon) {
             list.append(QVariant::fromValue(coor));
         }
-        output.append(QVariant::fromValue(list));
+        obj.insert("grid", list);
+
+        output.append(QVariant::fromValue(obj));
     }
     return output;
 }
@@ -359,7 +365,7 @@ qreal lengthToOrigin(QPointF p) {
     return qSqrt(p.x() * p.x() + p.y() * p.y());
 }
 
-void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace)
+qreal OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygonPoints, QList<QPointF> &gridPoints, float gridSpace)
 {
     QList<QPointF> a = polygonPoints;
     // Choose flying direction from longest side
@@ -367,13 +373,17 @@ void OptimizeGridCalculation::gridOptimizeGenerator(const QList<QPointF> &polygo
     QPointF ab = a[1] - a[0];
     if (distanceFromPointToPoint(a[0], a[1]) < distanceFromPointToPoint(a[0], a.last())) {
         ab = a.last() - a[0];
+        // qDebug() << "Flip";
     }
-    QPointF ac(0.0, ab.y() / qAbs(ab.y()));
+    QPointF ac(0.0, 1.0); // ab.y() / qAbs(ab.y()));
     qreal angle = qAcos( QPointF::dotProduct(ab, ac) / lengthToOrigin(ab) / lengthToOrigin(ac) ) / M_PI * 180.0;
+    angle = ab.x() < 0 ? 180 + angle : -angle;
 
-    // TODO: If
-    gridGenerator(a, gridPoints, gridSpace, -angle);
-    // qreal f1 = calculateLength(gridPoints);
+    // qDebug() << "Angle" << angle << ab << ac << a[0] << a[1] << a.last();
+
+    gridGenerator(a, gridPoints, gridSpace, angle);
+
+    return angle;
 }
 
 
@@ -433,6 +443,7 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     float d4 = distanceFromPointToPoint(polygon[0], intersectLines.last().p2());
     float minD = qMin(d1, qMin(d2, qMin(d3, d4)));
 
+    // qDebug() << "D" << d1 << d2 << d3 << d4 << minD;
     if (minD == d2 || minD == d4) {
         for (int i=0; i<intersectLines.count(); i++) {
             const QLineF& line = intersectLines[i];
@@ -445,9 +456,10 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     } else {
         resultLines = intersectLines;
     }
+    // qDebug() << resultLines;
 
     // Turn into a path
-    if (minD == d1 || minD == d2) {
+    if (minD == d1 || minD == d2 || minD == d4) {
         for (int i=0; i<resultLines.count(); i++) {
             const QLineF& line = resultLines[i];
             if (i & 1) {
@@ -466,4 +478,5 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
             }
         }
     }
+    // qDebug() << gridPoints;
 }
