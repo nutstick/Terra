@@ -82,7 +82,7 @@ Tile.TileState = {
     Failed: 3
 };
 
-Tile.size = Array.apply(null, Array(31)).map(function (_, idx) {
+Tile.size = Array.apply(null, Array(32)).map(function (_, idx) {
     return MapSettings.basePlaneDimension / Math.pow(2, idx);
 });
 

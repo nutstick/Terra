@@ -97,7 +97,7 @@ OrbitConstraint.prototype.rotateUp = function (angle) {
 var v = new THREE.Vector3();
 
 OrbitConstraint.prototype.panLeft = function (distance) {
-    var te = this.matrix.elements;
+    var te = this.camera.matrix.elements;
 
     // get X column of matrix
     v.set(te[ 0 ], te[ 1 ], te[ 2 ]);
@@ -108,7 +108,7 @@ OrbitConstraint.prototype.panLeft = function (distance) {
 
 // pass in distance in world space to move up
 OrbitConstraint.prototype.panUp = function (distance) {
-    var te = this.matrix.elements;
+    var te = this.camera.matrix.elements;
 
     // get Y column of matrix
     v.set(te[ 4 ], /* te[ 5 ] */ 0, te[ 6 ]);

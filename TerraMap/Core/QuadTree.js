@@ -1,4 +1,6 @@
 var TileReplacementQueue = require('./TileReplacementQueue');
+var MapSettings = require('./MapSettings');
+var Tile = require('./Tile');
 var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
@@ -107,6 +109,10 @@ QuadTree.prototype.update = function () {
 
     this._tileReplacementQueue.markStartOfRenderFrame();
 
+    for (var i = 0; i < tiles.children.length; ++i) {
+        tiles.children[i].geometry.dispose();
+        tiles.children[i].material.dispose();
+    }
     tiles.children.length = 0;
 
     selectTilesForRendering(this);
@@ -377,8 +383,37 @@ function addTileToRenderList (primitive, tile) {
 }
 
 function renderTiles (primitive, tiles) {
+    var target = primitive.camera.target;
     for (var i = 0; i < tiles.length; ++i) {
-        
+        var tile = tiles[i];
+        var tileSize = Tile.size[tile.z];
+
+        var material = new THREE.MeshBasicMaterial({
+            wireframe: true,
+            opacity: 0
+        });
+
+        var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
+
+        geometry.rotateX(Math.PI / 2);
+        // geometry.vertices = [
+        //     new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
+        //     new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
+        //     new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
+        //     new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
+        // ];
+        // geometry.faces = [
+        //     new THREE.Face3(0, 1, 2),
+        //     new THREE.Face3(1, 3, 2)
+        // ];
+        // geometry.computeFaceNormals();
+
+        var xOffset = (tile.x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2 - target.x;
+        var yOffset = (tile.y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2 - target.z;
+
+        geometry.translate(xOffset, 0, yOffset);
+
+        primitive.tiles.add(new THREE.Mesh(geometry, material));
     }
 }
 

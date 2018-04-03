@@ -102,7 +102,7 @@ function OrbitControls (options) {
     // pass in x,y of change desired in pixel space,
     // right and down are positive
     var pan = function (deltaX, deltaY) {
-        this.constraint.pan(deltaX, deltaY, scope.canvas.width, scope.canvas.height);
+        scope.constraint.pan(deltaX, deltaY, scope.canvas.width, scope.canvas.height);
     };
     // pan(100,100000)
 
@@ -135,7 +135,7 @@ function OrbitControls (options) {
         } else if (button === scope.mouseButtons.PAN) {
             // Checking mouse down on marker
             // TODO: Use mission method to handle object
-            var selectedObject = scope._map.mouseDownOnMarkers(pickerFromScreen(x, y, picker));
+            var selectedObject = scope._map.mouseDownOnMarkers(pickerFromScreen(scope, x, y, picker));
 
             panStart.set(x, y);
 
@@ -149,7 +149,7 @@ function OrbitControls (options) {
 
                 scope._state = OrbitControls.STATE.CHANGE_PIN_POSITION;
             } else if (lastClick && now - lastClick < scope.constraint.maxClickTimeInterval && scope.enableMoveMarker === true) {
-                currentPin = scope._map.addPin(pickerFromScreen(x, y, picker));
+                currentPin = scope._map.addPin(pickerFromScreen(scope, x, y, picker));
 
                 scope._state = OrbitControls.STATE.CHANGE_PIN_HEIGHT;
             } else if (scope.enablePan === true) {
@@ -159,13 +159,13 @@ function OrbitControls (options) {
             lastClick = now;
         }
 
-        if (scope._state !== OrbitControls.STATE.STATE.NONE) {
+        if (scope._state !== OrbitControls.STATE.NONE) {
             if (typeof Qt === 'object') {
                 // eventSource.mouseMove.connect(onMouseMove)
                 scope.eventSource.mouseUp.connect(onMouseUp);
             } else {
                 // document.addEventListener( 'mousemove', onMouseMove_, false );
-                scope._map._renderer.addEventListener('mouseup', scope.onWebMouseUp, false);
+                scope._map._renderer.domElement.addEventListener('mouseup', onWebMouseUp, false);
             }
             scope.dispatchEvent(startEvent);
         }
@@ -460,10 +460,10 @@ function OrbitControls (options) {
 
             scope.eventSource.keyDown.disconnect(onKeyDown);
         } else {
-            this._map._renderer.removeEventListener('contextmenu', contextmenu, false);
-            this._map._renderer.removeEventListener('mousedown', onWebMouseDown, false);
-            this._map._renderer.removeEventListener('mousemove', onWebMouseMove, false);
-            this._map._renderer.removeEventListener('mousewheel', onWebMouseWheel, false);
+            this._map._renderer.domElement.removeEventListener('contextmenu', contextmenu, false);
+            this._map._renderer.domElement.removeEventListener('mousedown', onWebMouseDown, false);
+            this._map._renderer.domElement.removeEventListener('mousemove', onWebMouseMove, false);
+            this._map._renderer.domElement.removeEventListener('mousewheel', onWebMouseWheel, false);
 
             this._map._renderer.domElement.removeEventListener('touchstart', touchstart, false);
             this._map._renderer.domElement.removeEventListener('touchend', touchend, false);
@@ -491,7 +491,7 @@ function OrbitControls (options) {
     }
 
     // force an update at start
-    // this.update();
+    this.update();
 };
 
 // State
@@ -515,10 +515,25 @@ var picker = new THREE.Raycaster();
 
 function pickerFromScreen (primitive, x, y, picker) {
     screenPosition.set((x / primitive.canvas.width) * 2 - 1, -(y / primitive.canvas.height) * 2 + 1);
-    picker.setFromCamera(screenPosition, primitive.object);
+    picker.setFromCamera(screenPosition, primitive.camera);
 
     return picker;
 }
+
+function contextmenu (event) {
+    event.preventDefault();
+};
+
+OrbitControls.prototype = Object.create(THREE.EventDispatcher.prototype);
+OrbitControls.prototype.constructor = THREE.OrbitControls;
+
+OrbitControls.prototype.getPolarAngle = function () {
+    return this.constraint.getPolarAngle();
+};
+
+OrbitControls.prototype.getAzimuthalAngle = function () {
+    return this.constraint.getAzimuthalAngle();
+};
 
 OrbitControls.prototype.update = function () {
     if (this.autoRotate && this._state === OrbitControls.STATE.NONE) {
@@ -541,21 +556,6 @@ OrbitControls.prototype.reset = function () {
     this.dispatchEvent(changeEvent);
 
     this.update();
-};
-
-function contextmenu (event) {
-    event.preventDefault();
-};
-
-OrbitControls.prototype = Object.create(THREE.EventDispatcher.prototype);
-OrbitControls.prototype.constructor = THREE.OrbitControls;
-
-OrbitControls.prototype.getPolarAngle = function () {
-    return this.constraint.getPolarAngle();
-};
-
-OrbitControls.prototype.getAzimuthalAngle = function () {
-    return this.constraint.getAzimuthalAngle();
 };
 
 Object.defineProperties(OrbitControls.prototype, {
