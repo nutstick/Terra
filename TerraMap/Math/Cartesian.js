@@ -28,7 +28,10 @@ function Cartesian (options) {
     this._z = options.height || options.z || 0;
 }
 
-Cartesian.prototype = Object.create(THREE.Vector3.prototype);
+Cartesian.prototype.dot = THREE.Vector3.prototype.dot;
+Cartesian.prototype.crossVectors = THREE.Vector3.prototype.crossVectors;
+Cartesian.prototype.subVectors = THREE.Vector3.prototype.subVectors;
+Cartesian.prototype.normalize = THREE.Vector3.prototype.normalize;
 
 Object.defineProperties(Cartesian.prototype, {
     /**

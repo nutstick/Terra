@@ -11,6 +11,9 @@
   "globals": {
     "THREE": true,
     "QtPositioning": true,
-    "Qt": true
+    "Qt": true,
+    "timer": true,
+    "optimizeGridCalculation": true,
+    "gridcalculation": true
   }
 }

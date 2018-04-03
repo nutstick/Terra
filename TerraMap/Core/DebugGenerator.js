@@ -75,6 +75,7 @@ DebugGenerator.prototype.loadTile = function (tile) {
     this._needUpdate = true;
     tile.imageryDone();
     this._loading--;
+    this._quadTree.needUpdate = true;
 };
 
 DebugGenerator.prototype.load = function () {

@@ -6,7 +6,7 @@ var TextureGenerator = require('../Core/TextureGenerator');
  * @constructor
  * @extends {SceneMode}
  */
-function Scene2D() {
+function Scene2D () {
     /**
      * @type TextureGenerator
      * @private
@@ -22,21 +22,21 @@ function Scene2D() {
 // FIXME: Screen space error calculation
 /**
  * Screen space error calculation
- * @param {QuadTree} quadTree 
- * @param {Tile} tile 
+ * @param {QuadTree} quadTree
+ * @param {Tile} tile
  * @returns {number} screenSpaceError of tile
  */
-Scene2D.prototype.screenSpaceError = function(quadTree, tile) {
-    var camera = map.cameraController.object;
+Scene2D.prototype.screenSpaceError = function (quadTree, tile) {
+    var camera = quadTree.camera;
 
     // Frustum calculate
     var _fovy = (camera.aspect <= 1) ? camera.fov : Math.atan(Math.tan(camera.fov * 0.5) / camera.aspect) * 2.0;
-    var top = camera.near * Math.tan(0.5 * _fovy)
+    var top = camera.near * Math.tan(0.5 * _fovy);
     var bottom = -top;
     var right = camera.aspect * top;
     var left = -right;
 
-    var context = map.cameraController.canvas;
+    var context = quadTree.cameraController.canvas;
     var width = context.width;
     var height = context.height;
 
@@ -45,28 +45,28 @@ Scene2D.prototype.screenSpaceError = function(quadTree, tile) {
     var error = maxGeometricError / pixelSize;
 
     // if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-    // 	error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+    //  error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
     // }
 
     return error;
-}
+};
 
 Object.defineProperties(Scene2D.prototype, {
     /**
      * Gets the quad tree.
      * @memberof Scene2D.prototype
-     * 
+     *
      * @type {QuadTree}
      */
     quadTree: {
-        get: function() {
+        get: function () {
             return this._quadTree;
         },
-        set: function(value) {
+        set: function (value) {
             this._quadTree = value;
-            this._textureGenerator = new TextureGenerator({ quadTree: value})
+            this._textureGenerator = new TextureGenerator({ quadTree: value });
         }
     }
 });
 
-module.exports = SceneMode;
+module.exports = Scene2D;

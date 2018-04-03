@@ -21,7 +21,7 @@ var DState = {
 
 /**
  * Map Class
- * @alias Map
+ * @alias TerrainMap
  * @constructor
  *
  * @param {Object} options
@@ -177,14 +177,14 @@ Map.prototype.setView = function (position, zoom) {
     c.z = px.z + Math.cos(bearing) * Math.sin(pitch) * distance;
     c.y = Math.cos(pitch) * distance;
 
-    var camera = this.cameraController.object;
+    var camera = this.cameraController.camera;
 
     camera.setPosition(c);
 
     camera.lookAt(this.cameraController.target);
     camera.updateMatrix();
     camera.updateMatrixWorld();
-    camera.matrixWorldInverse.getInverse(this.cameraController.object.matrixWorld);
+    // camera.matrixWorldInverse.getInverse(camera.matrixWorld);
 
     this.quadTree.needUpdate = true;
 };

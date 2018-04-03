@@ -9,7 +9,6 @@ Row {
     property int index
 
     onIndexChanged: {
-        console.log(index)
         idText.text = qsTr("#" + index + " : ")
     }
 

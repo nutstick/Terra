@@ -4,6 +4,19 @@ var Cartesian = require('../Math/Cartesian');
 
 var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
 
+/**
+ * AABB class
+ * @alias AABB
+ * @constructor
+ *
+ * @param {Object} options - Option
+ * @param {number} xMin
+ * @param {number} xMax
+ * @param {number} yMin
+ * @param {number} yMax
+ * @param {number} zMin
+ * @param {number} zMax
+ */
 function AABB (options) {
     options = options || {};
     this.xMin = options.xMin || 0;
@@ -62,29 +75,6 @@ function AABB (options) {
     this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, this.yMax);
 }
 
-Object.defineProperties(AABB.prototype, {
-    xCenter: {
-        get: function () {
-            return (this.xMax + this.xMin) / 2;
-        }
-    },
-    yCenter: {
-        get: function () {
-            return (this.yMax + this.yMin) / 2;
-        }
-    },
-    zCenter: {
-        get: function () {
-            return (this.zMax + this.zMin) / 2;
-        }
-    },
-    center: {
-        get: function () {
-            return THREE.Vector2(this.xCenter, this.yCenter, this.zCenter);
-        }
-    }
-});
-
 AABB.prototype.intersects = function (x, y, z) {
     if (x instanceof AABB) {
         var other = x;
@@ -109,7 +99,7 @@ AABB.prototype.onRect = function (x, y) {
 AABB.prototype.distanceToCamera = function (camera) {
     var cameraCartesianPosition = camera.positionCartesian;
 
-    var temp = new THREE.Vector3();
+    var temp = new Cartesian();
     var result = 0.0;
 
     if (!this.onRect(cameraCartesianPosition.x, cameraCartesianPosition.y)) {
@@ -181,13 +171,11 @@ AABB.createAABBForTile = function (tile) {
 
     // TODO: height as 10 meters
     return new AABB({
-        xMin: topLeftCornner.x,
         xMax: bottomRightCornner.x,
         yMin: topLeftCornner.y,
         yMax: bottomRightCornner.y,
         zMin: 0,
-        zMax: 0,
-        tile: tile
+        zMax: 0
     });
 };
 

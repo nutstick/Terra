@@ -9,12 +9,28 @@ var Cartesian = require('../Math/Cartesian');
  *
  * @param {Object} options
  * @param {Canvas} options.canvas - Canvas
+ * @param {TerrainMap} options.map - Map
  */
 function Camera (options) {
     if (!options) throw new Error('No option provided');
     if (!options.canvas) throw new Error('No options.canvas provided');
 
     THREE.PerspectiveCamera.call(this, 70, options.canvas.width / options.canvas.height, 1 / 99, 100000000000000);
+
+    /**
+     * @type {THREE.Vector3}
+     */
+    this.target = new THREE.Vector3();
+
+    /**
+     * @type {QtPositioning.coordinate}
+     */
+    this._targetCartographic = QtPositioning.coordinate();
+
+    /**
+     * @type {Cartesian}
+     */
+    this._targetCartesian = new Cartesian();
 
     /**
      * @type {QtPositioning.coordinate}
@@ -25,6 +41,8 @@ function Camera (options) {
      * @type {Cartesian}
      */
     this._positionCartesian = new Cartesian();
+
+    this.frustum = new THREE.Frustum();
 
     /**
      * @type {boolean}
@@ -55,10 +73,18 @@ Camera.prototype.setPosition = function (position) {
     this.updatedLastFrame = true;
 };
 
-Camera.prototype.updatePosition = function () {
-    sphericalMercator.PixelToCartographic(this.position, this._positionCartographic);
+var t = new THREE.Vector3();
+Camera.prototype.update = function () {
+    // Update Camera target position
+    sphericalMercator.PixelToCartographic(this.target, this._targetCartographic);
+    sphericalMercator.PixelToCartesian(this.target, this._targetCartesian);
 
-    sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
+    t.addVectors(this.target, this.position);
+    sphericalMercator.PixelToCartographic(t, this._positionCartographic);
+    sphericalMercator.PixelToCartesian(t, this._positionCartesian);
+
+    var matrix = new THREE.Matrix4().multiplyMatrices(this.projectionMatrix, this.matrixWorldInverse);
+    this.frustum.setFromMatrix(matrix);
 
     this.updatedLastFrame = true;
 };
@@ -72,6 +98,16 @@ Object.defineProperties(Camera.prototype, {
     positionCartesian: {
         get: function () {
             return this._positionCartesian;
+        }
+    },
+    targetCartographic: {
+        get: function () {
+            return this._targetCartographic;
+        }
+    },
+    targetCartesian: {
+        get: function () {
+            return this._targetCartesian;
         }
     }
 });
