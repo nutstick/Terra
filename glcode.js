@@ -11,7 +11,7 @@ function initializeGL(canvas, eventSource) {
     renderer.setSize(canvas.width, canvas.height);
 
     map = new Map({
-        mode: new DebugScene3D(),
+        mode: new Scene3D(),
         canvas: canvas,
         eventSource: eventSource,
         renderer: renderer
