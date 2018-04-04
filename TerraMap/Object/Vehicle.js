@@ -158,6 +158,7 @@ Object.defineProperties(Vehicle.prototype, {
                 // Default height is 10 meters
                 this._position.y = this._position.y | MapUtility.tenMeters();
             }
+            this._position.y = Math.max(this._position, 0);
 
             // Update Head position
             this.head.position.copy(this._position);
