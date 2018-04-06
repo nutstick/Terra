@@ -1,6 +1,7 @@
 var MapSettings = require('./MapSettings');
 var sphericalMercator = require('../Utility/SphericalMercator');
 var Cartesian = require('../Math/Cartesian');
+var Tile = require('./Tile');
 
 var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
 
@@ -88,21 +89,26 @@ AABB.prototype.intersects = function (x, y, z) {
         this.zMin <= z && this.zMax >= z;
 };
 
-AABB.prototype.onRect = function (x, y) {
+AABB.prototype.onRect = function (x, z) {
     return this.xMin <= x && this.xMax >= x &&
-        this.yMin <= y && this.yMax >= y;
+        this.zMin <= z && this.zMax >= z;
 };
 
 /**
  * @param {Camera} camera
  */
+var cameraCartesianPosition = new Cartesian();
 AABB.prototype.distanceToCamera = function (camera) {
-    var cameraCartesianPosition = camera.positionCartesian;
+    cameraCartesianPosition.set(camera.position.x, camera.position.y, camera.position.z);
 
+    return this.distanceFromPoint(cameraCartesianPosition);
+};
+
+AABB.prototype.distanceFromPoint = function (cartesian) {
     var temp = new Cartesian();
     var result = 0.0;
 
-    if (!this.onRect(cameraCartesianPosition.x, cameraCartesianPosition.y)) {
+    if (!this.onRect(cartesian.x, cartesian.z)) {
         var northwestCornnerCartesian = this.northwestCornnerCartesian;
         var southeastCornnerCartesian = this.southeastCornnerCartesian;
         var westNormal = this.westNormal;
@@ -110,11 +116,11 @@ AABB.prototype.distanceToCamera = function (camera) {
         var eastNormal = this.eastNormal;
         var northNormal = this.northNormal;
 
-        var vectorFromNorthwestCorner = temp.subVectors(cameraCartesianPosition, northwestCornnerCartesian);
+        var vectorFromNorthwestCorner = temp.subVectors(cartesian, northwestCornnerCartesian);
         var distanceToWestPlane = vectorFromNorthwestCorner.dot(westNormal);
         var distanceToNorthPlane = vectorFromNorthwestCorner.dot(northNormal);
 
-        var vectorFromSoutheastCorner = temp.subVectors(cameraCartesianPosition, southeastCornnerCartesian);
+        var vectorFromSoutheastCorner = temp.subVectors(cartesian, southeastCornnerCartesian);
         var distanceToEastPlane = vectorFromSoutheastCorner.dot(eastNormal);
         var distanceToSouthPlane = vectorFromSoutheastCorner.dot(southNormal);
 
@@ -131,9 +137,9 @@ AABB.prototype.distanceToCamera = function (camera) {
         }
     }
 
-    var cameraHeight = cameraCartesianPosition.height;
+    var height = cartesian.height;
 
-    var distanceFromTop = cameraHeight;
+    var distanceFromTop = height;
     if (distanceFromTop > 0.0) {
         result += distanceFromTop * distanceFromTop;
     }
@@ -141,42 +147,16 @@ AABB.prototype.distanceToCamera = function (camera) {
     return Math.sqrt(result);
 };
 
-AABB.prototype.distanceFromPoint = function (vector) {
-    var dx = Math.min(vector.x - this.xMin, this.xMax - vector.x);
-    var dy = Math.min(vector.y - this.yMin, this.yMax - vector.y);
-    var dz = Math.min(vector.z - this.zMin, this.zMax - vector.z);
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-};
-
-var corner = new THREE.Vector3();
-
-AABB.createAABBForTile = function (tile) {
-    var tileSize = MapSettings.basePlaneDimension / Math.pow(2, tile.z);
-    var xMin = (tile.x) * tileSize - MapSettings.basePlaneDimension / 2;
-    var xMax = (tile.x + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-    var zMin = (tile.y) * tileSize - MapSettings.basePlaneDimension / 2;
-    var zMax = (tile.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-
-    // Converting px to cartesian
-    // North West Cornner
-    corner.x = xMin;
-    corner.z = zMin;
-    var topLeftCornner = new Cartesian();
-    sphericalMercator.PixelToCartesian(corner, topLeftCornner);
-    // South East Corner
-    corner.x = xMax;
-    corner.z = zMax;
-    var bottomRightCornner = new Cartesian();
-    sphericalMercator.PixelToCartesian(corner, bottomRightCornner);
-
-    // TODO: height as 10 meters
-    return new AABB({
-        xMax: bottomRightCornner.x,
-        yMin: topLeftCornner.y,
-        yMax: bottomRightCornner.y,
-        zMin: 0,
-        zMax: 0
-    });
-};
+Object.defineProperties(AABB.prototype, {
+    center: {
+        get: function () {
+            return new Cartesian({
+                x: (this.xMin + this.xMax) / 2,
+                y: (this.yMin + this.yMax) / 2,
+                z: (this.zMin + this.zMax) / 2
+            });
+        }
+    }
+});
 
 module.exports = AABB;

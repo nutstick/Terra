@@ -53,9 +53,6 @@ function Map (options) {
         canvas: options.canvas,
     });
 
-    this.cameraController.targetCartographic = QtPositioning.coordinate();
-    this.cameraController.targetCartesian = new Cartesian();
-
     // Base Plane
     this.basePlane = new THREE.Mesh(
         new THREE.PlaneBufferGeometry(MapSettings.basePlaneDimension * 100, MapSettings.basePlaneDimension * 100, 1, 1),

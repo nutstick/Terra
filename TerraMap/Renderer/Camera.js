@@ -68,7 +68,7 @@ Camera.prototype.setPosition = function (position) {
 
     sphericalMercator.PixelToCartographic(this.position, this._positionCartographic);
 
-    sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
+    // sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
 
     this.updatedLastFrame = true;
 };
@@ -77,13 +77,14 @@ var t = new THREE.Vector3();
 Camera.prototype.update = function () {
     // Update Camera target position
     sphericalMercator.PixelToCartographic(this.target, this._targetCartographic);
-    sphericalMercator.PixelToCartesian(this.target, this._targetCartesian);
+    // sphericalMercator.PixelToCartesian(this.target, this._targetCartesian);
 
     t.addVectors(this.target, this.position);
     sphericalMercator.PixelToCartographic(t, this._positionCartographic);
-    sphericalMercator.PixelToCartesian(t, this._positionCartesian);
+    // sphericalMercator.PixelToCartesian(t, this._positionCartesian);
 
-    var matrix = new THREE.Matrix4().multiplyMatrices(this.projectionMatrix, this.matrixWorldInverse);
+    var matrix = new THREE.Matrix4();
+    matrix.multiplyMatrices(this.projectionMatrix, this.matrixWorldInverse);
     this.frustum.setFromMatrix(matrix);
 
     this.updatedLastFrame = true;
@@ -95,21 +96,11 @@ Object.defineProperties(Camera.prototype, {
             return this._positionCartographic;
         }
     },
-    positionCartesian: {
-        get: function () {
-            return this._positionCartesian;
-        }
-    },
     targetCartographic: {
         get: function () {
             return this._targetCartographic;
         }
     },
-    targetCartesian: {
-        get: function () {
-            return this._targetCartesian;
-        }
-    }
 });
 
 module.exports = Camera;

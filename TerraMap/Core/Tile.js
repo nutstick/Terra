@@ -82,9 +82,13 @@ Tile.TileState = {
     Failed: 3
 };
 
-Tile.size = Array.apply(null, Array(32)).map(function (_, idx) {
+var size = Array.apply(null, Array(32)).map(function (_, idx) {
     return MapSettings.basePlaneDimension / Math.pow(2, idx);
 });
+
+Tile.size = function (z) {
+    return size[z];
+};
 
 /**
  *
@@ -239,8 +243,23 @@ Object.defineProperties(Tile.prototype, {
     bbox: {
         get: function () {
             if (!this._bbox) {
-                this._bbox = AABB.createAABBForTile(this);
+                var tileSize = Tile.size(this.z);
+                var xMin = (this.x) * tileSize - MapSettings.basePlaneDimension / 2;
+                var xMax = (this.x + 1) * tileSize - MapSettings.basePlaneDimension / 2;
+                var zMin = (this.y) * tileSize - MapSettings.basePlaneDimension / 2;
+                var zMax = (this.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
+
+                // TODO: height as 10 meters
+                this._bbox = new AABB({
+                    xMin: xMin,
+                    xMax: xMax,
+                    yMin: 0,
+                    yMax: 0,
+                    zMin: zMin,
+                    zMax: zMax
+                });
             }
+
             return this._bbox;
         }
     },

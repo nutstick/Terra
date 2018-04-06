@@ -28,8 +28,14 @@ function Cartesian (options) {
     this._z = options.height || options.z || 0;
 }
 
+Cartesian.prototype.set = function (x, y, z) {
+    this._x = x;
+    this._y = y;
+    this._z = z;
+};
 Cartesian.prototype.dot = THREE.Vector3.prototype.dot;
 Cartesian.prototype.crossVectors = THREE.Vector3.prototype.crossVectors;
+Cartesian.prototype.addVectors = THREE.Vector3.prototype.addVectors;
 Cartesian.prototype.subVectors = THREE.Vector3.prototype.subVectors;
 Cartesian.prototype.normalize = THREE.Vector3.prototype.normalize;
 
@@ -67,10 +73,10 @@ Object.defineProperties(Cartesian.prototype, {
      */
     height: {
         get: function () {
-            return this._z;
+            return this._y;
         },
-        set: function (z) {
-            this._z = z;
+        set: function (y) {
+            this._y = y;
         }
     },
     /**

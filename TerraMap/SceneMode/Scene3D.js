@@ -28,7 +28,7 @@ function Scene3D () {
 
     this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(
         this._tilingScheme.ellipsoid,
-        32,
+        64,
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
 }
@@ -58,6 +58,7 @@ Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
 
     // Update distance of tile from camera
     if (camera.updatedLastFrame || !tile.distance) {
+        console.log('scs');
         tile.distance = tile.bbox.distanceToCamera(quadTree.camera);
     }
 
@@ -65,7 +66,9 @@ Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
     var sseDenominator = 2 * Math.tan(camera.fov * Math.PI / (2 * 180));
 
     var error = (maxGeometricError * height) / (tile.distance * sseDenominator);
+    console.log('scs', maxGeometricError, tile.distance, sseDenominator, error)
 
+    // console.log(maxGeometricError, height, tile.distance, sseDenominator, error)
     // TODO: Fof from Cesium
     // if (frameState.fog.enabled) {
     //  error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;

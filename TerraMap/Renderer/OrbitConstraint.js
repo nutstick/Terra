@@ -37,7 +37,7 @@ function OrbitConstraint (map, camera, targetDistance) {
     // How far you can orbit vertically, upper and lower limits.
     // Range is 0 to Math.PI radians.
     this.minPolarAngle = 0; // radians
-    this.maxPolarAngle = 0.2 * Math.PI; // radians
+    this.maxPolarAngle = 0.48 * Math.PI; // radians
 
     // How far you can orbit horizontally, upper and lower limits.
     // If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].

@@ -1,7 +1,8 @@
 var TileReplacementQueue = require('./TileReplacementQueue');
 var MapSettings = require('./MapSettings');
-var Tile = require('./Tile');
 var sphericalMercator = require('../Utility/SphericalMercator');
+var Tile = require('./Tile');
+var Cartesian = require('../Math/Cartesian');
 
 /**
  * QuadTree class
@@ -235,7 +236,7 @@ function visitTile (primitive, tile) {
             // Load the children even though we're (currently) not going to render them.
             // A tile that is "upsampled only" right now might change its tune once it does more loading.
             // A tile that is upsampled now and forever should also be done loading, so no harm done.
-            queueChildLoadNearToFar(primitive, primitive.camera.targetCartesian, tile.children);
+            queueChildLoadNearToFar(primitive, primitive.camera.target, tile.children);
 
             if (tile.needsLoading) {
                 // Rendered tile that's not waiting on children loads with medium priority.
@@ -254,7 +255,7 @@ function visitTile (primitive, tile) {
     } else {
         // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
         // render this tile in the meantime.
-        queueChildLoadNearToFar(primitive, primitive.camera.targetCartesian, tile.children);
+        queueChildLoadNearToFar(primitive, primitive.camera.target, tile.children);
         addTileToRenderList(primitive, tile);
 
         if (tile.needsLoading) {
@@ -318,7 +319,7 @@ function queueChildTileLoad (primitive, childTile) {
 
 function visitVisibleChildrenNearToFar (primitive, children) {
     var distances = children.map(function (child) {
-        return { tile: child, distance: child.bbox.distanceFromPoint(primitive.camera.targetCartesian) };
+        return { tile: child, distance: child.bbox.distanceFromPoint(primitive.camera.target) };
     });
     distances.sort(function (a, b) {
         return a.distance - b.distance;
@@ -382,11 +383,12 @@ function addTileToRenderList (primitive, tile) {
     ++primitive._debug.tilesRendered;
 }
 
+var center = new Cartesian();
 function renderTiles (primitive, tiles) {
     var target = primitive.camera.target;
     for (var i = 0; i < tiles.length; ++i) {
         var tile = tiles[i];
-        var tileSize = Tile.size[tile.z];
+        var tileSize = Tile.size(tile.z);
 
         var material = new THREE.MeshBasicMaterial({
             wireframe: true,
@@ -408,10 +410,8 @@ function renderTiles (primitive, tiles) {
         // ];
         // geometry.computeFaceNormals();
 
-        var xOffset = (tile.x + 0.5) * tileSize - MapSettings.basePlaneDimension / 2 - target.x;
-        var yOffset = (tile.y + 0.5) * tileSize - MapSettings.basePlaneDimension / 2 - target.z;
-
-        geometry.translate(xOffset, 0, yOffset);
+        center.subVectors(tile.bbox.center, target);
+        geometry.translate(center.x, center.y, center.z);
 
         primitive.tiles.add(new THREE.Mesh(geometry, material));
     }
