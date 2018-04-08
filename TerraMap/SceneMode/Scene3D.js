@@ -58,17 +58,14 @@ Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
 
     // Update distance of tile from camera
     if (camera.updatedLastFrame || !tile.distance) {
-        console.log('scs');
         tile.distance = tile.bbox.distanceToCamera(quadTree.camera);
     }
 
     var height = Math.max(quadTree.cameraController.canvas.height, quadTree.cameraController.canvas.width);
     var sseDenominator = 2 * Math.tan(camera.fov * Math.PI / (2 * 180));
 
-    var error = (maxGeometricError * height) / (tile.distance * sseDenominator);
-    console.log('scs', maxGeometricError, tile.distance, sseDenominator, error)
+    var error = (maxGeometricError * height) / (tile.distance * sseDenominator)
 
-    // console.log(maxGeometricError, height, tile.distance, sseDenominator, error)
     // TODO: Fof from Cesium
     // if (frameState.fog.enabled) {
     //  error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;

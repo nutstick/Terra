@@ -42,7 +42,10 @@ function Camera (options) {
      */
     this._positionCartesian = new Cartesian();
 
-    this.frustum = new THREE.Frustum();
+    /**
+     * @type {Cartesian[]}
+     */
+    this._culledGroundPlane = [new Cartesian(), new Cartesian(), new Cartesian(), new Cartesian()];
 
     /**
      * @type {boolean}
@@ -74,18 +77,25 @@ Camera.prototype.setPosition = function (position) {
 };
 
 var t = new THREE.Vector3();
+var s = new THREE.Vector3();
+var corner = [[-1, -1], [-1, 1], [1, 1], [1, -1]];
 Camera.prototype.update = function () {
-    // Update Camera target position
+    // Update Cartographic position
     sphericalMercator.PixelToCartographic(this.target, this._targetCartographic);
-    // sphericalMercator.PixelToCartesian(this.target, this._targetCartesian);
 
     t.addVectors(this.target, this.position);
     sphericalMercator.PixelToCartographic(t, this._positionCartographic);
-    // sphericalMercator.PixelToCartesian(t, this._positionCartesian);
 
-    var matrix = new THREE.Matrix4();
-    matrix.multiplyMatrices(this.projectionMatrix, this.matrixWorldInverse);
-    this.frustum.setFromMatrix(matrix);
+    // Calculate ray direction at 4 corners of screen
+    var scale;
+    for (var i = 0; i < 4; i++) {
+        t.set(corner[i][0] , corner[i][1], 0.5).unproject(this).sub(this.position).normalize();
+
+        scale = this.position.y / t.y;
+        s.subVectors(this.position, t.multiplyScalar(scale));
+
+        this._culledGroundPlane[i].set(s.x + this.target.x, 0, s.z + this.target.z);
+    }
 
     this.updatedLastFrame = true;
 };
@@ -101,6 +111,11 @@ Object.defineProperties(Camera.prototype, {
             return this._targetCartographic;
         }
     },
+    culledGroundPlane: {
+        get: function () {
+            return this._culledGroundPlane;
+        }
+    }
 });
 
 module.exports = Camera;

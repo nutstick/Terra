@@ -330,35 +330,52 @@ function visitVisibleChildrenNearToFar (primitive, children) {
     };
 }
 
-function computeTileVisibility (primitive, tile) {
-    // TODO: using AABB to Culling
-    // var frustum = primitive.camera.frustum;
-    // var planes = frustum.planes;
+var classifyPoint = require('robust-point-in-polygon');
 
-    // for (var i = 0; i < 6; i++) {
+function pointInsidePolygon (polygon, pt) {
+    // Ray-casting algorithm only 2D x-z
+    // var x = pt.x;
+    // var y = pt.z;
+    // var inside = false;
+    // console.log('-------')
+    // for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    //     var xi = polygon[i].x;
+    //     var yi = polygon[i].z;
+    //     var xj = polygon[j].x;
+    //     var yj = polygon[j].z;
 
-    //     var plane = planes[ i ];
-
-    //     p1.x = plane.normal.x > 0 ? box.min.x : box.max.x;
-    //     p2.x = plane.normal.x > 0 ? box.max.x : box.min.x;
-    //     p1.y = plane.normal.y > 0 ? box.min.y : box.max.y;
-    //     p2.y = plane.normal.y > 0 ? box.max.y : box.min.y;
-    //     p1.z = plane.normal.z > 0 ? box.min.z : box.max.z;
-    //     p2.z = plane.normal.z > 0 ? box.max.z : box.min.z;
-
-    //     var d1 = plane.distanceToPoint( p1 );
-    //     var d2 = plane.distanceToPoint( p2 );
-
-    //     // if both outside plane, no intersection
-
-    //     if ( d1 < 0 && d2 < 0 ) {
-
-    //         return false;
-
-    //     }
-
+    //     var intersect = ((yi >= y) != (yj >= y))
+    //         && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    //     if (intersect) inside = !inside;
+    //     console.log(intersect)
     // }
-    return true; // frustum.intersectsObject(tile._entity);
+
+    return classifyPoint(polygon.map(function (p) { return [p.x, p.z]; }), [pt.x, pt.z]) < 1;
+}
+
+var p = new Cartesian();
+var pg = Array.apply(null, Array(4)).map(function (_, idx) {
+    return new Cartesian();
+});
+var corner = [[0, 0], [0, 1], [1, 1], [1, 0]];
+function computeTileVisibility (primitive, tile) {
+    for (var i = 0; i < 4; i++) {
+        p.set(corner[i][0] ? tile.bbox.xMin : tile.bbox.xMax, 0, corner[i][1] ? tile.bbox.zMin : tile.bbox.zMax);
+
+        if (pointInsidePolygon(primitive.camera.culledGroundPlane, p)) {
+            return true;
+        }
+    }
+
+    for (var i = 0; i < 4; i++) {
+        pg[i].set(corner[i][0] ? tile.bbox.xMin : tile.bbox.xMax, 0, corner[i][1] ? tile.bbox.zMin : tile.bbox.zMax);
+    }
+
+    for (var i = 0; i < 4; i++) {
+        if (pointInsidePolygon(pg, primitive.camera.culledGroundPlane[i])) {
+            return true;
+        }
+    }
 }
 
 function visitIfVisible (primitive, tile) {
