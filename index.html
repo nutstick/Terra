@@ -11,9 +11,10 @@
   </style>
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
-  <!-- <script src="./OrbitControls.js"></script> -->
   <script src="./require.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
+  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+  <!-- <script src="./OrbitControls.js"></script> -->
   <script defer="defer">
     var QtPositioning = {
       coordinate: function(x, y, z) {
@@ -50,12 +51,25 @@
 
     // map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
+    // Debug 70
+    var camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1 / 99, 100000000000000);
+    var controls = new THREE.OrbitControls(camera);
+    controls,
+    camera.position.set( 0, 50000000, 0 );
+    
     var animate = function () {
       requestAnimationFrame( animate );
 
-      map.update();
+      if (map.quadTree._debug.suspendLodUpdate) {
 
-      renderer.render(map.scene, map.camera);
+        controls.update();
+
+        renderer.render(map.scene, camera);
+      } else {
+        map.update();
+
+        renderer.render(map.scene, map.camera);
+      }
     };
 
     animate();

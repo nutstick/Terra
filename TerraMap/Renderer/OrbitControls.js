@@ -662,6 +662,4 @@ Object.defineProperties(OrbitControls.prototype, {
     },
 });
 
-module.exports = THREE.OrbitControls;
-
 module.exports = OrbitControls;
