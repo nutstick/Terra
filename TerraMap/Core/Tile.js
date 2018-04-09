@@ -90,6 +90,28 @@ Tile.size = function (z) {
     return size[z];
 };
 
+Tile.pool = Array.apply(null, Array(120)).map(function (_, idx) {
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true,
+        opacity: 0
+    });
+
+    var geometry = new THREE.Geometry();
+    geometry.vertices = [
+        new THREE.Vector3(),
+        new THREE.Vector3(),
+        new THREE.Vector3(),
+        new THREE.Vector3()
+    ];
+    geometry.faces = [
+        new THREE.Face3(0, 1, 3),
+        new THREE.Face3(0, 3, 2),
+    ];
+    geometry.computeFaceNormals();
+
+    return new THREE.Mesh(geometry, material);
+});
+
 /**
  *
  * @param {QuadTree} quadTree
@@ -314,12 +336,9 @@ Object.defineProperties(Tile.prototype, {
     material: {
         get: function () {
             if (!this.data.texture) throw new Error('Material request before texture loaded');
-            if (!this._material) {
-                this._material = new THREE.MeshBasicMaterial({
-                    map: this.data.texture
-                });
-            }
-            return this._material;
+            return new THREE.MeshBasicMaterial({
+                map: this.data.texture
+            });
         }
     },
 

@@ -32,13 +32,10 @@ DebugTile.prototype.freeResources = function () {
 Object.defineProperties(DebugTile.prototype, {
     material: {
         get: function () {
-            if (!this._material) {
-                this._material = new THREE.MeshBasicMaterial({
-                    wireframe: true,
-                    opacity: 0
-                });
-            }
-            return this._material;
+            return new THREE.MeshBasicMaterial({
+                wireframe: true,
+                opacity: 0
+            });
         }
     },
     children: {

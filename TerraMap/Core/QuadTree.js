@@ -397,35 +397,21 @@ function renderTiles (primitive, tiles) {
         var tile = tiles[i];
         var tileSize = Tile.size(tile.z);
 
-        var material = new THREE.MeshBasicMaterial({
-            wireframe: true,
-            opacity: 0
-        });
-
-        var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
-
-        geometry.rotateX(-Math.PI / 2);
-        // geometry.vertices = [
-        //     new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
-        //     new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
-        //     new THREE.Vector3(tileSize / 2, 0, -tileSize / 2),
-        //     new THREE.Vector3(tileSize / 2, 0, tileSize / 2)
-        // ];
-        // geometry.faces = [
-        //     new THREE.Face3(0, 1, 2),
-        //     new THREE.Face3(1, 3, 2)
-        // ];
-        // geometry.computeFaceNormals();
-
         center.subVectors(tile.bbox.center, target);
-        geometry.translate(center.x, center.y, center.z);
 
-        geometry.computeBoundingSphere();
-        geometry.boundingSphere.center.set(center.x, center.y, center.z);
+        var mesh = tile.constructor.pool[i];
 
-        var t = new THREE.Mesh(geometry, material);
-        t.tile = tile;
-        primitive.tiles.add(t);
+        mesh.geometry.vertices[0].set(center.x - tileSize / 2, center.y, center.z - tileSize / 2)
+        mesh.geometry.vertices[1].set(center.x - tileSize / 2, center.y, center.z + tileSize / 2)
+        mesh.geometry.vertices[2].set(center.x + tileSize / 2, center.y, center.z - tileSize / 2)
+        mesh.geometry.vertices[3].set(center.x + tileSize / 2, center.y, center.z + tileSize / 2)
+
+        mesh.geometry.verticesNeedUpdate = true;
+
+        mesh.geometry.computeBoundingSphere();
+        mesh.geometry.boundingSphere.center.set(center.x, center.y, center.z);
+
+        primitive.tiles.add(mesh);
         // var box = new THREE.BoxHelper(tile, 0xffff00);
         // primitive.tiles.add(box);
     }
