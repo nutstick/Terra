@@ -36,36 +36,56 @@ Polyline.prototype.addPin = function (position, height) {
     var pin = new Pin({
         index: index,
         mission: this,
-        position: position,
-        height: height
+        position: position
     });
     this.pins.push(pin);
 
     if (this.pins.length > 1) {
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(this.pins[index - 1].head.position.clone());
-        lineGeometry.vertices.push(this.pins[index].head.position.clone());
+        lineGeometry.vertices.push(this.pins[index - 1].head.position);
+        lineGeometry.vertices.push(this.pins[index].head.position);
         var line = new THREE.LineSegments(
             lineGeometry,
             new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.8 })
         );
-        this.lines[index - 1] = line;
+        this.lines.push(line);
 
         this._map.scene.add(line);
+    }
+
+    if (MapSettings.debug) {
+        this.debug = { updated: true };
     }
 
     return pin;
 };
 
 Polyline.prototype.updatePin = function (index) {
-    if (index > 0) {
-        this.lines[index - 1].geometry.vertices[1].copy(this.pins[index].head.position);
+    if (index > 0 && index - 1 < this.lines.length) {
         this.lines[index - 1].geometry.verticesNeedUpdate = true;
     }
     if (index + 1 < this.pins.length) {
-        this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
         this.lines[index].geometry.verticesNeedUpdate = true;
     }
+};
+
+Polygon.prototype.clearPins = function () {
+    // Clear all pins
+    for (var i = 0; i < this.pins.length; i++) {
+        this.pins[i].dispose();
+    }
+    this.pins.length = 0;
+
+    for (var i_ = 0; i_ < this.lines.length; i_++) {
+        var line = this.lines[i_];
+
+        this._map.scene.remove(line);
+
+        line.geometry.dispose();
+        line.material.dispose();
+        this.lines[i_] = undefined;
+    }
+    this.lines.length = 0;
 };
 
 Polyline.prototype.interactableObjects = function () {
@@ -75,5 +95,16 @@ Polyline.prototype.interactableObjects = function () {
         return prev;
     }, []);
 };
+
+Object.defineProperties(Polyline.prototype, {
+    pinsCoordinate: {
+        get: function () {
+            return this.pins.map(function (pin) {
+                return pin.coordinate;
+            });
+        }
+    }
+});
+
 
 module.exports = Polyline;

@@ -12,7 +12,6 @@ var sphericalMercator = require('../Utility/SphericalMercator');
  * @param {Mission} options.mission
  * @param {number} options.index
  * @param {THREE.Vector2 | QtPositioning.coordinate} [options.position] - Initial position
- * @param {number} options.height
  */
 function Pin (options) {
     if (!options) throw new Error('No options provided');
@@ -109,7 +108,7 @@ function Pin (options) {
      * @type {THREE.Vector3}
      * @private
      */
-    this._rGPosition = this.line.geometry.vertices[0];
+    this._rGPosition = this.arrow.position;
     /**
      * Rendered Point
      * @type {THREE.Vector3}
@@ -134,6 +133,7 @@ function Pin (options) {
     // TODO: lastScale inside mission or map so that no need to calculate on all pin
     this.lastScale = 1.0;
 
+    
     // Add Target Subscribe to this object
     this._mission._map.addSubscribeObject(this);
 }
@@ -168,8 +168,6 @@ Pin.prototype.dispose = function () {
     this._position = undefined;
 
     this._mission._map.removeSubscribeObject(this);
-
-    console.log(this)
 };
 
 
@@ -232,12 +230,9 @@ Object.defineProperties(Pin.prototype, {
                 }   
             }
             // Update rendering position
-            // TODO: Is this._map needs
-            this._rPosition.subVectors(this._position, this._mission._map.camera.target);
-            // TODO: elevation projection instead of 0
-            this._rGPosition.set(this._rPosition.x, 0, this._rPosition.z);
+            this.updateTarget(this._mission._map.camera.target);
 
-            this.line.geometry.verticesNeedUpdate = true;
+            this._mission.updatePin(this._index);
         }
     },
     groundPosition: {
@@ -258,6 +253,8 @@ Object.defineProperties(Pin.prototype, {
             }
 
             this.updateTarget(this._mission._map.camera.target);
+
+            this._mission.updatePin(this._index);
         }
     },
     /**
@@ -276,6 +273,10 @@ Object.defineProperties(Pin.prototype, {
         },
         set: function (height) {
             this._position.y = height;
+
+            this.updateTarget(this._mission._map.camera.target);
+
+            this._mission.updatePin(this._index);
         }
     },
     /**

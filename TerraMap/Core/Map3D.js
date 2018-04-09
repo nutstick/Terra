@@ -140,7 +140,6 @@ Map3D.prototype.update = function () {
 };
 
 Map3D.prototype.addPin = function (picker) {
-    // console.log(picker, this.quadTree.tiles.children, picker.intersectObjects(this.quadTree.tiles.children))
     var intersects = picker.intersectObjects(this.quadTree.tiles.children);//[0].point;
 
     if (!intersects.length) {
@@ -156,7 +155,6 @@ Map3D.prototype.addPin = function (picker) {
         this._currentMission = new Polygon({ map: this });
         this.missions.push(this._currentMission);
     }
-    console.log(position)
 
     return this._currentMission.addPin(position);
 };
