@@ -25,7 +25,7 @@
         };
       }
     }
-    var Map = require('./TerraMap/Core/Map');
+    var Map3D = require('./TerraMap/Core/Map3D');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
     var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
     var DebugTile = require('./TerraMap/Core/DebugTile');
@@ -38,7 +38,7 @@
         event.preventDefault();
     }, false);
 
-    map = new Map({
+    map = new Map3D({
         mode: new DebugScene3D(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
@@ -49,12 +49,12 @@
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
 
-    // map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
+    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
-    // Debug 70
+    // TODO: Debug 70
     var camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1 / 99, 100000000000000);
     var controls = new THREE.OrbitControls(camera);
-    controls,
+
     camera.position.set( 0, 50000000, 0 );
     
     var animate = function () {

@@ -1,5 +1,6 @@
 var OrbitConstraint = require('./OrbitConstraint');
 var MapSettings = require('../Core/MapSettings');
+var sphericalMercator = require('../Utility/SphericalMercator');
 
 function compare (modifiers) {
     if (typeof Qt === 'object') {
@@ -11,7 +12,7 @@ function compare (modifiers) {
 
 /**
  * @param {Object} options
- * @param {TerrainMap} options.map
+ * @param {Map3D} options.map
  */
 function OrbitControls (options) {
     if (!options) throw new Error('No option provided');
@@ -21,7 +22,7 @@ function OrbitControls (options) {
     if (!options.canvas) throw new Error('No options.canvas provided');
 
     /**
-     * @type TerrainMap
+     * @type Map3D
      */
     this._map = options.map;
     this.constraint = new OrbitConstraint(this._map, this._map.camera, MapSettings.cameraDistance);
@@ -223,14 +224,15 @@ function OrbitControls (options) {
             panEnd.set(x, y);
             panDelta.subVectors(panEnd, panStart);
 
-            currentPin.offsetHeight(-panDelta.y * scope.camera.position.y / scope.canvas.height);
+            currentPin.height += -panDelta.y * scope.camera.position.y / scope.canvas.height;
 
             panStart.copy(panEnd);
         } else if (scope._state === OrbitControls.STATE.CHANGE_PIN_POSITION) {
             if (scope.enableMoveMarker === false) return;
 
-            var markerPosition = pickerFromScreen(x, y, picker).intersectObject(scope._map.basePlane)[0].point;
-            currentPin.setPosition(markerPosition);
+            // TODO: Deprecated base plane
+            var markerPosition = pickerFromScreen(scope, x, y, picker).intersectObject(scope._map.basePlane)[0].point;
+            currentPin.groundPosition = markerPosition.add(scope.camera.target);
         }
 
         if (scope._state !== OrbitControls.STATE.NONE) scope.update();
@@ -536,6 +538,9 @@ OrbitControls.prototype.getAzimuthalAngle = function () {
 };
 
 OrbitControls.prototype.update = function () {
+    // Pause camera when debuging
+    if (this._map.quadTree && this._map.quadTree._debug.suspendLodUpdate) return;
+
     if (this.autoRotate && this._state === OrbitControls.STATE.NONE) {
         this.constraint.rotateLeft(getAutoRotationAngle(this));
     }
@@ -556,6 +561,28 @@ OrbitControls.prototype.reset = function () {
     this.dispatchEvent(changeEvent);
 
     this.update();
+};
+
+var px = new THREE.Vector3();
+/**
+ * Set camrea view
+ * @param {Cartographic} position - Cartographic position
+ * @param {number} zoom - Zoom distance
+ * @param {number} duration
+ */
+OrbitControls.prototype.setView = function (position, zoom, duration) {
+    // TODO: duration as animation
+    duration = duration || 0;
+
+    sphericalMercator.CartographicToPixel(position, px);
+    // FIXME: Y = elevation data
+    this.constraint.camera.target.set(px.x, 0, px.z);
+
+    this.constraint.targetDistance = Math.pow(0.5, zoom) * MapSettings.cameraDistance;
+    this.update();
+    // camera.matrixWorldInverse.getInverse(camera.matrixWorld);
+
+    // this.quadTree.needUpdate = true;
 };
 
 Object.defineProperties(OrbitControls.prototype, {

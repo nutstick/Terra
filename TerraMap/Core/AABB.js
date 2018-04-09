@@ -1,10 +1,7 @@
-var MapSettings = require('./MapSettings');
-var sphericalMercator = require('../Utility/SphericalMercator');
 var Cartesian = require('../Math/Cartesian');
-var Tile = require('./Tile');
 
-var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
-
+var UNIT_Y = { x: 0.0, y: 1.0, z: 0.0 };
+var t = [[0, 0], [0, 1], [1, 1], [1, 0]];
 /**
  * AABB class
  * @alias AABB
@@ -36,44 +33,54 @@ function AABB (options) {
     // Compute the normal of the plane on the western edge of the tile.
     var midPoint = new THREE.Vector3();
     midPoint.x = (this.xMax + this.xMin) / 2;
-    midPoint.y = (this.yMax + this.yMin) / 2;
+    midPoint.z = (this.zMax + this.zMin) / 2;
 
     var temp2 = new THREE.Vector3();
 
     var westernMidpointCartesian = new THREE.Vector3();
     westernMidpointCartesian.x = (this.xMax + this.xMin) / 2;
-    westernMidpointCartesian.y = this.yMin;
+    westernMidpointCartesian.z = this.zMin;
 
     this.westNormal = new THREE.Vector3();
-    this.westNormal.crossVectors(temp2.subVectors(midPoint, westernMidpointCartesian), UNIT_Z);
+    this.westNormal.crossVectors(temp2.subVectors(midPoint, westernMidpointCartesian), UNIT_Y);
     this.westNormal.normalize();
 
     var easternMidpointCartesian = new THREE.Vector3();
     easternMidpointCartesian.x = (this.xMax + this.xMin) / 2;
-    easternMidpointCartesian.y = this.yMax;
+    easternMidpointCartesian.z = this.zMax;
 
     this.eastNormal = new THREE.Vector3();
-    this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Z);
+    this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Y);
     this.eastNormal.normalize();
 
     var northMidpointCartesian = new THREE.Vector3();
     northMidpointCartesian.x = this.xMin;
-    northMidpointCartesian.y = (this.yMax + this.yMin) / 2;
+    northMidpointCartesian.z = (this.zMax + this.zMin) / 2;
 
     this.northNormal = new THREE.Vector3();
-    this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Z);
+    this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Y);
     this.northNormal.normalize();
 
     var southMidpointCartesian = new THREE.Vector3();
     southMidpointCartesian.x = this.xMax;
-    southMidpointCartesian.y = (this.yMax + this.yMin) / 2;
+    southMidpointCartesian.z = (this.zMax + this.zMin) / 2;
 
     this.southNormal = new THREE.Vector3();
-    this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Z);
+    this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Y);
     this.southNormal.normalize();
 
-    this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, this.yMin);
-    this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, this.yMax);
+    this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, 0, this.zMin);
+    this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, 0, this.zMax);
+
+    this._corner = new Array(4);
+    for (var i = 0; i < 4; ++i) {
+        // TODO: y
+        this._corner[i] = new Cartesian({
+            x: t[i][0] ? this.xMin : this.xMax,
+            y: 0,
+            z: t[i][1] ? this.zMin : this.zMax
+        });
+    };
 }
 
 AABB.prototype.intersects = function (x, y, z) {
@@ -99,7 +106,7 @@ AABB.prototype.onRect = function (x, z) {
  */
 var cameraCartesianPosition = new Cartesian();
 AABB.prototype.distanceToCamera = function (camera) {
-    cameraCartesianPosition.set(camera.position.x, camera.position.y, camera.position.z);
+    cameraCartesianPosition.set(camera.position.x + camera.target.x, camera.position.y + camera.target.y, camera.position.z + camera.target.z);
 
     return this.distanceFromPoint(cameraCartesianPosition);
 };
@@ -155,6 +162,11 @@ Object.defineProperties(AABB.prototype, {
                 y: (this.yMin + this.yMax) / 2,
                 z: (this.zMin + this.zMax) / 2
             });
+        }
+    },
+    corner: {
+        get: function () {
+            return this._corner;
         }
     }
 });

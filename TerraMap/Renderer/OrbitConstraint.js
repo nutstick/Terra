@@ -7,7 +7,7 @@ var EPS = 0.000001;
  * @alias OrbitConstraint
  * @constructor
  *
- * @param {TerrainMap} map
+ * @param {Map3D} map
  * @param {Camera} camera
  * @param {number} targetDistance
  */
@@ -146,7 +146,8 @@ var quatInverse = new THREE.Quaternion();
  * @returns {boolean}
  */
 OrbitConstraint.prototype.update = function () {
-    var offset = this.camera.position;
+    var offset = this.camera.position;t
+    var target = this.target;
 
     this.theta += this.thetaDelta;
     this.phi += this.phiDelta;
@@ -165,7 +166,7 @@ OrbitConstraint.prototype.update = function () {
     this.targetDistance = Math.max(this.minDistance, Math.min(this.maxDistance, this.targetDistance));
 
     // Move target to panned location
-    this.target.add(this.panOffset);
+    target.add(this.panOffset);
 
     offset.x = this.targetDistance * Math.sin(this.phi) * Math.sin(this.theta);
     offset.y = this.targetDistance * Math.cos(this.phi);
@@ -182,6 +183,9 @@ OrbitConstraint.prototype.update = function () {
     this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
 
     this.camera.update();
+
+    // Update subscribe objec
+    this.map._subscribeObjects.forEach(function (obj) { obj.updateTarget(target); });
 
     if (this.enableDamping === true) {
         this.thetaDelta *= (1.0 - this.dampingFactor);

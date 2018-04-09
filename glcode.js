@@ -1,7 +1,7 @@
 Qt.include('./three.js');
 
 Qt.include('./require.js');
-var Map = require('./TerraMap/Core/Map');
+var Map3D = require('./TerraMap3D/Core/Map');
 var Scene3D = require('./TerraMap/SceneMode/Scene3D');
 var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
 

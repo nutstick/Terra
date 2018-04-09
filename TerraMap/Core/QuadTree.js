@@ -10,7 +10,7 @@ var Cartesian = require('../Math/Cartesian');
  * @constructor
  *
  * @param {Object} options
- * @param {TerrainMap} options.map - Map
+ * @param {Map3D} options.map - Map
  * @param {SceneMode} options.mode - Scene2D | Scene3D
  */
 function QuadTree (options) {
@@ -110,18 +110,18 @@ QuadTree.prototype.update = function () {
 
     this._tileReplacementQueue.markStartOfRenderFrame();
 
-    for (var i = 0; i < tiles.children.length; ++i) {
-        tiles.children[i].geometry.dispose();
-        tiles.children[i].material.dispose();
-    }
-    tiles.children.length = 0;
-
     selectTilesForRendering(this);
 
     // Rendering tile
     // this._activeTiles.forEach(function (tile) {
     //     tiles.add(tile._entity);
     // });
+
+    for (var i = 0; i < tiles.children.length; ++i) {
+        tiles.children[i].geometry.dispose();
+        tiles.children[i].material.dispose();
+    }
+    tiles.children.length = 0;
     renderTiles(this, this._activeTiles);
 
     processTileLoadQueue(this);
@@ -330,49 +330,39 @@ function visitVisibleChildrenNearToFar (primitive, children) {
     };
 }
 
-var classifyPoint = require('robust-point-in-polygon');
-
 function pointInsidePolygon (polygon, pt) {
     // Ray-casting algorithm only 2D x-z
-    // var x = pt.x;
-    // var y = pt.z;
-    // var inside = false;
-    // console.log('-------')
-    // for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    //     var xi = polygon[i].x;
-    //     var yi = polygon[i].z;
-    //     var xj = polygon[j].x;
-    //     var yj = polygon[j].z;
+    var x = pt.x;
+    var z = pt.z;
+    var inside = false;
+    for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        var xi = polygon[i].x;
+        var zi = polygon[i].z;
+        var xj = polygon[j].x;
+        var zj = polygon[j].z;
 
-    //     var intersect = ((yi >= y) != (yj >= y))
-    //         && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-    //     if (intersect) inside = !inside;
-    //     console.log(intersect)
-    // }
+        var intersect = ((zi >= z) !== (zj >= z)) &&
+            (x < (xj - xi) * (z - zi) / (zj - zi) + xi);
+        if (intersect) inside = !inside;
+    }
 
-    return classifyPoint(polygon.map(function (p) { return [p.x, p.z]; }), [pt.x, pt.z]) < 1;
+    return inside;
+
+    // return inside([pt.x, pt.z], polygon.map(function (p) { return [p.x, p.z]; }));
+
+    // return classifyPoint(polygon.map(function (p) { return [p.x, p.z]; }), [pt.x, pt.z]) < 1;
 }
 
-var p = new Cartesian();
-var pg = Array.apply(null, Array(4)).map(function (_, idx) {
-    return new Cartesian();
-});
-var corner = [[0, 0], [0, 1], [1, 1], [1, 0]];
 function computeTileVisibility (primitive, tile) {
+    var corner = tile.bbox.corner;
     for (var i = 0; i < 4; i++) {
-        p.set(corner[i][0] ? tile.bbox.xMin : tile.bbox.xMax, 0, corner[i][1] ? tile.bbox.zMin : tile.bbox.zMax);
-
-        if (pointInsidePolygon(primitive.camera.culledGroundPlane, p)) {
+        if (pointInsidePolygon(corner, primitive.camera.culledGroundPlane[i])) {
             return true;
         }
     }
 
     for (var i = 0; i < 4; i++) {
-        pg[i].set(corner[i][0] ? tile.bbox.xMin : tile.bbox.xMax, 0, corner[i][1] ? tile.bbox.zMin : tile.bbox.zMax);
-    }
-
-    for (var i = 0; i < 4; i++) {
-        if (pointInsidePolygon(pg, primitive.camera.culledGroundPlane[i])) {
+        if (pointInsidePolygon(primitive.camera.culledGroundPlane, corner[i])) {
             return true;
         }
     }
@@ -414,7 +404,7 @@ function renderTiles (primitive, tiles) {
 
         var geometry = new THREE.PlaneGeometry(tileSize, tileSize);
 
-        geometry.rotateX(Math.PI / 2);
+        geometry.rotateX(-Math.PI / 2);
         // geometry.vertices = [
         //     new THREE.Vector3(-tileSize / 2, 0, -tileSize / 2),
         //     new THREE.Vector3(-tileSize / 2, 0, tileSize / 2),
@@ -430,7 +420,14 @@ function renderTiles (primitive, tiles) {
         center.subVectors(tile.bbox.center, target);
         geometry.translate(center.x, center.y, center.z);
 
-        primitive.tiles.add(new THREE.Mesh(geometry, material));
+        geometry.computeBoundingSphere();
+        geometry.boundingSphere.center.set(center.x, center.y, center.z);
+
+        var t = new THREE.Mesh(geometry, material);
+        t.tile = tile;
+        primitive.tiles.add(t);
+        // var box = new THREE.BoxHelper(tile, 0xffff00);
+        // primitive.tiles.add(box);
     }
 }
 
