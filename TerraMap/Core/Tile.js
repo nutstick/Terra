@@ -90,7 +90,7 @@ Tile.size = function (z) {
     return size[z];
 };
 
-Tile.pool = Array.apply(null, Array(120)).map(function (_, idx) {
+Tile.pool = Array.apply(null, Array(16)).map(function (_, idx) {
     var material = new THREE.MeshBasicMaterial({
         wireframe: true,
         opacity: 0
@@ -111,6 +111,31 @@ Tile.pool = Array.apply(null, Array(120)).map(function (_, idx) {
 
     return new THREE.Mesh(geometry, material);
 });
+
+Tile.pool.doublize = function () {
+    const length = Tile.pool.length
+    for (var i = 0; i < length; i++) {
+        var material = new THREE.MeshBasicMaterial({
+            wireframe: true,
+            opacity: 0
+        });
+    
+        var geometry = new THREE.Geometry();
+        geometry.vertices = [
+            new THREE.Vector3(),
+            new THREE.Vector3(),
+            new THREE.Vector3(),
+            new THREE.Vector3()
+        ];
+        geometry.faces = [
+            new THREE.Face3(0, 1, 3),
+            new THREE.Face3(0, 3, 2),
+        ];
+        geometry.computeFaceNormals();
+    
+        Tile.pool.push(new THREE.Mesh(geometry, material));
+    }
+}
 
 /**
  *

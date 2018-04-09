@@ -101,8 +101,6 @@ QuadTree.prototype.update = function () {
     this.needUpdate = false;
     this.updating = true;
 
-    var tiles = this.tiles;
-
     // Compute frustum of camera
     this.camera.update();
 
@@ -112,16 +110,6 @@ QuadTree.prototype.update = function () {
 
     selectTilesForRendering(this);
 
-    // Rendering tile
-    // this._activeTiles.forEach(function (tile) {
-    //     tiles.add(tile._entity);
-    // });
-
-    for (var i = 0; i < tiles.children.length; ++i) {
-        tiles.children[i].geometry.dispose();
-        tiles.children[i].material.dispose();
-    }
-    tiles.children.length = 0;
     renderTiles(this, this._activeTiles);
 
     processTileLoadQueue(this);
@@ -392,6 +380,14 @@ function addTileToRenderList (primitive, tile) {
 
 var center = new Cartesian();
 function renderTiles (primitive, tiles) {
+    if (tiles.length === 0) return;
+
+    while (tiles.length > tiles[0].constructor.pool.length) {
+        tiles[0].constructor.pool.doublize();
+    }
+    
+    primitive.tiles.children.length = 0;
+
     var target = primitive.camera.target;
     for (var i = 0; i < tiles.length; ++i) {
         var tile = tiles[i];

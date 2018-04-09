@@ -7,6 +7,8 @@ function DebugTile (options) {
 
 DebugTile.prototype = Object.create(Tile.prototype);
 
+DebugTile.prototype.constrcutor = DebugTile;
+
 DebugTile.prototype.imageryLoading = function (layerName, texture) {
     if (this._state === Tile.TileState.Failed) return;
 
