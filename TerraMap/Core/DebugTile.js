@@ -28,6 +28,14 @@ DebugTile.prototype.imageryFailed = function (layerName) {
     this._state = Tile.TileState.Start;
 };
 
+DebugTile.prototype.applyMaterial = function (material) {
+    material.wireframe = true;
+    material.map = undefined;
+    // material.opacity = 0;
+
+    material.needsUpdate = true;
+}
+
 DebugTile.prototype.freeResources = function () {
 };
 
