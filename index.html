@@ -39,7 +39,7 @@
     }, false);
 
     map = new Map3D({
-        mode: new DebugScene3D(),
+        mode: new Scene3D(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
         renderer: renderer
@@ -51,25 +51,12 @@
 
     map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
-    // TODO: Debug 70
-    var camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1 / 99, 100000000000000);
-    var controls = new THREE.OrbitControls(camera);
-
-    camera.position.set( 0, 50000000, 0 );
-    
     var animate = function () {
       requestAnimationFrame( animate );
 
-      if (map.quadTree._debug.suspendLodUpdate) {
+      map.update();
 
-        controls.update();
-
-        renderer.render(map.scene, camera);
-      } else {
-        map.update();
-
-        renderer.render(map.scene, map.camera);
-      }
+      renderer.render(map.scene, map.camera);
     };
 
     animate();

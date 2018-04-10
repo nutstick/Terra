@@ -46,31 +46,6 @@ function Camera (options) {
      * @type {boolean}
      */
     this.updatedLastFrame = false;
-
-    /**
-     * FIXME:
-     * Debuging mesh
-     */
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true,
-        opacity: 0,
-        color: new THREE.Color(0xff0000)
-    });
-    this.geometry = new THREE.Geometry();
-    this.geometry.vertices = [
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3()
-    ];
-    this.geometry.faces = [
-        new THREE.Face3(0, 1, 3),
-        new THREE.Face3(1, 3, 2)
-    ];
-    this.geometry.computeFaceNormals();
-    var mesh = new THREE.Mesh(this.geometry, material);
-
-    this._map.scene.add(mesh);
 }
 
 Camera.prototype = Object.create(THREE.PerspectiveCamera.prototype);
@@ -122,13 +97,7 @@ Camera.prototype.update = function () {
         s.subVectors(this.position, t.multiplyScalar(scale));
 
         this._culledGroundPlane[i].set(s.x + this.target.x, 0, s.z + this.target.z);
-
-        // FIXME: Debugging
-        this.geometry.vertices[i].set(s.x, 0, s.z);
     }
-
-    // FIXME: Debugging
-    this.geometry.verticesNeedUpdate = true;
 };
 
 Object.defineProperties(Camera.prototype, {
