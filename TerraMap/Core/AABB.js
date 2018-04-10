@@ -1,9 +1,20 @@
-var MapSettings = require('./MapSettings');
-var sphericalMercator = require('../Utility/SphericalMercator');
 var Cartesian = require('../Math/Cartesian');
 
-var UNIT_Z = { x: 0.0, y: 0.0, z: 1.0 };
-
+var UNIT_Y = { x: 0.0, y: 1.0, z: 0.0 };
+var t = [[0, 0], [0, 1], [1, 1], [1, 0]];
+/**
+ * AABB class
+ * @alias AABB
+ * @constructor
+ *
+ * @param {Object} options - Option
+ * @param {number} xMin
+ * @param {number} xMax
+ * @param {number} yMin
+ * @param {number} yMax
+ * @param {number} zMin
+ * @param {number} zMax
+ */
 function AABB (options) {
     options = options || {};
     this.xMin = options.xMin || 0;
@@ -22,68 +33,55 @@ function AABB (options) {
     // Compute the normal of the plane on the western edge of the tile.
     var midPoint = new THREE.Vector3();
     midPoint.x = (this.xMax + this.xMin) / 2;
-    midPoint.y = (this.yMax + this.yMin) / 2;
+    midPoint.z = (this.zMax + this.zMin) / 2;
 
     var temp2 = new THREE.Vector3();
 
     var westernMidpointCartesian = new THREE.Vector3();
     westernMidpointCartesian.x = (this.xMax + this.xMin) / 2;
-    westernMidpointCartesian.y = this.yMin;
+    westernMidpointCartesian.z = this.zMin;
 
     this.westNormal = new THREE.Vector3();
-    this.westNormal.crossVectors(temp2.subVectors(midPoint, westernMidpointCartesian), UNIT_Z);
+    this.westNormal.crossVectors(temp2.subVectors(midPoint, westernMidpointCartesian), UNIT_Y);
     this.westNormal.normalize();
 
     var easternMidpointCartesian = new THREE.Vector3();
     easternMidpointCartesian.x = (this.xMax + this.xMin) / 2;
-    easternMidpointCartesian.y = this.yMax;
+    easternMidpointCartesian.z = this.zMax;
 
     this.eastNormal = new THREE.Vector3();
-    this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Z);
+    this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Y);
     this.eastNormal.normalize();
 
     var northMidpointCartesian = new THREE.Vector3();
     northMidpointCartesian.x = this.xMin;
-    northMidpointCartesian.y = (this.yMax + this.yMin) / 2;
+    northMidpointCartesian.z = (this.zMax + this.zMin) / 2;
 
     this.northNormal = new THREE.Vector3();
-    this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Z);
+    this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Y);
     this.northNormal.normalize();
 
     var southMidpointCartesian = new THREE.Vector3();
     southMidpointCartesian.x = this.xMax;
-    southMidpointCartesian.y = (this.yMax + this.yMin) / 2;
+    southMidpointCartesian.z = (this.zMax + this.zMin) / 2;
 
     this.southNormal = new THREE.Vector3();
-    this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Z);
+    this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Y);
     this.southNormal.normalize();
 
-    this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, this.yMin);
-    this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, this.yMax);
-}
+    this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, 0, this.zMin);
+    this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, 0, this.zMax);
 
-Object.defineProperties(AABB.prototype, {
-    xCenter: {
-        get: function () {
-            return (this.xMax + this.xMin) / 2;
-        }
-    },
-    yCenter: {
-        get: function () {
-            return (this.yMax + this.yMin) / 2;
-        }
-    },
-    zCenter: {
-        get: function () {
-            return (this.zMax + this.zMin) / 2;
-        }
-    },
-    center: {
-        get: function () {
-            return THREE.Vector2(this.xCenter, this.yCenter, this.zCenter);
-        }
-    }
-});
+    this._corner = new Array(4);
+    for (var i = 0; i < 4; ++i) {
+        // TODO: y
+        this._corner[i] = new Cartesian({
+            x: t[i][0] ? this.xMin : this.xMax,
+            y: 0,
+            z: t[i][1] ? this.zMin : this.zMax
+        });
+    };
+}
 
 AABB.prototype.intersects = function (x, y, z) {
     if (x instanceof AABB) {
@@ -98,21 +96,26 @@ AABB.prototype.intersects = function (x, y, z) {
         this.zMin <= z && this.zMax >= z;
 };
 
-AABB.prototype.onRect = function (x, y) {
+AABB.prototype.onRect = function (x, z) {
     return this.xMin <= x && this.xMax >= x &&
-        this.yMin <= y && this.yMax >= y;
+        this.zMin <= z && this.zMax >= z;
 };
 
 /**
  * @param {Camera} camera
  */
+var cameraCartesianPosition = new Cartesian();
 AABB.prototype.distanceToCamera = function (camera) {
-    var cameraCartesianPosition = camera.positionCartesian;
+    cameraCartesianPosition.set(camera.position.x + camera.target.x, camera.position.y + camera.target.y, camera.position.z + camera.target.z);
 
-    var temp = new THREE.Vector3();
+    return this.distanceFromPoint(cameraCartesianPosition);
+};
+
+AABB.prototype.distanceFromPoint = function (cartesian) {
+    var temp = new Cartesian();
     var result = 0.0;
 
-    if (!this.onRect(cameraCartesianPosition.x, cameraCartesianPosition.y)) {
+    if (!this.onRect(cartesian.x, cartesian.z)) {
         var northwestCornnerCartesian = this.northwestCornnerCartesian;
         var southeastCornnerCartesian = this.southeastCornnerCartesian;
         var westNormal = this.westNormal;
@@ -120,11 +123,11 @@ AABB.prototype.distanceToCamera = function (camera) {
         var eastNormal = this.eastNormal;
         var northNormal = this.northNormal;
 
-        var vectorFromNorthwestCorner = temp.subVectors(cameraCartesianPosition, northwestCornnerCartesian);
+        var vectorFromNorthwestCorner = temp.subVectors(cartesian, northwestCornnerCartesian);
         var distanceToWestPlane = vectorFromNorthwestCorner.dot(westNormal);
         var distanceToNorthPlane = vectorFromNorthwestCorner.dot(northNormal);
 
-        var vectorFromSoutheastCorner = temp.subVectors(cameraCartesianPosition, southeastCornnerCartesian);
+        var vectorFromSoutheastCorner = temp.subVectors(cartesian, southeastCornnerCartesian);
         var distanceToEastPlane = vectorFromSoutheastCorner.dot(eastNormal);
         var distanceToSouthPlane = vectorFromSoutheastCorner.dot(southNormal);
 
@@ -141,9 +144,9 @@ AABB.prototype.distanceToCamera = function (camera) {
         }
     }
 
-    var cameraHeight = cameraCartesianPosition.height;
+    var height = cartesian.height;
 
-    var distanceFromTop = cameraHeight;
+    var distanceFromTop = height;
     if (distanceFromTop > 0.0) {
         result += distanceFromTop * distanceFromTop;
     }
@@ -151,44 +154,21 @@ AABB.prototype.distanceToCamera = function (camera) {
     return Math.sqrt(result);
 };
 
-AABB.prototype.distanceFromPoint = function (vector) {
-    var dx = Math.min(vector.x - this.xMin, this.xMax - vector.x);
-    var dy = Math.min(vector.y - this.yMin, this.yMax - vector.y);
-    var dz = Math.min(vector.z - this.zMin, this.zMax - vector.z);
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-};
-
-var corner = new THREE.Vector3();
-
-AABB.createAABBForTile = function (tile) {
-    var tileSize = MapSettings.basePlaneDimension / Math.pow(2, tile.z);
-    var xMin = (tile.x) * tileSize - MapSettings.basePlaneDimension / 2;
-    var xMax = (tile.x + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-    var zMin = (tile.y) * tileSize - MapSettings.basePlaneDimension / 2;
-    var zMax = (tile.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-
-    // Converting px to cartesian
-    // North West Cornner
-    corner.x = xMin;
-    corner.z = zMin;
-    var topLeftCornner = new Cartesian();
-    sphericalMercator.PixelToCartesian(corner, topLeftCornner);
-    // South East Corner
-    corner.x = xMax;
-    corner.z = zMax;
-    var bottomRightCornner = new Cartesian();
-    sphericalMercator.PixelToCartesian(corner, bottomRightCornner);
-
-    // TODO: height as 10 meters
-    return new AABB({
-        xMin: topLeftCornner.x,
-        xMax: bottomRightCornner.x,
-        yMin: topLeftCornner.y,
-        yMax: bottomRightCornner.y,
-        zMin: 0,
-        zMax: 0,
-        tile: tile
-    });
-};
+Object.defineProperties(AABB.prototype, {
+    center: {
+        get: function () {
+            return new Cartesian({
+                x: (this.xMin + this.xMax) / 2,
+                y: (this.yMin + this.yMax) / 2,
+                z: (this.zMin + this.zMax) / 2
+            });
+        }
+    },
+    corner: {
+        get: function () {
+            return this._corner;
+        }
+    }
+});
 
 module.exports = AABB;

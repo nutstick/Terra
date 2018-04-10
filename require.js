@@ -2467,8 +2467,7 @@ function loadFileExtensions(filename) {
 
 function loadAsFile(filename) {
     // console.log('loadAsFile()', filename);
-    return loadFile(filename)
-        || loadFileExtensions(filename);
+    return loadFileExtensions(filename) || loadFile(filename);
 }
 
 function loadIndex(dirname) {
@@ -2500,7 +2499,7 @@ function nodeModulePaths(start) {
             continue;
         var dir = path.join.apply(null, parts.slice(0, i).concat(node_modules));
         if (dir === node_modules) { // special case
-            dir = path.join('.', node_modules);
+            dir = path.join('../', node_modules);
             if (dirs.length === 0
                 || dirs[dirs.length - 1] !== dir)
                 dirs.push(dir);

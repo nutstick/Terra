@@ -4,7 +4,7 @@
         <file>TerraMap/Core/DebugGenerator.js</file>
         <file>TerraMap/Core/DebugTile.js</file>
         <file>TerraMap/Core/DeveloperError.js</file>
-        <file>TerraMap/Core/Map.js</file>
+        <file>TerraMap/Core/Map3D.js</file>
         <file>TerraMap/Core/MapSettings.js</file>
         <file>TerraMap/Core/QuadTree.js</file>
         <file>TerraMap/Core/TextureGenerator.js</file>
@@ -17,8 +17,10 @@
         <file>TerraMap/Object/Pin.js</file>
         <file>TerraMap/Object/Polygon.js</file>
         <file>TerraMap/Object/Polyline.js</file>
+        <file>TerraMap/Object/RenderingObject.js</file>
         <file>TerraMap/Object/Vehicle.js</file>
         <file>TerraMap/Renderer/Camera.js</file>
+        <file>TerraMap/Renderer/OrbitConstraint.js</file>
         <file>TerraMap/Renderer/OrbitControls.js</file>
         <file>TerraMap/SceneMode/DebugScene3D.js</file>
         <file>TerraMap/SceneMode/Scene2D.js</file>

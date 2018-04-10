@@ -49,6 +49,8 @@ function Polygon (options) {
      */
     this.gridMesh = undefined;
 
+    this.gridGenerateOffset = new THREE.Vector3();
+
     /**
      * Three.Line
      * @type {THREE.LineSegments}
@@ -58,35 +60,54 @@ function Polygon (options) {
     this.debug = {
         updated: false
     };
+
+    this._map.addSubscribeObject(this);
 }
+
+Polygon.prototype.updateTarget = function (target) {
+    this.lines.forEach(function (line) {
+        line.geometry.verticesNeedUpdate = true;
+    });
+
+    if (this._closeLine) {
+        this._closeLine.geometry.verticesNeedUpdate = true;
+    }
+
+    if (this.gridMesh) {
+        this.gridMesh.position.set(
+             this.gridGenerateOffset.x - target.x,
+             this.gridGenerateOffset.y - target.y,
+             this.gridGenerateOffset.z - target.z
+        );
+    }
+};
 
 Polygon.prototype.addPin = function (position, height) {
     var index = this.pins.length;
     var pin = new Pin({
         index: index,
         mission: this,
-        position: position,
-        height: height
+        position: position
     });
 
     this.pins.push(pin);
-
+    
     if (this.pins.length > 1) {
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(this.pins[index - 1].head.position.clone());
-        lineGeometry.vertices.push(this.pins[index].head.position.clone());
+        lineGeometry.vertices.push(this.pins[index - 1].head.position);
+        lineGeometry.vertices.push(this.pins[index].head.position);
         var line = new THREE.LineSegments(
             lineGeometry,
             new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 })
         );
-        this.lines[index - 1] = line;
+        this.lines.push(line);
 
         this._map.scene.add(line);
 
         if (!this._closeLine) {
             var lineGeometry_ = new THREE.Geometry();
-            lineGeometry_.vertices.push(this.pins[index].head.position.clone());
-            lineGeometry_.vertices.push(this.pins[0].head.position.clone());
+            lineGeometry_.vertices.push(this.pins[index].head.position);
+            lineGeometry_.vertices.push(this.pins[0].head.position);
 
             this._closeLine = new THREE.LineSegments(
                 lineGeometry_,
@@ -95,7 +116,7 @@ Polygon.prototype.addPin = function (position, height) {
 
             this._map.scene.add(this._closeLine);
         } else {
-            this._closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
+            this._closeLine.geometry.vertices[0] = this.pins[index].head.position;
             this._closeLine.geometry.verticesNeedUpdate = true;
         }
     }
@@ -108,21 +129,17 @@ Polygon.prototype.addPin = function (position, height) {
 };
 
 Polygon.prototype.updatePin = function (index) {
-    if (index > 0) {
-        this.lines[index - 1].geometry.vertices[1].copy(this.pins[index].head.position);
+    if (index > 0 && index - 1 < this.lines.length) {
         this.lines[index - 1].geometry.verticesNeedUpdate = true;
     }
     if (index + 1 < this.pins.length) {
-        this.lines[index].geometry.vertices[0].copy(this.pins[index].head.position);
         this.lines[index].geometry.verticesNeedUpdate = true;
     }
 
     if (this.pins.length > 1) {
         if (index === 0) {
-            this._closeLine.geometry.vertices[1].copy(this.pins[index].head.position);
             this._closeLine.geometry.verticesNeedUpdate = true;
         } else if (index + 1 === this.pins.length) {
-            this._closeLine.geometry.vertices[0].copy(this.pins[index].head.position);
             this._closeLine.geometry.verticesNeedUpdate = true;
         }
     }
@@ -169,7 +186,11 @@ Polygon.prototype.interactableObjects = function () {
     }, []);
 };
 
+var px = new THREE.Vector3();
 Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute) {
+    var target = this._map.camera.target;
+    this.gridGenerateOffset.set(target.x, target.y, target.z);
+  
     // Call C++ function to genreate flight grid
     if (type === 'opt') {
         if (speed) {
@@ -201,6 +222,8 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute
     // Redraw grid mesh
     // Remove exist mesh first
     if (this.gridMesh) {
+        this.gridMesh.geometry.dispose();
+        this.gridMesh.material.dispose();
         this._map.scene.remove(this.gridMesh);
     }
 
@@ -214,11 +237,11 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute
         var lineGeometry = new THREE.Geometry();
         for (var i = 0; i < grid.length; i++) {
             // Passing Geocoordinate to 3D Point
-            var px = sphericalMercator.px(grid[i], 0);
-            var meterPerPixel = sphericalMercator.mPerPixel(grid[i].latitude);
+            sphericalMercator.CartographicToPixel(grid[i], px);
             // Doubling point, so it's will render consecutive line
-            if (i !== 0) lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
-            lineGeometry.vertices.push(new THREE.Vector3(px.x - MapSettings.basePlaneDimension / 2, grid[i].altitude / meterPerPixel, px.y - MapSettings.basePlaneDimension / 2));
+            var v = px.clone().sub(this.gridGenerateOffset);
+            if (i != 0) lineGeometry.vertices.push(v);
+            lineGeometry.vertices.push(v);
         }
 
         this.gridMesh.add(new THREE.LineSegments(

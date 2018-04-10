@@ -11,9 +11,10 @@
   </style>
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
-  <!-- <script src="./OrbitControls.js"></script> -->
   <script src="./require.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
+  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+  <!-- <script src="./OrbitControls.js"></script> -->
   <script defer="defer">
     var QtPositioning = {
       coordinate: function(x, y, z) {
@@ -24,7 +25,7 @@
         };
       }
     }
-    var Map = require('./TerraMap/Core/Map');
+    var Map3D = require('./TerraMap/Core/Map3D');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
     var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
     var DebugTile = require('./TerraMap/Core/DebugTile');
@@ -37,7 +38,7 @@
         event.preventDefault();
     }, false);
 
-    map = new Map({
+    map = new Map3D({
         mode: new Scene3D(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},

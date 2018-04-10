@@ -53,18 +53,18 @@ Scene3D.prototype.getLevelMaximumGeometricError = function (level) {
  * @returns {number} screenSpaceError of tile
  */
 Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
-    var camera = quadTree.cameraController.object;
+    var camera = quadTree.camera;
     var maxGeometricError = this.getLevelMaximumGeometricError(tile.z);
 
     // Update distance of tile from camera
     if (camera.updatedLastFrame || !tile.distance) {
-        tile.distance = tile.bbox.distanceToCamera(quadTree.cameraController.object);
+        tile.distance = tile.bbox.distanceToCamera(quadTree.camera);
     }
 
     var height = Math.max(quadTree.cameraController.canvas.height, quadTree.cameraController.canvas.width);
-    var sseDenominator = 2 * Math.tan(quadTree.cameraController.object.fov * Math.PI / (2 * 180));
+    var sseDenominator = 2 * Math.tan(camera.fov * Math.PI / (2 * 180));
 
-    var error = (maxGeometricError * height) / (tile.distance * sseDenominator);
+    var error = (maxGeometricError * height) / (tile.distance * sseDenominator)
 
     // TODO: Fof from Cesium
     // if (frameState.fog.enabled) {

@@ -20,8 +20,8 @@ var DState = {
  */
 
 /**
- * Map Class
- * @alias Map
+ * Map3D Class
+ * @alias Map3D
  * @constructor
  *
  * @param {Object} options
@@ -30,12 +30,18 @@ var DState = {
  * @param {eventSource} options.eventSource - EventSource
  * @param {Renderer} options.renderer - Renderer
  */
-function Map (options) {
+function Map3D (options) {
     if (!options) throw new Error('No option provided');
     if (!options.mode) throw new Error('No option.mode provided');
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
     if (!options.renderer) throw new Error('No options.renderer provided');
+
+    /**
+     * Subsribe camera target object
+     * @type {any[]}
+     */
+    this._subscribeObjects = [];
 
     /*
     * Setup ThreeJS scene
@@ -44,21 +50,19 @@ function Map (options) {
 
     this.scene = new THREE.Scene();
 
-    this.camera = new Camera({ canvas: options.canvas });
+    this.camera = new Camera({ canvas: options.canvas, map: this });
     this.camera.setPosition({ z: MapSettings.cameraDistance });
 
+    // TODO: target distance min 0.03527380584401122
     this.cameraController = new OrbitControls({
         map: this,
         eventSource: options.eventSource,
         canvas: options.canvas,
     });
 
-    this.cameraController.targetCartographic = QtPositioning.coordinate();
-    this.cameraController.targetCartesian = new Cartesian();
-
     // Base Plane
     this.basePlane = new THREE.Mesh(
-        new THREE.PlaneBufferGeometry(MapSettings.basePlaneDimension * 100, MapSettings.basePlaneDimension * 100, 1, 1),
+        new THREE.PlaneBufferGeometry(MapSettings.basePlaneDimension * 10000, MapSettings.basePlaneDimension * 10000, 1, 1),
         new THREE.MeshBasicMaterial({
             wireframe: true,
             opacity: 0
@@ -93,7 +97,7 @@ function Map (options) {
     this.state = DState.GROUND;
 }
 
-Object.defineProperties(Map.prototype, {
+Object.defineProperties(Map3D.prototype, {
     currentMission: {
         get: function () {
             if (!this._currentMission) {
@@ -113,30 +117,39 @@ Object.defineProperties(Map.prototype, {
     }
 });
 
-Map.prototype.newMission = function (type) {
+Map3D.prototype.newMission = function (type) {
     this._currentMission = (type === 'Polyline') ? new Mission({ map: this }) : new Polygon({ map: this });
     this.missions.push(this._currentMission);
     return this._currentMission;
 };
 
-Map.prototype.update = function () {
+Map3D.prototype.update = function () {
     // Quad Tree update
     this.quadTree.update();
 
     // Mission update
     var scaleFactor = 120;
-    var scale = this.camera.position.y / scaleFactor;
+    var scale = this.cameraController.constraint.targetDistance / scaleFactor;
 
     this.vehicle.scale = scale;
     this.missions.forEach(function (mission) {
         mission.pins.forEach(function (pin) {
-            pin.setScale(scale);
+            pin.scale = scale;
         });
     });
 };
 
-Map.prototype.addPin = function (picker) {
-    var position = picker.intersectObjects(this.quadTree.tiles.children)[0].point;
+Map3D.prototype.addPin = function (picker) {
+    var intersects = picker.intersectObjects(this.quadTree.tiles.children);//[0].point;
+
+    if (!intersects.length) {
+        console.warn('Mouse down position have no intersect with any tiles.');
+        return;
+    } else if (intersects.length > 1) {
+        console.warn('Mouse down on more than one tile.');
+    }
+
+    var position = intersects[0].point.add(this.camera.target);
 
     if (typeof this._currentMission === 'undefined') {
         this._currentMission = new Polygon({ map: this });
@@ -146,11 +159,11 @@ Map.prototype.addPin = function (picker) {
     return this._currentMission.addPin(position);
 };
 
-Map.prototype.generateGrid = function (type) {
+Map3D.prototype.generateGrid = function (type) {
     this._currentMission.generateGrid(type || 'opt', 4);
 };
 
-Map.prototype.mouseDownOnMarkers = function (picker) {
+Map3D.prototype.mouseDownOnMarkers = function (picker) {
     var intersect = picker.intersectObjects(this.currentMission.interactableObjects(), true);
 
     for (var i = 0; i < intersect.length; i++) {
@@ -160,36 +173,11 @@ Map.prototype.mouseDownOnMarkers = function (picker) {
     return null;
 };
 
-Map.prototype.setView = function (position, zoom) {
-    var px = new THREE.Vector3();
-    sphericalMercator.CartographicToPixel(position, px);
-    this.cameraController.target.x = px.x;
-    // FIXME: Y
-    this.cameraController.target.y = 0;
-    this.cameraController.target.z = px.z;
-
-    var distance = Math.pow(0.5, zoom) * MapSettings.cameraDistance;
-
-    var c = new THREE.Vector3();
-    var bearing = this.cameraController.getAzimuthalAngle();
-    var pitch = this.cameraController.getPolarAngle();
-    c.x = px.x - Math.sin(bearing) * Math.sin(pitch) * distance;
-    c.z = px.z + Math.cos(bearing) * Math.sin(pitch) * distance;
-    c.y = Math.cos(pitch) * distance;
-
-    var camera = this.cameraController.object;
-
-    camera.setPosition(c);
-
-    camera.lookAt(this.cameraController.target);
-    camera.updateMatrix();
-    camera.updateMatrixWorld();
-    camera.matrixWorldInverse.getInverse(this.cameraController.object.matrixWorld);
-
-    this.quadTree.needUpdate = true;
+Map3D.prototype.setView = function (position, zoom) {
+    this.cameraController.setView(position, zoom);
 };
 
-Map.prototype.resizeView = function (canvas) {
+Map3D.prototype.resizeView = function (canvas) {
     this.camera.aspect = canvas.width / canvas.height;
     this.camera.updateProjectionMatrix();
 
@@ -197,4 +185,18 @@ Map.prototype.resizeView = function (canvas) {
     this._renderer.setSize(canvas.width, canvas.height);
 };
 
-module.exports = Map;
+Map3D.prototype.addSubscribeObject = function (object) {
+    this._subscribeObjects.push(object);
+}
+
+Map3D.prototype.removeSubscribeObject = function (object) {
+    var index = this._subscribeObjects.indexOf(object);
+
+    if ( index !== - 1 ) {
+        this._subscribeObjects.splice(index, 1);
+    }
+
+    return this;
+}
+
+module.exports = Map3D;

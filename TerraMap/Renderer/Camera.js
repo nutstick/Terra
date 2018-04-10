@@ -5,10 +5,11 @@ var Cartesian = require('../Math/Cartesian');
  * Camera class
  * @alias Camera
  * @constructor
- * @extends {THREE.PerspectiveCamera}
+ * @extends THREE.PerspectiveCamera
  *
  * @param {Object} options
  * @param {Canvas} options.canvas - Canvas
+ * @param {Map3D} options.map - Map
  */
 function Camera (options) {
     if (!options) throw new Error('No option provided');
@@ -17,14 +18,29 @@ function Camera (options) {
     THREE.PerspectiveCamera.call(this, 70, options.canvas.width / options.canvas.height, 1 / 99, 100000000000000);
 
     /**
+     * @type {Map3D}
+     */
+    this._map = options.map;
+
+    /**
+     * @type {THREE.Vector3}
+     */
+    this.target = new THREE.Vector3();
+
+    /**
+     * @type {QtPositioning.coordinate}
+     */
+    this._targetCartographic = QtPositioning.coordinate();
+
+    /**
      * @type {QtPositioning.coordinate}
      */
     this._positionCartographic = QtPositioning.coordinate();
 
     /**
-     * @type {Cartesian}
+     * @type {Cartesian[]}
      */
-    this._positionCartesian = new Cartesian();
+    this._culledGroundPlane = [new Cartesian(), new Cartesian(), new Cartesian(), new Cartesian()];
 
     /**
      * @type {boolean}
@@ -50,17 +66,38 @@ Camera.prototype.setPosition = function (position) {
 
     sphericalMercator.PixelToCartographic(this.position, this._positionCartographic);
 
-    sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
+    // sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
 
     this.updatedLastFrame = true;
 };
 
-Camera.prototype.updatePosition = function () {
-    sphericalMercator.PixelToCartographic(this.position, this._positionCartographic);
+var t = new THREE.Vector3();
+var s = new THREE.Vector3();
+var corner = [[-1, -1], [-1, 1], [1, 1], [1, -1]];
+Camera.prototype.update = function () {
+    // Update Cartographic position
+    sphericalMercator.PixelToCartographic(this.target, this._targetCartographic);
 
-    sphericalMercator.PixelToCartesian(this.position, this._positionCartesian);
+    t.addVectors(this.target, this.position);
+    sphericalMercator.PixelToCartographic(t, this._positionCartographic);
 
     this.updatedLastFrame = true;
+
+    // Calculate ray direction at 4 corners of screen
+    var scale;
+    for (var i = 0; i < 4; i++) {
+        t.set(corner[i][0], corner[i][1], 0.5).unproject(this).sub(this.position).normalize();
+        // Case corner of camrea to over horizontal line direction from camera y axis will be positive
+        // It will not be able to project plane so will clip with -0
+        if (t.y >= 0) {
+            t.y = -0.00001;
+        }
+
+        scale = this.position.y / t.y;
+        s.subVectors(this.position, t.multiplyScalar(scale));
+
+        this._culledGroundPlane[i].set(s.x + this.target.x, 0, s.z + this.target.z);
+    }
 };
 
 Object.defineProperties(Camera.prototype, {
@@ -69,9 +106,14 @@ Object.defineProperties(Camera.prototype, {
             return this._positionCartographic;
         }
     },
-    positionCartesian: {
+    targetCartographic: {
         get: function () {
-            return this._positionCartesian;
+            return this._targetCartographic;
+        }
+    },
+    culledGroundPlane: {
+        get: function () {
+            return this._culledGroundPlane;
         }
     }
 });
