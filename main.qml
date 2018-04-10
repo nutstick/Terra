@@ -22,11 +22,12 @@ QtObject {
 
             onInitializeGL: {
                 GLCode.initializeGL(canvas3d, eventSource);
-                controlWindow.onMapChanged(GLCode.map);
+                // controlWindow.onMapChanged(GLCode.map);
             }
 
             onPaintGL: {
                 GLCode.paintGL(canvas3d);
+                // controlWindow.onMapUpdate();
             }
 
             onResizeGL: {
@@ -76,5 +77,5 @@ QtObject {
         }
     }
 
-    property var controlWindow: ControlWindow { }
+    // property var controlWindow: ControlWindow { }
 }

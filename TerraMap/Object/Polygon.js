@@ -44,6 +44,8 @@ function Polygon (options) {
      */
     this.gridMesh = undefined;
 
+    this.gridGenerateOffset = new THREE.Vector3();
+
     /**
      * Three.Line
      * @type {THREE.LineSegments}
@@ -67,7 +69,11 @@ Polygon.prototype.updateTarget = function (target) {
     }
 
     if (this.gridMesh) {
-        this.gridMesh.position = target;
+        this.gridMesh.position.set(
+             this.gridGenerateOffset.x - target.x,
+             this.gridGenerateOffset.y - target.y,
+             this.gridGenerateOffset.z - target.z
+        );
     }
 };
 
@@ -177,6 +183,9 @@ Polygon.prototype.interactableObjects = function () {
 
 var px = new THREE.Vector3();
 Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
+    var target = this._map.camera.target;
+    this.gridGenerateOffset.set(target.x, target.y, target.z);
+
     // Call C++ function to genreate flight grid
     this.grids = type === 'opt' ? optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace)
         : gridcalculation.genGridInsideBound(this.pinsCoordinate, this._map.vehicle.coordinate, gridSpace, angle || 0);
@@ -184,6 +193,8 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
     // Redraw grid mesh
     // Remove exist mesh first
     if (this.gridMesh) {
+        this.gridMesh.geometry.dispose();
+        this.gridMesh.material.dispose();
         this._map.scene.remove(this.gridMesh);
     }
 
@@ -199,7 +210,7 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle) {
             // Passing Geocoordinate to 3D Point
             sphericalMercator.CartographicToPixel(grid[i], px);
             // Doubling point, so it's will render consecutive line
-            var v = px.clone().subtract(this._map.camera.target);
+            var v = px.clone().sub(this.gridGenerateOffset);
             if (i != 0) lineGeometry.vertices.push(v);
             lineGeometry.vertices.push(v);
         }

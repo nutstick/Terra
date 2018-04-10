@@ -10,6 +10,7 @@
         <file>MissionControlView.qml</file>
         <file>PinItemView.qml</file>
         <file>require.js</file>
+        <file>index.html</file>
     </qresource>
     <qresource prefix="/worker"/>
     <qresource prefix="/lib" lang="js">

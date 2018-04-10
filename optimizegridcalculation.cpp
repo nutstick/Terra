@@ -254,7 +254,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 
                 // No point retern
                 if (b.count() == 0) {
-                    qDebug() << 'Error on optimize grid';
+                    qDebug() << "Error on optimize grid";
                     error = true;
                 }
                 // If total length of grid > maxDistance, should divinded into more region
@@ -285,7 +285,7 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
 
             // No point retern
             if (b.count() == 0) {
-                qDebug() << 'Error on optimize grid';
+                qDebug() << "Error on optimize grid";
                 error = true;
             }
             // If total length of grid > maxDistance, should divinded into more region
