@@ -401,10 +401,11 @@ function renderTiles (primitive, tiles) {
         mesh.scale.set(tileSize, tileSize, tileSize);
         mesh.position.set(center.x, center.y, center.z);
 
+        // TODO: Mesh caching by x,y,z of tile
         if (tile.stringify !== mesh.tile) {
             mesh.tile = tile.stringify;
 
-            tile.applyMaterial(mesh.material);
+            mesh.material = tile.material;
         }
 
         primitive.tiles.add(mesh);
