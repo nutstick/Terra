@@ -91,6 +91,8 @@ function OrbitControls (options) {
 
     this._state = OrbitControls.STATE.NONE;
 
+    this._md = false;
+
     // set start position
     // TODO: using property instead of location
     // setView(this, location.hash)
@@ -161,14 +163,15 @@ function OrbitControls (options) {
         }
 
         if (scope._state !== OrbitControls.STATE.NONE) {
-            if (typeof Qt === 'object') {
-                // eventSource.mouseMove.connect(onMouseMove)
-                scope.eventSource.mouseUp.connect(onMouseUp);
-            } else {
-                // document.addEventListener( 'mousemove', onMouseMove_, false );
-                scope._map._renderer.domElement.addEventListener('mouseup', onWebMouseUp, false);
-            }
-            scope.dispatchEvent(startEvent);
+            // if (typeof Qt === 'object') {
+            //     eventSource.mouseMove.connect(onMouseMove)
+            //     scope.eventSource.mouseUp.connect(onMouseUp);
+            // } else {
+            //     document.addEventListener( 'mousemove', onMouseMove_, false );
+            //     scope._map._renderer.domElement.addEventListener('mouseup', onWebMouseUp, false);
+            // }
+            // scope.dispatchEvent(startEvent);
+            scope._md = true;
         }
     }
 
@@ -245,15 +248,9 @@ function OrbitControls (options) {
 
     function onMouseUp (x, y) {
         if (scope.enabled === false) return;
+        if (!scope._md) return;
 
-        if (typeof Qt === 'object') {
-            // eventSource.mouseMove.disconnect(onMouseMove)
-            scope.eventSource.mouseUp.disconnect(onMouseUp);
-        } else {
-            // document.removeEventListener( 'mousemove', onMouseMove_, false );
-            document.removeEventListener('mouseup', onWebMouseUp, false);
-        }
-        scope.dispatchEvent(endEvent);
+        scope._md = false;
         scope._state = OrbitControls.STATE.NONE;
     }
 
@@ -270,8 +267,8 @@ function OrbitControls (options) {
         scope.constraint.dollyOut(getZoomScale(delta));
 
         scope.update();
-        scope.dispatchEvent(startEvent);
-        scope.dispatchEvent(endEvent);
+        // scope.dispatchEvent(startEvent);
+        // scope.dispatchEvent(endEvent);
 
         // off-center zooming :D
         if (scope.camera.position.y >= scope.maxDistance) return;
@@ -372,8 +369,6 @@ function OrbitControls (options) {
 
             scope._state = OrbitControls.STATE.NONE;
         }
-
-        if (scope._state !== OrbitControls.STATE.NONE) scope.dispatchEvent(startEvent);
     }
 
     function touchmove (event) {
@@ -450,7 +445,7 @@ function OrbitControls (options) {
     function touchend () {
         if (scope.enabled === false) return;
 
-        scope.dispatchEvent(endEvent);
+        // scope.dispatchEvent(endEvent);
         scope._state = OrbitControls.STATE.NONE;
     }
 
@@ -458,12 +453,14 @@ function OrbitControls (options) {
         if (typeof Qt === 'object') {
             scope.eventSource.mouseDown.disconnect(onMouseDown);
             scope.eventSource.mouseMove.disconnect(onMouseMove);
+            this.eventSource.mouseMove.disconnect(onMouseUp);
             scope.eventSource.mouseWheel.disconnect(onMouseWheel);
 
             scope.eventSource.keyDown.disconnect(onKeyDown);
         } else {
             this._map._renderer.domElement.removeEventListener('contextmenu', contextmenu, false);
             this._map._renderer.domElement.removeEventListener('mousedown', onWebMouseDown, false);
+            this._map._renderer.domElement.removeEventListener('mouseup', onWebMouseUp, false);
             this._map._renderer.domElement.removeEventListener('mousemove', onWebMouseMove, false);
             this._map._renderer.domElement.removeEventListener('mousewheel', onWebMouseWheel, false);
 
@@ -478,6 +475,7 @@ function OrbitControls (options) {
     if (typeof Qt === 'object') {
         this.eventSource.mouseDown.connect(onMouseDown);
         this.eventSource.mouseMove.connect(onMouseMove);
+        this.eventSource.mouseUp.connect(onMouseUp);
         this.eventSource.mouseWheel.connect(onMouseWheel);
 
         this.eventSource.keyDown.connect(onKeyDown);
@@ -485,6 +483,7 @@ function OrbitControls (options) {
     } else {
         this._map._renderer.domElement.addEventListener('mousedown', onWebMouseDown, false);
         this._map._renderer.domElement.addEventListener('mousemove', onWebMouseMove, false);
+        this._map._renderer.domElement.addEventListener('mouseup', onWebMouseUp, false);
         this._map._renderer.domElement.addEventListener('mousewheel', onWebMouseWheel, false);
 
         this._map._renderer.domElement.addEventListener('touchstart', touchstart, false);
@@ -546,7 +545,7 @@ OrbitControls.prototype.update = function () {
     }
 
     if (this.constraint.update() === true) {
-        this.dispatchEvent(changeEvent);
+        // this.dispatchEvent(changeEvent);
     }
 };
 
@@ -558,7 +557,7 @@ OrbitControls.prototype.reset = function () {
     this.camera.zoom = this.zoom0;
 
     this.camera.updateProjectionMatrix();
-    this.dispatchEvent(changeEvent);
+    // this.dispatchEvent(changeEvent);
 
     this.update();
 };
