@@ -60,6 +60,11 @@ function Map3D (options) {
         canvas: options.canvas,
     });
 
+    /**
+     * @type {Canvas}
+     */
+    this.canvas = options.canvas;
+
     // Base Plane
     this.basePlane = new THREE.Mesh(
         new THREE.PlaneBufferGeometry(MapSettings.basePlaneDimension * 10000, MapSettings.basePlaneDimension * 10000, 1, 1),
@@ -128,8 +133,7 @@ Map3D.prototype.update = function () {
     this.quadTree.update();
 
     // Mission update
-    var scaleFactor = 120;
-    var scale = this.cameraController.constraint.targetDistance / scaleFactor;
+    var scale = this.cameraController.constraint.targetDistance * sphericalMercator.mPerPixel() * 4.0 / this.canvas.height;
 
     this.vehicle.scale = scale;
     this.missions.forEach(function (mission) {
@@ -161,16 +165,6 @@ Map3D.prototype.addPin = function (picker) {
 
 Map3D.prototype.generateGrid = function (type) {
     this._currentMission.generateGrid(type || 'opt', 4);
-};
-
-Map3D.prototype.mouseDownOnMarkers = function (picker) {
-    var intersect = picker.intersectObjects(this.currentMission.interactableObjects(), true);
-
-    for (var i = 0; i < intersect.length; i++) {
-        return intersect[i].object;
-    }
-
-    return null;
 };
 
 Map3D.prototype.setView = function (position, zoom) {

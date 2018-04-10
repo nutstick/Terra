@@ -1,5 +1,6 @@
 var Pin = require('./Pin');
 var MapSettings = require('../Core/MapSettings');
+var MapUtility = require('../Utility/MapUtility');
 var sphericalMercator = require('../Utility/SphericalMercator');
 
 /**
@@ -62,7 +63,20 @@ function Polygon (options) {
     };
 
     this._map.addSubscribeObject(this);
+
+    /**
+     * Controller
+     */
+    /**
+     * Set to false to disable marker modifiered
+     * @type {bool}
+     */
+    this.enableMoveMarker = true;
+
+    this.activePin = undefined;
 }
+
+Polygon.STATE = { CHANGE_PIN_HEIGHT: -2, CHANGE_PIN_POSITION: -3 };
 
 Polygon.prototype.updateTarget = function (target) {
     this.lines.forEach(function (line) {
@@ -186,6 +200,96 @@ Polygon.prototype.interactableObjects = function () {
     }, []);
 };
 
+/**
+ * Mouse down handler
+ * @param {OrbitControls} controls
+ * @param {number} x
+ * @param {number} y
+ * @param {number} button
+ */
+var panStart = new THREE.Vector2();
+var picker = new THREE.Raycaster();
+Polygon.prototype.onMouseDown = function (controls, x, y, button) {
+    var now = Date.now();
+    panStart.set(x, y);
+
+    // Doubled click => Create new PIN
+    if (controls._lastClick && now - controls._lastClick < controls.constraint.maxClickTimeInterval && this.enableMoveMarker === true) {
+        MapUtility.rayCasterFromScreen(controls, x, y, picker)
+
+        var intersects = picker.intersectObjects(this._map.quadTree.tiles.children);
+
+        if (!intersects.length) {
+            console.warn('Mouse down position have no intersect with any tiles.');
+            controls._lastClick = null;
+            return true;
+        } else if (intersects.length > 1) {
+            console.warn('Mouse down on more than one tile.');
+        }
+
+        var position = intersects[0].point.add(controls.camera.target);
+
+        this.activePin = this.addPin(position);
+
+        controls._state = Polygon.STATE.CHANGE_PIN_HEIGHT;
+        controls._lastClick = null;
+
+        return true;
+    }
+
+    MapUtility.rayCasterFromScreen(controls, x, y, picker);
+
+    var intersects = picker.intersectObjects(this.interactableObjects());
+
+    if (intersects.length > 0) {
+        var obj = intersects[0].object;
+        if (obj.name === 'Head') {
+            this.activePin = obj.pin;
+            controls._state = Polygon.STATE.CHANGE_PIN_HEIGHT;
+        } else if (obj.name === 'Arrow') {
+            this.activePin = obj.pin;
+            controls._state = Polygon.STATE.CHANGE_PIN_POSITION;
+        }
+
+        return true;
+    }
+
+    return false;
+};
+
+var panEnd = new THREE.Vector2();
+var panDelta = new THREE.Vector2();
+/**
+ * Mouse move handler
+ * @param {OrbitControls} controls
+ * @param {number} x
+ * @param {number} y
+ */
+Polygon.prototype.onMouseMove = function (controls, x, y) {
+    if (controls._state === Polygon.STATE.CHANGE_PIN_HEIGHT) {
+        if (!this.enableMoveMarker) return false;
+        panEnd.set(x, y);
+        panDelta.subVectors(panEnd, panStart);
+
+        this.activePin.height += -panDelta.y * controls.camera.position.y / controls.canvas.height;
+
+        panStart.copy(panEnd);
+
+        return true;
+    } else if (controls._state === Polygon.STATE.CHANGE_PIN_POSITION) {
+        if (!this.enableMoveMarker) return false;
+
+        MapUtility.rayCasterFromScreen(controls, x, y, picker);
+        // TODO: Deprecated base plane
+        var markerPosition = picker.intersectObject(this._map.basePlane)[0].point;
+        this.activePin.groundPosition = markerPosition.add(controls.camera.target);
+
+        return true;
+    }
+
+    return false;
+};
+
 var px = new THREE.Vector3();
 Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute) {
     var target = this._map.camera.target;
@@ -222,8 +326,11 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute
     // Redraw grid mesh
     // Remove exist mesh first
     if (this.gridMesh) {
-        this.gridMesh.geometry.dispose();
-        this.gridMesh.material.dispose();
+        this.gridMesh.children.map(function (mesh) {
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+        })
+        this.gridMesh.children.length = 0;
         this._map.scene.remove(this.gridMesh);
     }
 

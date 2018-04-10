@@ -1,5 +1,6 @@
 var OrbitConstraint = require('./OrbitConstraint');
 var MapSettings = require('../Core/MapSettings');
+var MapUtility = require('../Utility/MapUtility');
 var sphericalMercator = require('../Utility/SphericalMercator');
 
 function compare (modifiers) {
@@ -58,9 +59,6 @@ function OrbitControls (options) {
     // Set to false to disable use of the keys
     this.enableKeys = true;
 
-    // Set to false to disable marker modifiered
-    this.enableMoveMarker = true;
-
     // The four arrow keys
     this.keys = typeof Qt === 'object'
         ? { LEFT: Qt.LeftArrow, UP: Qt.UpArrow, RIGHT: Qt.RightArrow, BOTTOM: Qt.DownArrow }
@@ -73,7 +71,6 @@ function OrbitControls (options) {
     // internals
 
     var scope = this;
-    var lastClick;
 
     var rotateStart = new THREE.Vector2();
     var rotateEnd = new THREE.Vector2();
@@ -87,11 +84,26 @@ function OrbitControls (options) {
     var dollyEnd = new THREE.Vector2();
     var dollyDelta = new THREE.Vector2();
 
+    /**
+     * State
+     */
+    this._state = OrbitControls.STATE.NONE;
+    /**
+     * Last click time
+     * @type {number}
+     */
+    this._lastClick = null;
+    /**
+     * Is mouse down
+     * @type {boolean}
+     */
+    this._isMouseDown = false;
+
+    
     var currentPin = null;
 
-    this._state = OrbitControls.STATE.NONE;
+    var intersected = null;
 
-    this._md = false;
 
     // set start position
     // TODO: using property instead of location
@@ -138,41 +150,15 @@ function OrbitControls (options) {
         } else if (button === scope.mouseButtons.PAN) {
             // Checking mouse down on marker
             // TODO: Use mission method to handle object
-            var selectedObject = scope._map.mouseDownOnMarkers(pickerFromScreen(scope, x, y, picker));
-
-            panStart.set(x, y);
-
-            var now = Date.now();
-            if (selectedObject && selectedObject.name === 'Head') {
-                currentPin = selectedObject.pin;
-
-                scope._state = OrbitControls.STATE.CHANGE_PIN_HEIGHT;
-            } else if (selectedObject && selectedObject.name === 'Arrow') {
-                currentPin = selectedObject.pin;
-
-                scope._state = OrbitControls.STATE.CHANGE_PIN_POSITION;
-            } else if (lastClick && now - lastClick < scope.constraint.maxClickTimeInterval && scope.enableMoveMarker === true) {
-                currentPin = scope._map.addPin(pickerFromScreen(scope, x, y, picker));
-
-                scope._state = OrbitControls.STATE.CHANGE_PIN_HEIGHT;
-            } else if (scope.enablePan === true) {
-                scope._state = OrbitControls.STATE.PAN;
+            if (!scope._map.currentMission.onMouseDown(scope, x, y, button)) {
+                panStart.set(x, y);
+                scope._lastClick = Date.now();
+                console.log(scope._lastClick)
             }
-
-            lastClick = now;
         }
+        console.log('d')
 
-        if (scope._state !== OrbitControls.STATE.NONE) {
-            // if (typeof Qt === 'object') {
-            //     eventSource.mouseMove.connect(onMouseMove)
-            //     scope.eventSource.mouseUp.connect(onMouseUp);
-            // } else {
-            //     document.addEventListener( 'mousemove', onMouseMove_, false );
-            //     scope._map._renderer.domElement.addEventListener('mouseup', onWebMouseUp, false);
-            // }
-            // scope.dispatchEvent(startEvent);
-            scope._md = true;
-        }
+        scope._isMouseDown = true;
     }
 
     function onWebMouseDown (event) {
@@ -184,10 +170,41 @@ function OrbitControls (options) {
     function onMouseMove (x, y) {
         if (scope.enabled === false) return;
 
+        var now = Date.now();
+        if (scope._lastClick) {
+            panEnd.set(x, y);
+            panDelta.subVectors(panEnd, panStart);
+
+            if (scope._isMouseDown && now - scope._lastClick <= 500 &&
+                Math.abs(panDelta.x) + Math.abs(panDelta.y) > 10 && scope.enablePan) {
+                scope._state = OrbitControls.STATE.PAN;
+                scope._lastClick = null;
+            } else if (now - scope._lastClick > 500) {
+                scope._lastClick = null;
+            }
+        }
+
         if (scope._state === OrbitControls.STATE.NONE) {
-            // FIXME: Debug
-            // pickerFromScreen(x, y, picker);
-            // console.log(picker.intersectObjects(map.quadTree.tiles.children).map(function (k) { return k.object.tile.stringify; }));
+            // Hovering Rendering Object
+            MapUtility.rayCasterFromScreen(scope, x, y, picker)
+            var intersects = picker.intersectObjects(scope._map.currentMission.interactableObjects(), true);
+
+            if (intersects.length > 0) {
+                var targetObject = intersects[0].object;
+
+                if (targetObject !== intersected) {
+                    if (intersected) {
+                        intersected.material.opacity = intersected.currentOpacity;
+                    }
+                    intersected = targetObject;
+                    intersected.currentOpacity = intersected.material.opacity;
+                    intersected.material.opacity = 1.0;
+                }
+            } else if (intersected) {
+                intersected.material.opacity = intersected.currentOpacity;
+                delete intersected.currentOpacity;
+                intersected = null;
+            }
         } else if (scope._state === OrbitControls.STATE.ROTATE) {
             if (scope.enableRotate === false) return;
 
@@ -222,20 +239,7 @@ function OrbitControls (options) {
             pan(panDelta.x, panDelta.y);
 
             panStart.copy(panEnd);
-        } else if (scope._state === OrbitControls.STATE.CHANGE_PIN_HEIGHT) {
-            if (scope.enableMoveMarker === false) return;
-            panEnd.set(x, y);
-            panDelta.subVectors(panEnd, panStart);
-
-            currentPin.height += -panDelta.y * scope.camera.position.y / scope.canvas.height;
-
-            panStart.copy(panEnd);
-        } else if (scope._state === OrbitControls.STATE.CHANGE_PIN_POSITION) {
-            if (scope.enableMoveMarker === false) return;
-
-            // TODO: Deprecated base plane
-            var markerPosition = pickerFromScreen(scope, x, y, picker).intersectObject(scope._map.basePlane)[0].point;
-            currentPin.groundPosition = markerPosition.add(scope.camera.target);
+        } else if (!scope._map.currentMission.onMouseMove(scope, x, y)) {
         }
 
         if (scope._state !== OrbitControls.STATE.NONE) scope.update();
@@ -248,9 +252,10 @@ function OrbitControls (options) {
 
     function onMouseUp (x, y) {
         if (scope.enabled === false) return;
-        if (!scope._md) return;
+        // if (!scope._isMouseDown) return;
 
-        scope._md = false;
+        scope._isMouseDown = false;
+        console.log('u')
         scope._state = OrbitControls.STATE.NONE;
     }
 
@@ -496,7 +501,7 @@ function OrbitControls (options) {
 };
 
 // State
-OrbitControls.STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_DOLLY: 4, TOUCH_PAN: 5, CLICKORPAN: 6, CHANGE_PIN_HEIGHT: 7, CHANGE_PIN_POSITION: 8 };
+OrbitControls.STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_DOLLY: 4, TOUCH_PAN: 5 };
 
 // Events
 var changeEvent = { type: 'change' };
