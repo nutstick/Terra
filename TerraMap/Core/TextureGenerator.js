@@ -54,7 +54,7 @@ TextureGenerator.prototype.start = function () {
                 scope._quadTree.update();
                 scope._needUpdate = false;
             }
-        }, 500);
+        }, 200);
     } else {
         setInterval(function () {
             scope.load();
@@ -62,7 +62,7 @@ TextureGenerator.prototype.start = function () {
                 scope._quadTree.update();
                 scope._needUpdate = false;
             }
-        }, 400);
+        }, 200);
     }
 };
 

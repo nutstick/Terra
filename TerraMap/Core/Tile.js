@@ -91,23 +91,11 @@ Tile.size = function (z) {
 };
 
 Tile.pool = Array.apply(null, Array(16)).map(function (_, idx) {
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true,
-        opacity: 0
-    });
+    var image = new Image();
+    var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
 
-    var geometry = new THREE.Geometry();
-    geometry.vertices = [
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3()
-    ];
-    geometry.faces = [
-        new THREE.Face3(0, 1, 3),
-        new THREE.Face3(0, 3, 2),
-    ];
-    geometry.computeFaceNormals();
+    var geometry = new THREE.PlaneGeometry(1, 1);
+    geometry.rotateX(-Math.PI / 2);
 
     return new THREE.Mesh(geometry, material);
 });
@@ -115,23 +103,11 @@ Tile.pool = Array.apply(null, Array(16)).map(function (_, idx) {
 Tile.pool.doublize = function () {
     const length = Tile.pool.length
     for (var i = 0; i < length; i++) {
-        var material = new THREE.MeshBasicMaterial({
-            wireframe: true,
-            opacity: 0
-        });
+        var image = new Image();
+        var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
     
-        var geometry = new THREE.Geometry();
-        geometry.vertices = [
-            new THREE.Vector3(),
-            new THREE.Vector3(),
-            new THREE.Vector3(),
-            new THREE.Vector3()
-        ];
-        geometry.faces = [
-            new THREE.Face3(0, 1, 3),
-            new THREE.Face3(0, 3, 2),
-        ];
-        geometry.computeFaceNormals();
+        var geometry = new THREE.PlaneGeometry(1, 1);
+        geometry.rotateX(-Math.PI / 2);
     
         Tile.pool.push(new THREE.Mesh(geometry, material));
     }
@@ -195,6 +171,14 @@ Tile.prototype.imageryDone = function (layerName) {
 Tile.prototype.imageryFailed = function (layerName) {
     this._state = Tile.TileState.Start;
 };
+
+Tile.prototype.applyMaterial = function (material) {
+    if (!this.data.texture) return;
+    
+    material.map.image = this.data.texture.image;
+    material.map.needsUpdate = true;
+    material.needsUpdate = true;
+}
 
 Object.defineProperties(Tile.prototype, {
     x: {

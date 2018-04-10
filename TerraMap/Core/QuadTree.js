@@ -361,7 +361,7 @@ function visitIfVisible (primitive, tile) {
         visitTile(primitive, tile);
     } else {
         ++primitive._debug.tilesCulled;
-        // primitive._tileReplacementQueue.markTileRendered(tile);
+        primitive._tileReplacementQueue.markTileRendered(tile);
 
         // We've decided this tile is not visible, but if it's not fully loaded yet, we've made
         // this determination based on possibly-incorrect information.  We need to load this
@@ -391,25 +391,23 @@ function renderTiles (primitive, tiles) {
     var target = primitive.camera.target;
     for (var i = 0; i < tiles.length; ++i) {
         var tile = tiles[i];
+
         var tileSize = Tile.size(tile.z);
 
         center.subVectors(tile.bbox.center, target);
 
         var mesh = tile.constructor.pool[i];
 
-        mesh.geometry.vertices[0].set(center.x - tileSize / 2, center.y, center.z - tileSize / 2)
-        mesh.geometry.vertices[1].set(center.x - tileSize / 2, center.y, center.z + tileSize / 2)
-        mesh.geometry.vertices[2].set(center.x + tileSize / 2, center.y, center.z - tileSize / 2)
-        mesh.geometry.vertices[3].set(center.x + tileSize / 2, center.y, center.z + tileSize / 2)
+        mesh.scale.set(tileSize, tileSize, tileSize);
+        mesh.position.set(center.x, center.y, center.z);
 
-        mesh.geometry.verticesNeedUpdate = true;
+        if (tile.stringify !== mesh.tile) {
+            mesh.tile = tile.stringify;
 
-        mesh.geometry.computeBoundingSphere();
-        mesh.geometry.boundingSphere.center.set(center.x, center.y, center.z);
+            tile.applyMaterial(mesh.material);
+        }
 
         primitive.tiles.add(mesh);
-        // var box = new THREE.BoxHelper(tile, 0xffff00);
-        // primitive.tiles.add(box);
     }
 }
 
