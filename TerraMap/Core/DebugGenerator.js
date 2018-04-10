@@ -71,11 +71,13 @@ DebugGenerator.prototype.loadTile = function (tile) {
     this._loadingThisTick--;
     this._loading++;
 
+    setTimeout(function () {
+        this._needUpdate = true;
+        tile.imageryDone();
+        this._loading--;
+    }, 1000)
+
     tile.imageryLoading();
-    this._needUpdate = true;
-    tile.imageryDone();
-    this._loading--;
-    this._quadTree.needUpdate = true;
 };
 
 DebugGenerator.prototype.load = function () {
