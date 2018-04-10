@@ -187,6 +187,10 @@ Object.defineProperties(Vehicle.prototype, {
                     this._position.y = this._position.y | MapUtility.tenMeters();
                 }   
             }
+
+            // Restrict position above ground only
+            this._position.y = Math.max(this._position.y, 0);
+
             // Update rendering position
             // TODO: Is this._map needs
             this._rPosition.subVectors(this._position, this._map.camera.target);
