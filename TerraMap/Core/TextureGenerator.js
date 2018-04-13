@@ -72,7 +72,7 @@ TextureGenerator.prototype.start = function () {
  */
 TextureGenerator.prototype.loadTile = function (tile) {
     if (this._loadingThisTick <= 0) return;
-    if (!tile.needsLoading) return;
+    if (tile.data.texture) return;
 
     var scope = this;
     this._loadingThisTick--;
@@ -83,7 +83,7 @@ TextureGenerator.prototype.loadTile = function (tile) {
             this.url(tile._x, tile._y, tile._z),
             function (resp) {
                 scope._needUpdate = true;
-                tile.imageryDone('texture');
+                tile.imageryDone('texture', texture);
                 scope._loading--;
             },
             function () {},

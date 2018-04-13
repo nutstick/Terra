@@ -1,5 +1,6 @@
 var Tile = require('./Tile');
 var MapSettings = require('./MapSettings');
+var Pool = require('./Pool');
 
 function DebugTile (options) {
     Tile.call(this, options);
@@ -7,7 +8,21 @@ function DebugTile (options) {
 
 DebugTile.prototype = Object.create(Tile.prototype);
 
-DebugTile.prototype.constrcutor = DebugTile;
+DebugTile.prototype.constructor = DebugTile;
+
+DebugTile.pool = new Pool({
+    create: function () {
+        var material = new THREE.MeshBasicMaterial({
+            wireframe: true,
+            opacity: 0
+        });
+
+        var geometry = new THREE.PlaneGeometry(1, 1);
+        geometry.rotateX(-Math.PI / 2);
+
+        return new THREE.Mesh(geometry, material);
+    }
+});
 
 DebugTile.prototype.imageryLoading = function (layerName, texture) {
     if (this._state === Tile.TileState.Failed) return;
@@ -28,26 +43,10 @@ DebugTile.prototype.imageryFailed = function (layerName) {
     this._state = Tile.TileState.Start;
 };
 
-DebugTile.prototype.applyMaterial = function (material) {
-    material.wireframe = true;
-    material.map = undefined;
-    // material.opacity = 0;
-
-    material.needsUpdate = true;
-}
-
 DebugTile.prototype.freeResources = function () {
 };
 
 Object.defineProperties(DebugTile.prototype, {
-    material: {
-        get: function () {
-            return new THREE.MeshBasicMaterial({
-                wireframe: true,
-                opacity: 0
-            });
-        }
-    },
     children: {
         get: function () {
             if (typeof this._children === 'undefined') {
@@ -68,6 +67,17 @@ Object.defineProperties(DebugTile.prototype, {
             }
 
             return this._children;
+        }
+    },
+    material: {
+        get: function () {
+            if (!this._material) {
+                return new THREE.MeshBasicMaterial({
+                    wireframe: true,
+                    opacity: 0
+                });
+            }
+            return this._material;
         }
     },
 });

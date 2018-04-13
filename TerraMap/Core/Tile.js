@@ -1,5 +1,6 @@
 var AABB = require('./AABB');
 var MapSettings = require('./MapSettings');
+var Pool = require('./Pool');
 
 /**
  * Tile
@@ -15,7 +16,7 @@ var MapSettings = require('./MapSettings');
  */
 function Tile (options) {
     if (!options) {
-        throw new Error('No option provided');
+        throw new Error('No options provided');
     }
 
     if (typeof options.x === 'undefined') throw new Error('No options.x provided');
@@ -90,27 +91,24 @@ Tile.size = function (z) {
     return size[z];
 };
 
-Tile.pool = Array.apply(null, Array(16)).map(function (_, idx) {
-    var image = new Image();
-    var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
-
-    var geometry = new THREE.PlaneGeometry(1, 1);
-    geometry.rotateX(-Math.PI / 2);
-
-    return new THREE.Mesh(geometry, material);
-});
-
-Tile.pool.doublize = function () {
-    const length = Tile.pool.length
-    for (var i = 0; i < length; i++) {
+Tile.pool = new Pool({
+    create: function () {
         var image = new Image();
         var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
-    
+
         var geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
-    
-        Tile.pool.push(new THREE.Mesh(geometry, material));
+
+        return new THREE.Mesh(geometry, material);
     }
+});
+
+Tile.prototype.applyDataToMesh = function (mesh) {
+    var tileSize = Tile.size(this.z);
+
+    var geometry = new THREE.PlaneGeometry(1, 1);
+
+    mesh.material = this.material;
 }
 
 /**
@@ -171,14 +169,6 @@ Tile.prototype.imageryDone = function (layerName) {
 Tile.prototype.imageryFailed = function (layerName) {
     this._state = Tile.TileState.Start;
 };
-
-Tile.prototype.applyMaterial = function (material) {
-    if (!this.data.texture) return;
-    
-    material.map.image = this.data.texture.image;
-    material.map.needsUpdate = true;
-    material.needsUpdate = true;
-}
 
 Object.defineProperties(Tile.prototype, {
     x: {
@@ -318,7 +308,7 @@ Object.defineProperties(Tile.prototype, {
      */
     needsLoading: {
         get: function () {
-            return this._state < Tile.TileState.Loading;
+            return this._state <= Tile.TileState.Loading;
         }
     },
     /**
@@ -344,10 +334,13 @@ Object.defineProperties(Tile.prototype, {
      ***********************/
     material: {
         get: function () {
-            if (!this.data.texture) throw new Error('Material request before texture loaded');
-            return new THREE.MeshBasicMaterial({
-                map: this.data.texture
-            });
+            if (!this._material) {
+                if (!this.data.texture) throw new Error('Material request before texture loaded');
+                this._material = new THREE.MeshBasicMaterial({
+                    map: this.data.texture
+                });
+            }
+            return this._material;
         }
     },
 

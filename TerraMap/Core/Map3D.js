@@ -29,6 +29,7 @@ var DState = {
  * @param {Canvas} options.canvas - Canvas
  * @param {eventSource} options.eventSource - EventSource
  * @param {Renderer} options.renderer - Renderer
+ * @param {Context2D} options.context2d - Context2D
  */
 function Map3D (options) {
     if (!options) throw new Error('No option provided');
@@ -36,6 +37,7 @@ function Map3D (options) {
     if (!options.canvas) throw new Error('No options.canvas provided');
     if (!options.eventSource) throw new Error('No options.eventSource provided');
     if (!options.renderer) throw new Error('No options.renderer provided');
+    if (!options.context2d) throw new Error('No options.context2d provided');
 
     /**
      * Subsribe camera target object
@@ -64,6 +66,11 @@ function Map3D (options) {
      * @type {Canvas}
      */
     this.canvas = options.canvas;
+
+    /**
+     * @type {Context2D}
+     */
+    this.context2d = options.context2d;
 
     // Base Plane
     this.basePlane = new THREE.Mesh(
@@ -141,26 +148,6 @@ Map3D.prototype.update = function () {
             pin.scale = scale;
         });
     });
-};
-
-Map3D.prototype.addPin = function (picker) {
-    var intersects = picker.intersectObjects(this.quadTree.tiles.children);//[0].point;
-
-    if (!intersects.length) {
-        console.warn('Mouse down position have no intersect with any tiles.');
-        return;
-    } else if (intersects.length > 1) {
-        console.warn('Mouse down on more than one tile.');
-    }
-
-    var position = intersects[0].point.add(this.camera.target);
-
-    if (typeof this._currentMission === 'undefined') {
-        this._currentMission = new Polygon({ map: this });
-        this.missions.push(this._currentMission);
-    }
-
-    return this._currentMission.addPin(position);
 };
 
 Map3D.prototype.generateGrid = function (type) {

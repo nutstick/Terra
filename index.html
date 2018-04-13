@@ -27,6 +27,7 @@
     }
     var Map3D = require('./TerraMap/Core/Map3D');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
+    var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
     var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
     var DebugTile = require('./TerraMap/Core/DebugTile');
 
@@ -34,15 +35,21 @@
 		renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
+    var canvas2d = document.createElement('canvas')
+    canvas2d.width = 512;
+    canvas2d.height = 512;
+    var context2d = canvas2d.getContext('2d');
+
     renderer.domElement.addEventListener('contextmenu', function (event) {
         event.preventDefault();
     }, false);
 
     map = new Map3D({
-        mode: new Scene3D(),
+        mode: new TerrainScene(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
-        renderer: renderer
+        renderer: renderer,
+        context2d: context2d
     });
     
     map.update();

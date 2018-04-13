@@ -18,6 +18,11 @@ function QuadTree (options) {
     if (!options.map) throw new Error('No option.map provided');
     if (!options.mode) throw new Error('No options.mode provided');
 
+    /**
+     * @type Map3D
+     */
+    this._map = options.map;
+
     this.scene = options.map.scene;
     /**
      * Tile group
@@ -383,7 +388,7 @@ function renderTiles (primitive, tiles) {
     if (tiles.length === 0) return;
 
     while (tiles.length > tiles[0].constructor.pool.length) {
-        tiles[0].constructor.pool.doublize();
+        tiles[0].constructor.pool.duplicate();
     }
     
     primitive.tiles.children.length = 0;
@@ -396,17 +401,16 @@ function renderTiles (primitive, tiles) {
 
         center.subVectors(tile.bbox.center, target);
 
-        var mesh = tile.constructor.pool[i];
+        var mesh = tile.constructor.pool.get(i);
 
-        mesh.scale.set(tileSize, tileSize, tileSize);
         mesh.position.set(center.x, center.y, center.z);
 
         // TODO: Mesh caching by x,y,z of tile
-        if (tile.stringify !== mesh.tile) {
-            mesh.tile = tile.stringify;
-
-            mesh.material = tile.material;
-        }
+        // if (tile.stringify !== mesh.tile) {
+            // mesh.tile = tile.stringify;
+            tile.applyDataToMesh(mesh);
+            mesh.geometry.tile = tile;
+        // }
 
         primitive.tiles.add(mesh);
     }

@@ -1,4 +1,4 @@
-import QtQuick 2.4
+import QtQuick 2.7
 import QtCanvas3D 1.1
 import QtQuick.Window 2.3
 import QtQuick.Controls 1.4
@@ -21,17 +21,17 @@ QtObject {
             focus: true
 
             onInitializeGL: {
-                GLCode.initializeGL(canvas3d, eventSource);
+                GLCode.initializeGL(canvas3d, canvas2d.getContext('2d'), eventSource);
                 // controlWindow.onMapChanged(GLCode.map);
             }
 
             onPaintGL: {
-                GLCode.paintGL(canvas3d);
+                GLCode.paintGL(canvas3d, canvas2d.getContext('2d'));
                 // controlWindow.onMapUpdate();
             }
 
             onResizeGL: {
-                GLCode.resizeGL(canvas3d);
+                GLCode.resizeGL(canvas3d, canvas2d.getContext('2d'));
             }
 
             ControlEventSource {
@@ -41,11 +41,8 @@ QtObject {
             }
         }
 
-        Compass {
-            id: compass
-
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
+        Canvas {
+            id: canvas2d
         }
 
         Button {

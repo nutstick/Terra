@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>TerraMap</title>
+  <style>
+    body { margin: 0; }
+    canvas { width: 100%; height: 100% }
+  </style>
+</head>
+<body>
+  <script src="./require.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
+  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+  <!-- <script src="./OrbitControls.js"></script> -->
+  <script defer="defer">
+
+    var renderer = new THREE.WebGLRenderer();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    var canvas2d = document.createElement('canvas')
+    canvas2d.width = 512;
+    canvas2d.height = 512;
+    var context2d = canvas2d.getContext('2d');
+
+    renderer.domElement.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+    }, false);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 3000 );
+    var controls = new THREE.OrbitControls( camera );
+
+    camera.position.y = 2000;
+    camera.lookAt(new THREE.Vector3());
+    controls.update();
+    
+    var vertices = 512;
+    var segments = vertices - 1;
+    var geometry;
+
+    var data = new Image()
+    data.crossOrigin = "Anonymous"
+    data.addEventListener('load', function() {
+        context2d.drawImage(data, 0, 0)
+        var pixels = context2d.getImageData(0, 0, data.width, data.height)
+        
+        var elevations = [];
+    
+        for (var e = 0; e < pixels.data.length; e += 4){
+            var R = pixels.data[e];
+            var G = pixels.data[e+1];
+            var B = pixels.data[e+2];
+            
+            var elevation = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1);
+            elevation /= 500;
+            elevation = Math.max(elevation, 0);
+            elevations.push(e / 4 % 512 - 256, elevation, e / 4 / 512 - 256);
+        }
+
+        geometry = new THREE.PlaneBufferGeometry(1024, 1024, segments, segments);
+
+        geometry.attributes.position.array = new Float32Array(elevations);
+
+        var texture = new THREE.TextureLoader()
+          .load('https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/2/3/2@2x.pngraw?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg',
+          function ( texture ) {
+            console.log(texture)
+            // in this example we create the material when the texture is loaded
+            var material = new THREE.MeshBasicMaterial( {
+              map: texture,
+              // wireframe: true,
+              // color: '0xffffff',
+              // transparent: true
+            } );
+            var placeholder = new THREE.Mesh(
+              geometry, 
+              material  
+            );
+            //  new THREE.MeshBasicMaterial({wireframe:true,color:0x999999}));
+
+            scene.add(placeholder);
+          },);
+
+        // var plane = new THREE.Mesh(geometry, material);
+    });
+    data.addEventListener('error', function(err) {
+    });
+    data.src = 'https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/2/3/2@2x.pngraw?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
+
+    var animate = function () {
+      requestAnimationFrame( animate );
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    window.addEventListener('resize', function () {
+      map.resizeView({ width: window.innerWidth, height: window.innerHeight })
+    });
+  </script>
+</body>
+</html>
