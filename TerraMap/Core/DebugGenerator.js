@@ -56,7 +56,7 @@ DebugGenerator.prototype.start = function () {
                 scope._quadTree.update();
                 scope._needUpdate = false;
             }
-        }, 10);
+        }, 100);
     }
 };
 
@@ -71,18 +71,20 @@ DebugGenerator.prototype.loadTile = function (tile) {
     this._loadingThisTick--;
     this._loading++;
 
+    var scope = this;
+
     setTimeout(function () {
-        this._needUpdate = true;
+        scope._needUpdate = true;
         tile.imageryDone();
-        this._loading--;
-    }, 1000)
+        scope._loading--;
+    }, 10);
 
     tile.imageryLoading();
 };
 
 DebugGenerator.prototype.load = function () {
     // Print out debug
-    // updateLoadingProgress(this);
+    updateLoadingProgress(this);
 
     this._loadingThisTick = this._maxLoad - this._loading;
     for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
@@ -105,7 +107,7 @@ function updateLoadingProgress (textureGenerator) {
     if (debug.high !== debug.lastHigh ||
         debug.medium !== debug.lastMedium ||
         debug.low !== debug.lastLow) {
-        console.log('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
+        console.debug('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
         debug.lastHigh = debug.high;
         debug.lastMedium = debug.medium;
         debug.lastLow = debug.low;

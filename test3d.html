@@ -68,7 +68,6 @@
         var texture = new THREE.TextureLoader()
           .load('https://c.tiles.mapbox.com/v4/mapbox.terrain-rgb/2/3/2@2x.pngraw?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg',
           function ( texture ) {
-            console.log(texture)
             // in this example we create the material when the texture is loaded
             var material = new THREE.MeshBasicMaterial( {
               map: texture,

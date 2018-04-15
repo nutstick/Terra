@@ -156,7 +156,7 @@ function updateLoadingProgress (textureGenerator) {
     if (debug.high !== debug.lastHigh ||
         debug.medium !== debug.lastMedium ||
         debug.low !== debug.lastLow) {
-        console.log('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
+        console.debug('Loading High: ' + debug.high + ', Medium: ' + debug.medium + ', Low: ' + debug.low);
         debug.lastHigh = debug.high;
         debug.lastMedium = debug.medium;
         debug.lastLow = debug.low;

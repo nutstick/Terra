@@ -99,6 +99,8 @@ function OrbitControls (options) {
      */
     this._isMouseDown = false;
 
+    this._mode = OrbitControls.MODE.NONE;
+
     
     var currentPin = null;
 
@@ -110,7 +112,13 @@ function OrbitControls (options) {
     // setView(this, location.hash)
 
     // for reset
+    /**
+     * @type {THREE.Vector3}
+     */
     this.target0 = this.target.clone();
+    /**
+     * @type {THREE.Vector3}
+     */
     this.position0 = this.camera.position.clone();
     this.zoom0 = this.camera.zoom;
 
@@ -153,10 +161,8 @@ function OrbitControls (options) {
             if (!scope._map.currentMission.onMouseDown(scope, x, y, button)) {
                 panStart.set(x, y);
                 scope._lastClick = Date.now();
-                console.log(scope._lastClick)
             }
         }
-        console.log('d')
 
         scope._isMouseDown = true;
     }
@@ -177,6 +183,15 @@ function OrbitControls (options) {
 
             if (scope._isMouseDown && now - scope._lastClick <= 500 &&
                 Math.abs(panDelta.x) + Math.abs(panDelta.y) > 10 && scope.enablePan) {
+
+                console.log('m')
+                
+                if (scope._mode === OrbitControls.MODE.GUIDE) {
+                    scope.target0.set(scope.target.x, 0, scope.target.z);
+                    scope.constraint.target = scope.target0;
+                    scope._mode = OrbitControls.MODE.NONE;
+                }
+
                 scope._state = OrbitControls.STATE.PAN;
                 scope._lastClick = null;
             } else if (now - scope._lastClick > 500) {
@@ -255,7 +270,6 @@ function OrbitControls (options) {
         // if (!scope._isMouseDown) return;
 
         scope._isMouseDown = false;
-        console.log('u')
         scope._state = OrbitControls.STATE.NONE;
     }
 
@@ -502,6 +516,7 @@ function OrbitControls (options) {
 
 // State
 OrbitControls.STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_DOLLY: 4, TOUCH_PAN: 5 };
+OrbitControls.MODE = { NONE: -1, GUIDE: 0 };
 
 // Events
 var changeEvent = { type: 'change' };
@@ -589,6 +604,17 @@ OrbitControls.prototype.setView = function (position, zoom, duration) {
     // this.quadTree.needUpdate = true;
 };
 
+OrbitControls.prototype.guide = function (vehicle) {
+    this._mode = OrbitControls.MODE.GUIDE;
+
+    this.target0 = this.constraint.target.clone();
+
+    this.constraint.target = vehicle.position;
+    this.constraint.targetDistance = vehicle.height * 2;
+    console.log(this.constraint.target, vehicle._position)
+    this.update();
+}
+
 Object.defineProperties(OrbitControls.prototype, {
     camera: {
         get: function () {
@@ -598,7 +624,7 @@ Object.defineProperties(OrbitControls.prototype, {
 
     target: {
         get: function () {
-            return this.constraint.camera.target;
+            return this.constraint.target;
         },
     },
 

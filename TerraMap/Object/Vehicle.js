@@ -198,6 +198,9 @@ Object.defineProperties(Vehicle.prototype, {
             this._rGPosition.set(this._rPosition.x, 0, this._rPosition.z);
 
             this.line.geometry.verticesNeedUpdate = true;
+
+            console.log(this._position)
+            this._map.cameraController.update();
         }
     },
     /**

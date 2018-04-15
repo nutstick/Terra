@@ -154,6 +154,10 @@ Map3D.prototype.generateGrid = function (type) {
     this._currentMission.generateGrid(type || 'opt', 4);
 };
 
+Map3D.prototype.guide = function () {
+    this.cameraController.guide(this.vehicle);
+}
+
 Map3D.prototype.setView = function (position, zoom) {
     this.cameraController.setView(position, zoom);
 };

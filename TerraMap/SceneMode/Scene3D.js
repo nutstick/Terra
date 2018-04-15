@@ -31,6 +31,8 @@ function Scene3D () {
         45,
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
+
+    this._instance = Tile;
 }
 
 /**
@@ -87,7 +89,7 @@ Object.defineProperties(Scene3D.prototype, {
         },
         set: function (value) {
             this._quadTree = value;
-            this._quadTree._rootTile = Tile.createRootTile(this._quadTree, this._tilingScheme);
+            // this._quadTree._rootTile = Tile.createRootTile(this._quadTree, this._tilingScheme);
             this._textureGenerator = new TextureGenerator({ quadTree: value });
         }
     }

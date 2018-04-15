@@ -30,11 +30,13 @@ TerrainTile.pool = new Pool({
     }
 });
 
-TerrainTile.prototype.imageryLoading = function (layerName) {
+TerrainTile.prototype.imageryLoading = function (layerName, data) {
     if (this._state === Tile.TileState.Failed) return;
 
     // TODO: Loading
     this._state = Tile.TileState.Loading;
+
+    this.data[layerName] = data;
 };
 
 TerrainTile.prototype.imageryDone = function (layerName, data) {
@@ -44,17 +46,15 @@ TerrainTile.prototype.imageryDone = function (layerName, data) {
     this.data[layerName] = data;
     
     if (layerName === 'terrain') {
-        if (!this._material) {
-            if (this.data.texture) {
-                this._material = new THREE.MeshBasicMaterial({
-                    map: this.data.texture
-                });
-            } else {
-                this._material = new THREE.MeshBasicMaterial({
-                    wireframe: true,
-                    color: 0x999999
-                });
-            }
+        if (this.data.texture) {
+            this._material = new THREE.MeshBasicMaterial({
+                map: this.data.texture
+            });
+        } else {
+            this._material = new THREE.MeshBasicMaterial({
+                wireframe: true,
+                color: 0x999999
+            });
         }
         this._state = Tile.TileState.Done;
 

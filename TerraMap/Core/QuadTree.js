@@ -35,7 +35,7 @@ function QuadTree (options) {
     this.cameraController = options.map.cameraController;
     this.camera = options.map.camera;
 
-    this._rootTile = undefined;
+    this._rootTile = createRootTile(this, options.mode._instance, options.mode._tilingScheme);
     /**
      * Scene mode
      * @type {SceneMode}
@@ -94,6 +94,31 @@ function QuadTree (options) {
 
         suspendLodUpdate: false
     };
+}
+
+function createRootTile (primitive, Instance, tilingScheme) {
+    if (!tilingScheme) {
+        throw new Error('No tiling scheme provided');
+    }
+
+    var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+    var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+
+    var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+
+    var index = 0;
+    for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+        for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+            result[index++] = new Instance({
+                x: x,
+                y: y,
+                z: 0,
+                quadTree: primitive
+            });
+        }
+    }
+
+    return result;
 }
 
 QuadTree.prototype.suspendLodUpdate = function (value) {
@@ -384,36 +409,53 @@ function addTileToRenderList (primitive, tile) {
 }
 
 var center = new Cartesian();
+var active = new Set();
 function renderTiles (primitive, tiles) {
     if (tiles.length === 0) return;
 
-    while (tiles.length > tiles[0].constructor.pool.length) {
+    var pool = tiles[0].constructor.pool;
+    while (tiles.length > pool.length) {
         tiles[0].constructor.pool.duplicate();
     }
     
     primitive.tiles.children.length = 0;
 
     var target = primitive.camera.target;
-    for (var i = 0; i < tiles.length; ++i) {
-        var tile = tiles[i];
 
+    var rendering = new Set(tiles);
+    active.forEach(function (tile) {
+        // Already rendering tile
+        if (rendering.has(tile)) {
+            rendering.delete(tile);
+
+            // Recalculate tile position
+            var tileSize = Tile.size(tile.z);
+            center.subVectors(tile.bbox.center, target);
+            var mesh = pool.get(tile.stringify);
+            mesh.position.set(center.x, center.y, center.z);
+
+            primitive.tiles.add(mesh);
+        } else {
+            // Free non rendering tile
+            active.delete(tile);
+            pool.free(tile.stringify);
+        }
+    });
+    
+    // Remaining tile in rendering list will be a new one
+    rendering.forEach(function (tile) {
         var tileSize = Tile.size(tile.z);
-
         center.subVectors(tile.bbox.center, target);
 
-        var mesh = tile.constructor.pool.get(i);
-
+        var mesh = pool.use(tile.stringify);
         mesh.position.set(center.x, center.y, center.z);
 
-        // TODO: Mesh caching by x,y,z of tile
-        // if (tile.stringify !== mesh.tile) {
-            // mesh.tile = tile.stringify;
-            tile.applyDataToMesh(mesh);
-            mesh.geometry.tile = tile;
-        // }
+        tile.applyDataToMesh(mesh);
+        mesh.geometry.tile = tile;
 
+        active.add(tile);
         primitive.tiles.add(mesh);
-    }
+    });
 }
 
 function processTileLoadQueue (primitive) {
@@ -460,7 +502,7 @@ function updateTileLoadProgress (primitive) {
             debug.tilesCulled !== debug.lastTilesCulled ||
             debug.maxDepth !== debug.lastMaxDepth ||
             debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-            console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+            console.debug('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
             debug.lastTilesVisited = debug.tilesVisited;
             debug.lastTilesRendered = debug.tilesRendered;
