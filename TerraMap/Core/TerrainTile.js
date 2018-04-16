@@ -22,7 +22,7 @@ TerrainTile.pool = new Pool({
           map : new THREE.Texture(image)
         });
 
-        var geometry = new THREE.PlaneBufferGeometry(1, 1, 511, 511);
+        var geometry = new THREE.PlaneBufferGeometry(1, 1, 2, 2);
 
         // geometry.rotateX(-Math.PI / 2);
 
@@ -38,6 +38,8 @@ TerrainTile.prototype.imageryLoading = function (layerName, data) {
 
     this.data[layerName] = data;
 };
+
+var scale = 512;
 
 TerrainTile.prototype.imageryDone = function (layerName, data) {
     // If the state of tile is not loading means tile is after freeResource or fail download
@@ -56,8 +58,9 @@ TerrainTile.prototype.imageryDone = function (layerName, data) {
                 color: 0x999999
             });
         }
-        this._state = Tile.TileState.Done;
 
+        this._geometry = new THREE.PlaneBufferGeometry(512, 512, 255, 255);
+        this._geometry.attributes.position.array = this.data.terrain;
         // Trigger need update
         this._quadTree.needUpdate = true;
     } else if (layerName === 'texture') {
@@ -69,6 +72,11 @@ TerrainTile.prototype.imageryDone = function (layerName, data) {
         }
     } else {
         throw new Error('Unknow layerName.');
+    }
+
+    var allDone = Object.values(this.data).reduce(function (p, v) { return p && v; }, true);
+    if (allDone) {
+        this._state = Tile.TileState.Done;
     }
 };
 
@@ -82,40 +90,14 @@ TerrainTile.prototype.freeResources = function () {
 TerrainTile.prototype.applyDataToMesh = function (mesh) {
     var tileSize = Tile.size(this.z);
 
-    var geometry = new THREE.PlaneBufferGeometry(512, 512, 511, 511);
-
     mesh.material = this.material;
 
-    mesh.scale.set(tileSize / 512, 1, tileSize / 512);
+    mesh.scale.set(tileSize / scale, 1, tileSize / scale);
 
-    mesh.geometry = geometry;
-    geometry.attributes.position.array = this.data.terrain;
+    mesh.geometry = this.geometry;
 }
 
 Object.defineProperties(TerrainTile.prototype, {
-    children: {
-        get: function () {
-            if (typeof this._children === 'undefined') {
-                this._children = new Array(4);
-            }
-
-            for (var i = 0; i < 4; ++i) {
-                if (typeof this._children[i] === 'undefined') {
-                    this._children[i] = new TerrainTile({
-                        x: this._x * 2 + i % 2,
-                        // Rounding float to integer ex. ~~2.5 = 2
-                        y: this._y * 2 + (~~(i / 2)) % 2,
-                        z: this._z + 1,
-                        parent: this,
-                        quadTree: this._quadTree
-                    });
-                }
-            }
-
-            return this._children;
-        }
-    },
-
     /************************
      * THREE.js rendering
      ***********************/
@@ -124,31 +106,11 @@ Object.defineProperties(TerrainTile.prototype, {
             return this._material;
         }
     },
-});
-
-TerrainTile.createRootTile = function (quadTree, tilingScheme) {
-    if (!tilingScheme) {
-        throw new Error('No tiling scheme provided');
-    }
-
-    var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-    var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
-
-    var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-    var index = 0;
-    for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-        for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-            result[index++] = new TerrainTile({
-                x: x,
-                y: y,
-                z: 0,
-                quadTree: quadTree
-            });
+    geometry: {
+        get: function () {
+            return this._geometry;
         }
-    }
-
-    return result;
-};
+    },
+});
 
 module.exports = TerrainTile;

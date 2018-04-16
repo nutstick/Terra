@@ -1,5 +1,5 @@
-var TextureGenerator = require('../Core/TextureGenerator');
-var TerrainGenerator = require('../Core/TerrainGenerator');
+var TextureGenerator = require('../Services/TextureGenerator');
+var TerrainGenerator = require('../Services/TerrainGenerator');
 var TilingScheme = require('../Core/TilingScheme');
 var TerrainTile = require('../Core/TerrainTile');
 
@@ -37,6 +37,8 @@ function TerrainScene () {
         45,
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
+
+    this._instance = TerrainTile;
 }
 
 /**
@@ -93,7 +95,6 @@ Object.defineProperties(TerrainScene.prototype, {
         },
         set: function (value) {
             this._quadTree = value;
-            this._quadTree._rootTile = TerrainTile.createRootTile(this._quadTree, this._tilingScheme);
             this._textureGenerator = new TextureGenerator({ quadTree: value });
             this._terrainGenerator = new TerrainGenerator({ quadTree: value });
         }

@@ -28,6 +28,7 @@
     var Map3D = require('./TerraMap/Core/Map3D');
     var Scene3D = require('./TerraMap/SceneMode/Scene3D');
     var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
+    var TerrainSTKScene = require('./TerraMap/SceneMode/TerrainSTKScene');
     var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
     var DebugTile = require('./TerraMap/Core/DebugTile');
 
@@ -45,7 +46,7 @@
     }, false);
 
     map = new Map3D({
-        mode: new DebugScene3D(),
+        mode: new TerrainSTKScene(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
         renderer: renderer,
@@ -56,7 +57,7 @@
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
 
-    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
+    // map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
     var animate = function () {
       requestAnimationFrame( animate );

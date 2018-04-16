@@ -1,4 +1,4 @@
-var TextureGenerator = require('../Core/TextureGenerator');
+var TextureGenerator = require('../Services/TextureGenerator');
 
 /**
  * Scene3D Class

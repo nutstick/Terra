@@ -10,8 +10,6 @@ DebugTile.prototype = Object.create(Tile.prototype);
 
 DebugTile.prototype.constructor = DebugTile;
 
-DebugTile.createRootTile = Tile.createRootTile;
-
 DebugTile.pool = new Pool({
     create: function () {
         var material = new THREE.MeshBasicMaterial({

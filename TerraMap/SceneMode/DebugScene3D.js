@@ -1,6 +1,6 @@
 var Scene3D = require('./Scene3D');
 var DebugTile = require('../Core/DebugTile');
-var DebugGenerator = require('../Core/DebugGenerator');
+var DebugGenerator = require('../Services/DebugGenerator');
 
 function DebugScene3D () {
     Scene3D.call(this);

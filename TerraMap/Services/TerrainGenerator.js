@@ -1,5 +1,3 @@
-var Tile = require('./Tile');
-
 /**
  * TextureGenerator Class
  * @alias TerrainGenerator
@@ -44,8 +42,8 @@ function TerrainGenerator (options) {
 TerrainGenerator.prototype.url = function (x, y, z) {
     var serverIndex = 2 * (x % 2) + y % 2;
     var server = ['a', 'b', 'c', 'd'][serverIndex];
-    return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.terrain-rgb/' + z + '/' + x + '/' + y+
-        '@2x.pngraw?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
+    return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.terrain-rgb/' + z + '/' + x + '/' + y +
+        '.pngraw?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
 };
 
 TerrainGenerator.prototype.start = function () {

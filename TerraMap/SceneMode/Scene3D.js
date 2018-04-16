@@ -1,4 +1,4 @@
-var TextureGenerator = require('../Core/TextureGenerator');
+var TextureGenerator = require('../Services/TextureGenerator');
 var TilingScheme = require('../Core/TilingScheme');
 var Tile = require('../Core/Tile');
 
@@ -89,7 +89,6 @@ Object.defineProperties(Scene3D.prototype, {
         },
         set: function (value) {
             this._quadTree = value;
-            // this._quadTree._rootTile = Tile.createRootTile(this._quadTree, this._tilingScheme);
             this._textureGenerator = new TextureGenerator({ quadTree: value });
         }
     }
