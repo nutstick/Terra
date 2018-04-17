@@ -4,7 +4,6 @@
         <file>glcode.js</file>
         <file>three.js</file>
         <file>ControlEventSource.qml</file>
-        <file>Compass.qml</file>
         <file>ControlWindow.qml</file>
         <file>MapControlView.qml</file>
         <file>MissionControlView.qml</file>

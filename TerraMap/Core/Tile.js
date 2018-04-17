@@ -1,5 +1,6 @@
 var AABB = require('./AABB');
 var MapSettings = require('./MapSettings');
+var Pool = require('./Pool');
 
 /**
  * Tile
@@ -15,7 +16,7 @@ var MapSettings = require('./MapSettings');
  */
 function Tile (options) {
     if (!options) {
-        throw new Error('No option provided');
+        throw new Error('No options provided');
     }
 
     if (typeof options.x === 'undefined') throw new Error('No options.x provided');
@@ -90,27 +91,24 @@ Tile.size = function (z) {
     return size[z];
 };
 
-Tile.pool = Array.apply(null, Array(16)).map(function (_, idx) {
-    var image = new Image();
-    var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
-
-    var geometry = new THREE.PlaneGeometry(1, 1);
-    geometry.rotateX(-Math.PI / 2);
-
-    return new THREE.Mesh(geometry, material);
-});
-
-Tile.pool.doublize = function () {
-    const length = Tile.pool.length
-    for (var i = 0; i < length; i++) {
+Tile.pool = new Pool({
+    create: function () {
         var image = new Image();
         var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
-    
+
         var geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
-    
-        Tile.pool.push(new THREE.Mesh(geometry, material));
+
+        return new THREE.Mesh(geometry, material);
     }
+});
+
+Tile.prototype.applyDataToMesh = function (mesh) {
+    var tileSize = Tile.size(this.z);
+    
+    mesh.scale.set(tileSize, 1, tileSize);
+
+    mesh.material = this.material;
 }
 
 /**
@@ -119,30 +117,32 @@ Tile.pool.doublize = function () {
  * @param {TilingScheme} tilingScheme
  * @return {Tile[]}
  */
-Tile.createRootTile = function (quadTree, tilingScheme) {
-    if (!tilingScheme) {
-        throw new Error('No tiling scheme provided');
-    }
+// Tile.createRootTile = function (quadTree, tilingScheme) {
+//     if (!tilingScheme) {
+//         throw new Error('No tiling scheme provided');
+//     }
 
-    var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-    var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+//     var Instance = this.constructor;
 
-    var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+//     var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+//     var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
 
-    var index = 0;
-    for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-        for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-            result[index++] = new Tile({
-                x: x,
-                y: y,
-                z: 0,
-                quadTree: quadTree
-            });
-        }
-    }
+//     var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
 
-    return result;
-};
+//     var index = 0;
+//     for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+//         for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+//             result[index++] = new Instance({
+//                 x: x,
+//                 y: y,
+//                 z: 0,
+//                 quadTree: quadTree
+//             });
+//         }
+//     }
+
+//     return result;
+// };
 
 Tile.prototype.imageryLoading = function (layerName, texture) {
     if (this._state === Tile.TileState.Failed) return;
@@ -152,15 +152,17 @@ Tile.prototype.imageryLoading = function (layerName, texture) {
     this._state = Tile.TileState.Loading;
 };
 
-Tile.prototype.imageryDone = function (layerName) {
+Tile.prototype.imageryDone = function (layerName, texture) {
     // If the state of tile is not loading means tile is after freeResource or fail download
     if (this._state !== Tile.TileState.Loading) return;
 
-    var isDone = Object.keys(this.data).reduce(function (prev, key) {
-        return prev && !this.data[key].loading;
-    }.bind(this), true);
+    this.data[layerName] = texture;
 
-    if (isDone) {
+    if (layerName === 'texture') {
+        this._material = new THREE.MeshBasicMaterial({
+            map: this.data.texture
+        });
+
         this._state = Tile.TileState.Done;
 
         // Trigger need update
@@ -171,14 +173,6 @@ Tile.prototype.imageryDone = function (layerName) {
 Tile.prototype.imageryFailed = function (layerName) {
     this._state = Tile.TileState.Start;
 };
-
-Tile.prototype.applyMaterial = function (material) {
-    if (!this.data.texture) return;
-    
-    material.map.image = this.data.texture.image;
-    material.map.needsUpdate = true;
-    material.needsUpdate = true;
-}
 
 Object.defineProperties(Tile.prototype, {
     x: {
@@ -211,9 +205,11 @@ Object.defineProperties(Tile.prototype, {
                 this._children = new Array(4);
             }
 
+            var Instance = this.constructor;
+
             for (var i = 0; i < 4; ++i) {
                 if (typeof this._children[i] === 'undefined') {
-                    this._children[i] = new Tile({
+                    this._children[i] = new Instance({
                         x: this._x * 2 + i % 2,
                         // Rounding float to integer ex. ~~2.5 = 2
                         y: this._y * 2 + (~~(i / 2)) % 2,
@@ -318,7 +314,7 @@ Object.defineProperties(Tile.prototype, {
      */
     needsLoading: {
         get: function () {
-            return this._state < Tile.TileState.Loading;
+            return this._state <= Tile.TileState.Loading;
         }
     },
     /**
@@ -344,10 +340,7 @@ Object.defineProperties(Tile.prototype, {
      ***********************/
     material: {
         get: function () {
-            if (!this.data.texture) throw new Error('Material request before texture loaded');
-            return new THREE.MeshBasicMaterial({
-                map: this.data.texture
-            });
+            return this._material;
         }
     },
 

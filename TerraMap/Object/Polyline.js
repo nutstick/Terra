@@ -96,6 +96,94 @@ Polyline.prototype.interactableObjects = function () {
     }, []);
 };
 
+var panStart = new THREE.Vector2();
+var picker = new THREE.Raycaster();
+/**
+ * Mouse down handler
+ * @param {OrbitControls} controls
+ * @param {number} x
+ * @param {number} y
+ * @param {number} button
+ */
+Polygon.prototype.onMouseDown = function (controls, x, y, button) {
+    var now = Date.now();
+    panStart.set(x, y);
+
+    // Doubled click => Create new PIN
+    if (controls._lastClick && now - controls._lastClick < controls.constraint.maxClickTimeInterval && this.enableMoveMarker === true) {
+        MapUtility.rayCasterFromScreen(controls, x, y, picker)
+
+        var intersects = picker.intersectObjects(this._map.quadTree.tiles.children);
+
+        if (!intersects.length) {
+            console.warn('Mouse down position have no intersect with any tiles.');
+            controls._lastClick = null;
+            return true;
+        } else if (intersects.length > 1) {
+            console.warn('Mouse down on more than one tile.');
+        }
+
+        var position = intersects[0].point.add(controls.camera.target);
+
+        this.activePin = this.addPin(position);
+
+        controls._state = Polygon.STATE.CHANGE_PIN_HEIGHT;
+        controls._lastClick = null;
+
+        return true;
+    }
+
+    MapUtility.rayCasterFromScreen(controls, x, y, picker);
+
+    var intersects = picker.intersectObjects(this.interactableObjects());
+
+    if (intersects.length > 0) {
+        var obj = intersects[0].object;
+        if (obj.name === 'Head') {
+            controls._state = Polygon.STATE.CHANGE_PIN_HEIGHT;
+        } else if (obj.name === 'Arrow') {
+            controls._state = Polygon.STATE.CHANGE_PIN_POSITION;
+        }
+
+        return true;
+    }
+
+    return false;
+};
+
+var panEnd = new THREE.Vector2();
+var panDelta = new THREE.Vector2();
+/**
+ * Mouse move handler
+ * @param {OrbitControls} controls
+ * @param {number} x
+ * @param {number} y
+ */
+Polygon.prototype.onMouseMove = function (controls, x, y) {
+    if (controls._state === Polygon.STATE.CHANGE_PIN_HEIGHT) {
+        if (!this.enableMoveMarker) return false;
+        panEnd.set(x, y);
+        panDelta.subVectors(panEnd, panStart);
+
+        this.activePin.height += -panDelta.y * controls.camera.position.y / controls.canvas.height;
+
+        panStart.copy(panEnd);
+
+        return true;
+    } else if (controls._state === Polygon.STATE.CHANGE_PIN_POSITION) {
+        if (!this.enableMoveMarker) return false;
+
+        MapUtility.rayCasterFromScreen(controls, x, y, picker);
+        // TODO: Deprecated base plane
+        var markerPosition = picker.intersectObject(this._map.basePlane)[0].point;
+        this.activePin.groundPosition = markerPosition.add(controls.camera.target);
+
+        return true;
+    }
+
+    return false;
+};
+
 Object.defineProperties(Polyline.prototype, {
     pinsCoordinate: {
         get: function () {

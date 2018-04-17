@@ -6,7 +6,10 @@
         <file>TerraMap/Core/DeveloperError.js</file>
         <file>TerraMap/Core/Map3D.js</file>
         <file>TerraMap/Core/MapSettings.js</file>
+        <file>TerraMap/Core/Pool.js</file>
         <file>TerraMap/Core/QuadTree.js</file>
+        <file>TerraMap/Core/TerrainGenerator.js</file>
+        <file>TerraMap/Core/TerrainTile.js</file>
         <file>TerraMap/Core/TextureGenerator.js</file>
         <file>TerraMap/Core/Tile.js</file>
         <file>TerraMap/Core/TileReplacementQueue.js</file>
@@ -26,6 +29,7 @@
         <file>TerraMap/SceneMode/Scene2D.js</file>
         <file>TerraMap/SceneMode/Scene3D.js</file>
         <file>TerraMap/SceneMode/SceneMode.js</file>
+        <file>TerraMap/SceneMode/TerrainScene.js</file>
         <file>TerraMap/Utility/MapUtility.js</file>
         <file>TerraMap/Utility/SphericalMercator.js</file>
     </qresource>

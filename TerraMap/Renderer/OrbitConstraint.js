@@ -26,7 +26,7 @@ function OrbitConstraint (map, camera, targetDistance) {
 
     // "target" sets the location of focus, where the object orbits around
     // and where it pans with respect to.
-    this.target = camera.target;
+    // this.target = camera.target;
 
     // this.offset = new THREE.Vector3();
 
@@ -147,7 +147,7 @@ var quatInverse = new THREE.Quaternion();
  */
 OrbitConstraint.prototype.update = function () {
     var offset = this.camera.position;t
-    var target = this.target;
+    var target = this.camera.target;
 
     this.theta += this.thetaDelta;
     this.phi += this.phiDelta;
@@ -184,7 +184,7 @@ OrbitConstraint.prototype.update = function () {
 
     this.camera.update();
 
-    // Update subscribe objec
+    // Update subscribe object
     this.map._subscribeObjects.forEach(function (obj) { obj.updateTarget(target); });
 
     if (this.enableDamping === true) {
@@ -219,5 +219,16 @@ OrbitConstraint.prototype.update = function () {
 
     return false;
 };
+
+Object.defineProperties(OrbitConstraint.prototype, {
+    target: {
+        get: function () {
+            return this.camera.target;
+        },
+        set: function (target) {
+            this.camera.target = target;
+        }
+    }
+});
 
 module.exports = OrbitConstraint;

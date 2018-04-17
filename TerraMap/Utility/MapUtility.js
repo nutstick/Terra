@@ -49,4 +49,12 @@ MapUtility.CartographicToCartesian = function(coordinate) {
     var lonRadian = coordinate.longitude * DEG_TO_RAD;
 };
 
+var screenPosition = new THREE.Vector2();
+MapUtility.rayCasterFromScreen = function (primitive, x, y, picker) {
+    screenPosition.set((x / primitive.canvas.width) * 2 - 1, -(y / primitive.canvas.height) * 2 + 1);
+    picker.setFromCamera(screenPosition, primitive.camera);
+
+    return picker;
+}
+
 module.exports = MapUtility;

@@ -1,14 +1,15 @@
 var TextureGenerator = require('../Services/TextureGenerator');
+var TerrainGenerator = require('../Services/TerrainGenerator');
 var TilingScheme = require('../Core/TilingScheme');
-var Tile = require('../Core/Tile');
+var TerrainTile = require('../Core/TerrainTile');
 
 /**
- * Scene3D Class
- * @alias Scene3D
+ * TerrainScene Class
+ * @alias TerrainScene
  * @constructor
  * @extends {SceneMode}
  */
-function Scene3D () {
+function TerrainScene () {
     /**
      * TilingScheme
      * @type {TilingScheme}
@@ -21,6 +22,11 @@ function Scene3D () {
      */
     this._textureGenerator = null;
     /**
+     * @type TerrainGenerator
+     * @private
+     */
+    this._terrainGenerator = null;
+    /**
      * @type QuadTree
      * @private
      */
@@ -32,7 +38,7 @@ function Scene3D () {
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
 
-    this._instance = Tile;
+    this._instance = TerrainTile;
 }
 
 /**
@@ -44,7 +50,7 @@ function getEstimatedLevelZeroGeometricErrorForAHeightmap (ellipsoid, tileImageW
     return ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (tileImageWidth * numberOfTilesAtLevelZero);
 };
 
-Scene3D.prototype.getLevelMaximumGeometricError = function (level) {
+TerrainScene.prototype.getLevelMaximumGeometricError = function (level) {
     return this._levelZeroMaximumGeometricError / (1 << level);
 };
 
@@ -54,7 +60,7 @@ Scene3D.prototype.getLevelMaximumGeometricError = function (level) {
  * @param {Tile} tile
  * @returns {number} screenSpaceError of tile
  */
-Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
+TerrainScene.prototype.screenSpaceError = function (quadTree, tile) {
     var camera = quadTree.camera;
     var maxGeometricError = this.getLevelMaximumGeometricError(tile.z);
 
@@ -76,7 +82,7 @@ Scene3D.prototype.screenSpaceError = function (quadTree, tile) {
     return error;
 };
 
-Object.defineProperties(Scene3D.prototype, {
+Object.defineProperties(TerrainScene.prototype, {
     /**
      * Gets the quad tree.
      * @memberof Scene3D.prototype
@@ -90,8 +96,9 @@ Object.defineProperties(Scene3D.prototype, {
         set: function (value) {
             this._quadTree = value;
             this._textureGenerator = new TextureGenerator({ quadTree: value });
+            this._terrainGenerator = new TerrainGenerator({ quadTree: value });
         }
     }
 });
 
-module.exports = Scene3D;
+module.exports = TerrainScene;

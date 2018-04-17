@@ -32,7 +32,6 @@ Mission.prototype.clearPins = function () {
 };
 
 Mission.prototype.reindex = function (pin, index) {
-    // TODO:
     throw new Error('Not implemented');
 };
 

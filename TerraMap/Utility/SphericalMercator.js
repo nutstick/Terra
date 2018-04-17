@@ -62,6 +62,7 @@ function SphericalMercator (options) {
 }
 
 SphericalMercator.prototype.mPerPixel = function (latitude) {
+    latitude = latitude || 0;
     return Math.abs(Ellipsoid.WGS84.maximumRadius * 2 * Math.PI * Math.cos(latitude * Math.PI / 180) / this.size);
 };
 
