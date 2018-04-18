@@ -1,6 +1,5 @@
 var AABB = require('./AABB');
 var MapSettings = require('./MapSettings');
-var Pool = require('./Pool');
 
 /**
  * Tile
@@ -41,12 +40,6 @@ function Tile (options) {
 
     // State
     this._state = Tile.TileState.Start;
-
-    this.data = {
-        texture: undefined,
-        // TODO: terrain loading
-        // terrain: undefined
-    };
 
     // QuadtreeTileReplacementQueue gets/sets these private properties.
     /**
@@ -91,87 +84,8 @@ Tile.size = function (z) {
     return size[z];
 };
 
-Tile.pool = new Pool({
-    create: function () {
-        var image = new Image();
-        var material = new THREE.MeshBasicMaterial({ map : new THREE.Texture(image) });
-
-        var geometry = new THREE.PlaneGeometry(1, 1);
-        geometry.rotateX(-Math.PI / 2);
-
-        return new THREE.Mesh(geometry, material);
-    }
-});
-
 Tile.prototype.applyDataToMesh = function (mesh) {
-    var tileSize = Tile.size(this.z);
-    
-    mesh.scale.set(tileSize, 1, tileSize);
-
-    mesh.material = this.material;
-}
-
-/**
- *
- * @param {QuadTree} quadTree
- * @param {TilingScheme} tilingScheme
- * @return {Tile[]}
- */
-// Tile.createRootTile = function (quadTree, tilingScheme) {
-//     if (!tilingScheme) {
-//         throw new Error('No tiling scheme provided');
-//     }
-
-//     var Instance = this.constructor;
-
-//     var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-//     var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
-
-//     var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-//     var index = 0;
-//     for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-//         for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-//             result[index++] = new Instance({
-//                 x: x,
-//                 y: y,
-//                 z: 0,
-//                 quadTree: quadTree
-//             });
-//         }
-//     }
-
-//     return result;
-// };
-
-Tile.prototype.imageryLoading = function (layerName, texture) {
-    if (this._state === Tile.TileState.Failed) return;
-
-    this.data[layerName] = texture;
-
-    this._state = Tile.TileState.Loading;
-};
-
-Tile.prototype.imageryDone = function (layerName, texture) {
-    // If the state of tile is not loading means tile is after freeResource or fail download
-    if (this._state !== Tile.TileState.Loading) return;
-
-    this.data[layerName] = texture;
-
-    if (layerName === 'texture') {
-        this._material = new THREE.MeshBasicMaterial({
-            map: this.data.texture
-        });
-
-        this._state = Tile.TileState.Done;
-
-        // Trigger need update
-        this._quadTree.needUpdate = true;
-    }
-};
-
-Tile.prototype.imageryFailed = function (layerName) {
-    this._state = Tile.TileState.Start;
+    throw new Error('Abtstract');
 };
 
 Object.defineProperties(Tile.prototype, {
@@ -303,7 +217,7 @@ Object.defineProperties(Tile.prototype, {
      */
     state: {
         get: function () {
-            return this._state;
+            throw new Error('derpercate');
         }
     },
     /**
@@ -314,7 +228,7 @@ Object.defineProperties(Tile.prototype, {
      */
     needsLoading: {
         get: function () {
-            return this._state <= Tile.TileState.Loading;
+            return this.data.needsLoading;
         }
     },
     /**
@@ -325,22 +239,13 @@ Object.defineProperties(Tile.prototype, {
      */
     renderable: {
         get: function () {
-            return this._state >= Tile.TileState.Done;
+            return this.data.done;
         }
     },
     // FIXME:
     eligibleForUnloading: {
         get: function () {
             return true;
-        }
-    },
-
-    /************************
-     * THREE.js rendering
-     ***********************/
-    material: {
-        get: function () {
-            return this._material;
         }
     },
 
@@ -370,7 +275,8 @@ Tile.prototype.freeResources = function () {
     if (this.data.texture) {
         this.data.texture.dispose();
     }
-    this.data = {};
+
+    this.data.dispose();
 
     if (this._children) {
         for (var j = 0; j < 4; ++j) {

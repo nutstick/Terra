@@ -10,9 +10,8 @@
         <file>PinItemView.qml</file>
         <file>require.js</file>
         <file>index.html</file>
+        <file>es6-collections.js</file>
     </qresource>
     <qresource prefix="/worker"/>
-    <qresource prefix="/lib" lang="js">
-        <file>image.js</file>
-    </qresource>
+    <qresource prefix="/lib" lang="js"/>
 </RCC>

@@ -1,6 +1,6 @@
 /**
- * 
- * @param {Object} options 
+ *
+ * @param {Object} options
  * @param {function} options.create
  * @param {number} [options.size=16]
  */
@@ -21,19 +21,17 @@ function Pool (options) {
     }
 }
 
-// Pool.prototype.constructor = Pool;
-
 Pool.prototype.duplicate = function () {
-    const length = this.length;
-    for (var i = 0; i < this._length; i++) {
+    var length = this._length;
+    for (var i = 0; i < length; i++) {
         this._freeNodes.push(this.create());
     }
     this._length *= 2;
-}
+};
 
 Pool.prototype.get = function (index) {
     return this._usingNodes[index];
-}
+};
 
 Pool.prototype.use = function (index) {
     var node = this._freeNodes.pop();
@@ -41,14 +39,14 @@ Pool.prototype.use = function (index) {
     this._usingNodes[index] = node;
 
     return node;
-}
+};
 
 Pool.prototype.free = function (index) {
     var node = this._usingNodes[index];
     delete this._usingNodes[index];
 
     this._freeNodes.push(node);
-}
+};
 
 Object.defineProperties(Pool.prototype, {
     length: {
@@ -56,6 +54,6 @@ Object.defineProperties(Pool.prototype, {
             return this._length;
         }
     }
-})
+});
 
 module.exports = Pool;

@@ -40,7 +40,7 @@ function TextureGenerator (options) {
 TextureGenerator.prototype.url = function (x, y, z) {
     var serverIndex = 2 * (x % 2) + y % 2;
     var server = ['a', 'b', 'c', 'd'][serverIndex];
-    return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.satellite/' + z + '/' + x + '/' + y+
+    return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.satellite/' + z + '/' + x + '/' + y +
         '@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
 };
 
@@ -72,7 +72,8 @@ TextureGenerator.prototype.start = function () {
  */
 TextureGenerator.prototype.loadTile = function (tile) {
     if (this._loadingThisTick <= 0) return;
-    if (tile.data.texture) return;
+    // TODO: status inside tile, remove import DataSrouce
+    if (tile.data.isLoading('texture')) return;
 
     var scope = this;
     this._loadingThisTick--;
@@ -83,38 +84,41 @@ TextureGenerator.prototype.loadTile = function (tile) {
             this.url(tile._x, tile._y, tile._z),
             function (resp) {
                 scope._needUpdate = true;
-                tile.imageryDone('texture', texture);
+                tile.data.loaded('texture', texture);
                 scope._loading--;
             },
             function () {},
             function (err) {
                 if (err) {
-                    tile.imageryFailed('texture');
+                    tile.data.fail('texture', err);
                     scope._loading--;
                     console.error('Error loading texture' + tile.stringify);
                 }
             }
         );
 
-    tile.imageryLoading('texture', texture);
+    tile.data.loading('texture');
 };
 
 TextureGenerator.prototype.load = function () {
     // Print out debug
     // updateLoadingProgress(this);
 
+    var i;
+
     this._loadingThisTick = this._maxLoad - this._loading;
-    for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueHigh[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueMedium[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
 };
 
+// eslint-disable-next-line no-unused-vars
 function updateLoadingProgress (textureGenerator) {
     var debug = textureGenerator.debug;
     debug.high = textureGenerator._quadTree._tileLoadQueueHigh.length;

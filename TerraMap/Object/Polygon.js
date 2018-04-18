@@ -89,9 +89,9 @@ Polygon.prototype.updateTarget = function (target) {
 
     if (this.gridMesh) {
         this.gridMesh.position.set(
-             this.gridGenerateOffset.x - target.x,
-             this.gridGenerateOffset.y - target.y,
-             this.gridGenerateOffset.z - target.z
+            this.gridGenerateOffset.x - target.x,
+            this.gridGenerateOffset.y - target.y,
+            this.gridGenerateOffset.z - target.z
         );
     }
 };
@@ -105,7 +105,7 @@ Polygon.prototype.addPin = function (position, height) {
     });
 
     this.pins.push(pin);
-    
+
     if (this.pins.length > 1) {
         var lineGeometry = new THREE.Geometry();
         lineGeometry.vertices.push(this.pins[index - 1].head.position);
@@ -211,13 +211,15 @@ var panStart = new THREE.Vector2();
 var picker = new THREE.Raycaster();
 Polygon.prototype.onMouseDown = function (controls, x, y, button) {
     var now = Date.now();
+    var intersects;
+
     panStart.set(x, y);
 
     // Doubled click => Create new PIN
     if (controls._lastClick && now - controls._lastClick < controls.constraint.maxClickTimeInterval && this.enableMoveMarker === true) {
-        MapUtility.rayCasterFromScreen(controls, x, y, picker)
+        MapUtility.rayCasterFromScreen(controls, x, y, picker);
 
-        var intersects = picker.intersectObjects(this._map.quadTree.tiles.children);
+        intersects = picker.intersectObjects(this._map.quadTree.tiles.children);
 
         if (!intersects.length) {
             console.warn('Mouse down position have no intersect with any tiles.');
@@ -239,7 +241,7 @@ Polygon.prototype.onMouseDown = function (controls, x, y, button) {
 
     MapUtility.rayCasterFromScreen(controls, x, y, picker);
 
-    var intersects = picker.intersectObjects(this.interactableObjects());
+    intersects = picker.intersectObjects(this.interactableObjects());
 
     if (intersects.length > 0) {
         var obj = intersects[0].object;
@@ -294,7 +296,7 @@ var px = new THREE.Vector3();
 Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute) {
     var target = this._map.camera.target;
     this.gridGenerateOffset.set(target.x, target.y, target.z);
-  
+
     // Call C++ function to genreate flight grid
     if (type === 'opt') {
         if (speed) {
@@ -329,7 +331,7 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute
         this.gridMesh.children.map(function (mesh) {
             mesh.geometry.dispose();
             mesh.material.dispose();
-        })
+        });
         this.gridMesh.children.length = 0;
         this._map.scene.remove(this.gridMesh);
     }
@@ -347,7 +349,7 @@ Polygon.prototype.generateGrid = function (type, gridSpace, angle, speed, minute
             sphericalMercator.CartographicToPixel(grid[i], px);
             // Doubling point, so it's will render consecutive line
             var v = px.clone().sub(this.gridGenerateOffset);
-            if (i != 0) lineGeometry.vertices.push(v);
+            if (i !== 0) lineGeometry.vertices.push(v);
             lineGeometry.vertices.push(v);
         }
 

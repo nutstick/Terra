@@ -1,4 +1,5 @@
 var Pin = require('./Pin');
+var MapUtility = require('../Utility/MapUtility');
 
 /**
  * Polyline Class
@@ -105,7 +106,7 @@ var picker = new THREE.Raycaster();
  * @param {number} y
  * @param {number} button
  */
-Polygon.prototype.onMouseDown = function (controls, x, y, button) {
+Polyline.prototype.onMouseDown = function (controls, x, y, button) {
     var now = Date.now();
     panStart.set(x, y);
 

@@ -1,7 +1,6 @@
 var MapSettings = require('./MapSettings');
 var sphericalMercator = require('../Utility/SphericalMercator');
 var QuadTree = require('./QuadTree');
-var Cartesian = require('../Math/Cartesian');
 var Camera = require('../Renderer/Camera');
 var OrbitControls = require('../Renderer/OrbitControls');
 var Mission = require('../Object/Mission');
@@ -156,7 +155,7 @@ Map3D.prototype.generateGrid = function (type) {
 
 Map3D.prototype.guide = function () {
     this.cameraController.guide(this.vehicle);
-}
+};
 
 Map3D.prototype.setView = function (position, zoom) {
     this.cameraController.setView(position, zoom);
@@ -172,16 +171,16 @@ Map3D.prototype.resizeView = function (canvas) {
 
 Map3D.prototype.addSubscribeObject = function (object) {
     this._subscribeObjects.push(object);
-}
+};
 
 Map3D.prototype.removeSubscribeObject = function (object) {
     var index = this._subscribeObjects.indexOf(object);
 
-    if ( index !== - 1 ) {
+    if (index !== -1) {
         this._subscribeObjects.splice(index, 1);
     }
 
     return this;
-}
+};
 
 module.exports = Map3D;

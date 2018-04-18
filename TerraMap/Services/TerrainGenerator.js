@@ -32,6 +32,8 @@ function TerrainGenerator (options) {
     this.start();
 }
 
+TerrainGenerator.imageSize = 256;
+
 /**
  *
  * @param {number} x
@@ -74,77 +76,79 @@ TerrainGenerator.prototype.start = function () {
 */
 TerrainGenerator.prototype.loadTile = function (tile) {
     if (this._loadingThisTick <= 0) return;
-    if (tile.data.terrain) return;
+    // TODO: status inside tile, remove import DataSrouce
+    if (tile.data.isLoading('terrain')) return;
 
     var scope = this;
     this._loadingThisTick--;
     this._loading++;
 
-    // if (tile.stringify !== '0/0/0') return;
+    if (tile.stringify !== '0/0/0') return;
 
-    var data = new Image()
-    data.crossOrigin = "Anonymous"
-    data.addEventListener('load', function() {
-        if (typeof Qt === 'Object') {
-            scope.context2d.drawImage(data._texImage, 0, 0)
-        } else {
-            scope.context2d.drawImage(data, 0, 0)
-        }
-        var pixels = scope.context2d.getImageData(0, 0, data.width, data.height)
-        
-        var elevations = [];
-    
-        for (var e = 0; e < pixels.data.length; e += 4){
-            var R = pixels.data[e];
-            var G = pixels.data[e+1];
-            var B = pixels.data[e+2];
-            
-            var elevation = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1);
-            // elevation *= 10;
-            elevations.push(e / 4 % 512 - 256, elevation, e / 4 / 512 - 256);
-        }
-        tile.imageryDone('terrain', new Float32Array(elevations));
-
-        scope._needUpdate = true;
-        scope._loading--;
-    });
-    data.addEventListener('error', function(err) {
-        if (err) {
-            var pixels = new Array(1048576).fill(0);
-            
-            var elevations = [];
-        
-            for (var e = 0; e < 512 * 512; e += 4){
-                elevations.push(e / 4 % 512 - 256, 0, e / 4 / 512 - 256);
+    if (typeof Qt === 'object') {
+        var url = this.url(tile.x, tile.y, tile.z);
+        var loaded = function () {
+            if (tile.stringify !== this.stringify) {
+                return;
             }
-            tile.imageryDone('terrain', new Float32Array(elevations));
+            canvas2d.imageLoaded.disconnect(loaded);
+
+            scope.context2d.drawImage(url, 0, 0);
+            var pixels = scope.context2d.getImageData(0, 0, 256, 256);
+
+            tile.data.loaded('terrain', pixels.data);
 
             scope._needUpdate = true;
             scope._loading--;
-            console.error('Error loading texture ' + tile.stringify);
-        }
-    });
-    data.src = this.url(tile.x, tile.y, tile.z);
+        }.bind(tile);
+        canvas2d.loadImage(url);
+        canvas2d.imageLoaded.connect(loaded);
+    } else {
+        var data = new Image();
+        data.crossOrigin = 'Anonymous';
+        data.addEventListener('load', function () {
+            scope.context2d.drawImage(data, 0, 0);
+            var pixels = scope.context2d.getImageData(0, 0, data.width, data.height);
 
-    tile.imageryLoading('terrain');
+            tile.data.loaded('terrain', pixels.data);
+
+            scope._needUpdate = true;
+            scope._loading--;
+        });
+        data.addEventListener('error', function (err) {
+            if (err) {
+                tile.data.failed('terrain', err);
+
+                scope._needUpdate = true;
+                scope._loading--;
+                // console.error('Error loading terrain ' + tile.stringify);
+            }
+        });
+        data.src = this.url(tile.x, tile.y, tile.z);
+    }
+
+    tile.data.loading('terrain');
 };
 
 TerrainGenerator.prototype.load = function () {
     // Print out debug
     // updateLoadingProgress(this);
-    
+
+    var i;
+
     this._loadingThisTick = this._maxLoad - this._loading;
-    for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueHigh[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueMedium[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
 };
 
+// eslint-disable-next-line no-unused-vars
 function updateLoadingProgress (textureGenerator) {
     var debug = textureGenerator.debug;
     debug.high = textureGenerator._quadTree._tileLoadQueueHigh.length;

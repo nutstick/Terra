@@ -70,28 +70,27 @@ TerrainGenerator.prototype.start = function () {
 function getHeader (data, byteCount) {
     return {
         bytes: data.byteLength,
-        centerX : c.getFloat64(data, byteCount),
-        centerY : c.getFloat64(data, byteCount + 8),  
-        centerZ : c.getFloat64(data, byteCount + 16),
-        minimumHeight : c.getFloat32(data, byteCount + 24),
-        maximumHeight : c.getFloat32(data, byteCount + 28),
-        boundingSphereCenterX : c.getFloat64(data, byteCount + 32),
-        boundingSphereCenterY : c.getFloat64(data, byteCount + 40),
-        boundingSphereCenterZ : c.getFloat64(data, byteCount + 48),
-        boundingSphereRadius : c.getFloat64(data, byteCount + 56),
-        horizonOcclusionPointX : c.getFloat64(data, byteCount + 64),
-        horizonOcclusionPointY : c.getFloat64(data, byteCount + 72),
-        horizonOcclusionPointZ : c.getFloat64(data, byteCount + 80)
-    }
+        centerX: c.getFloat64(data, byteCount),
+        centerY: c.getFloat64(data, byteCount + 8),
+        centerZ: c.getFloat64(data, byteCount + 16),
+        minimumHeight: c.getFloat32(data, byteCount + 24),
+        maximumHeight: c.getFloat32(data, byteCount + 28),
+        boundingSphereCenterX: c.getFloat64(data, byteCount + 32),
+        boundingSphereCenterY: c.getFloat64(data, byteCount + 40),
+        boundingSphereCenterZ: c.getFloat64(data, byteCount + 48),
+        boundingSphereRadius: c.getFloat64(data, byteCount + 56),
+        horizonOcclusionPointX: c.getFloat64(data, byteCount + 64),
+        horizonOcclusionPointY: c.getFloat64(data, byteCount + 72),
+        horizonOcclusionPointZ: c.getFloat64(data, byteCount + 80)
+    };
 }
 
 function parseTile (data) {
+    let byteCount = 0;
 
-    let byteCount = 0; 
-    
     let header = getHeader(data, byteCount);
     byteCount += 88;
-    
+
     var vertexCount = c.getUint32(data, byteCount);
     byteCount += c.UINT32_BYTE_SIZE;
 
@@ -118,11 +117,10 @@ function parseTile (data) {
         vArray[i] = v;
         heightArray[i] = height;
     }
-    
+
     if (byteCount % 2 !== 0) {
         byteCount += (2 - (byteCount % 2));
     }
-
 
     var triangleCount = c.getUint32(data, byteCount);
     byteCount += c.UINT32_BYTE_SIZE;
@@ -130,7 +128,7 @@ function parseTile (data) {
     var indices = c.getUint16Array(data, byteCount, triangleCount * 3);
     byteCount += triangleCount * 3 * 2;
 
-    let indexArray = c.highwaterDecode(indices); 
+    let indexArray = c.highwaterDecode(indices);
     return [header, uArray, vArray, heightArray, indexArray];
 }
 
@@ -151,8 +149,8 @@ TerrainGenerator.prototype.loadTile = function (tile) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', this.url(tile.x, tile.y, tile.z), true);
     xhr.setRequestHeader('Accept', ' application/vnd.quantized-mesh,application/octet-stream;q=0.9');
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function(e) {    
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function (e) {
         if (this.response) {
             tile.imageryDone('terrain', parseTile(xhr.response));
             scope._needUpdate = true;
@@ -167,19 +165,22 @@ TerrainGenerator.prototype.loadTile = function (tile) {
 TerrainGenerator.prototype.load = function () {
     // Print out debug
     // updateLoadingProgress(this);
-    
+
+    var i;
+
     this._loadingThisTick = this._maxLoad - this._loading;
-    for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueHigh[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueMedium[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
 };
 
+// eslint-disable-next-line no-unused-vars
 function updateLoadingProgress (textureGenerator) {
     var debug = textureGenerator.debug;
     debug.high = textureGenerator._quadTree._tileLoadQueueHigh.length;

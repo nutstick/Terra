@@ -48,7 +48,7 @@ DebugGenerator.prototype.start = function () {
                 scope._quadTree.update();
                 scope._needUpdate = false;
             }
-        }, 500);
+        }, 100);
     } else {
         setInterval(function () {
             scope.load();
@@ -73,27 +73,36 @@ DebugGenerator.prototype.loadTile = function (tile) {
 
     var scope = this;
 
-    setTimeout(function () {
-        scope._needUpdate = true;
-        tile.imageryDone();
-        scope._loading--;
-    }, 10);
+    if (typeof Qt === 'object') {
+        timer.setTimeout(function () {
+            scope._needUpdate = true;
+            tile.data.loaded('debug');
+            scope._loading--;
+        }, 10);
+    } else {
+        setTimeout(function () {
+            scope._needUpdate = true;
+            tile.data.loaded('debug');
+            scope._loading--;
+        }, 10);
+    }
 
-    tile.imageryLoading();
+    tile.data.loading('debug');
 };
 
 DebugGenerator.prototype.load = function () {
     // Print out debug
     updateLoadingProgress(this);
 
+    var i;
     this._loadingThisTick = this._maxLoad - this._loading;
-    for (var i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueHigh.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueHigh[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueMedium.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueMedium[i]);
     }
-    for (var i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
+    for (i = 0; i < this._quadTree._tileLoadQueueLow.length && this._loadingThisTick; ++i) {
         this.loadTile(this._quadTree._tileLoadQueueLow[i]);
     }
 };

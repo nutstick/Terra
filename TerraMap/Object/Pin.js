@@ -1,4 +1,3 @@
-var MapSettings = require('../Core/MapSettings');
 var MapUtility = require('../Utility/MapUtility');
 var sphericalMercator = require('../Utility/SphericalMercator');
 
@@ -121,7 +120,9 @@ function Pin (options) {
      * @type {THREE.Vector3}
      * @private
      */
-    this._position = new THREE.Vector3(0, 0, 0);
+    this._position = new THREE.Vector3();
+
+    this._coordinate = QtPositioning.coordinate();
 
     // Initialize pin position
     this.position = options.position;
@@ -133,7 +134,6 @@ function Pin (options) {
     // TODO: lastScale inside mission or map so that no need to calculate on all pin
     this.lastScale = 1.0;
 
-    
     // Add Target Subscribe to this object
     this._mission._map.addSubscribeObject(this);
 }
@@ -142,9 +142,10 @@ function Pin (options) {
  * Free memory and remove pin from rendering
  */
 Pin.prototype.dispose = function () {
-    this.group,remove(this.head);
-    this.group,remove(this.line);
+    this.group.remove(this.head);
+    this.group.remove(this.line);
 
+    this._mission._map.removeSubscribeObject(this);
     this._mission._map.scene.remove(this.group);
 
     this._mission = undefined;
@@ -166,10 +167,7 @@ Pin.prototype.dispose = function () {
     this._rGPosition = undefined;
     this._rPosition = undefined;
     this._position = undefined;
-
-    this._mission._map.removeSubscribeObject(this);
 };
-
 
 Pin.prototype.updateTarget = function (target) {
     // Update rendering position
@@ -177,7 +175,7 @@ Pin.prototype.updateTarget = function (target) {
     // TODO: elevation projection instead of 0
     this._rGPosition.set(this._rPosition.x, 0, this._rPosition.z);
     this.line.geometry.verticesNeedUpdate = true;
-}
+};
 
 /**
  * Moving head with offset height
@@ -226,8 +224,8 @@ Object.defineProperties(Pin.prototype, {
                 } else {
                     this._position.copy(position);
                     // Default height is 10 meters
-                    this._position.y = this._position.y | MapUtility.tenMeters();
-                }   
+                    this._position.y = this._position.y || MapUtility.tenMeters();
+                }
             }
             // Update rendering position
             this.updateTarget(this._mission._map.camera.target);
@@ -243,10 +241,9 @@ Object.defineProperties(Pin.prototype, {
         set: function (position) {
             // Case position is a QtPositioning.coordiante
             if (position.longitude) {
-                var p = MapUtility.CartographicToPixel(position);
-
-                this._position.x = p.x;
-                this._position.z = p.z;
+                // TODO: Ground
+                sphericalMercator.CartographicToPixel(position, this._position);
+                this._position.y = 0;
             } else {
                 this._position.x = position.x;
                 this._position.z = position.z;
@@ -264,7 +261,8 @@ Object.defineProperties(Pin.prototype, {
      */
     coordinate: {
         get: function () {
-            return MapUtility.PixelToCartographic(this._position);
+            sphericalMercator.PixelToCartographic(this._position, this._coordinate);
+            return this._coordinate;
         }
     },
     height: {

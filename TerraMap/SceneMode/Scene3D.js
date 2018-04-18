@@ -1,6 +1,6 @@
 var TextureGenerator = require('../Services/TextureGenerator');
 var TilingScheme = require('../Core/TilingScheme');
-var Tile = require('../Core/Tile');
+var Tile2D = require('../Core/Tile2D');
 
 /**
  * Scene3D Class
@@ -32,7 +32,7 @@ function Scene3D () {
         this._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
 
-    this._instance = Tile;
+    this._instance = Tile2D;
 }
 
 /**

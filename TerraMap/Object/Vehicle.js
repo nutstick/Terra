@@ -86,7 +86,7 @@ function Vehicle (options) {
     this.group.add(this.head);
     this.group.add(this.line);
     this.group.name = 'Vehicle';
-    
+
     options.map.scene.add(this.group);
 
     // var box = new THREE.BoxHelper(this.group, 0xffff00);
@@ -111,7 +111,9 @@ function Vehicle (options) {
      * @type {THREE.Vector3}
      * @private
      */
-    this._position = new THREE.Vector3(0, 0, 0);
+    this._position = new THREE.Vector3();
+
+    this._coordinate = QtPositioning.coordinate();
 
     /**
      * Head angle from North (0, -1, 0)
@@ -138,9 +140,10 @@ function Vehicle (options) {
  */
 Vehicle.prototype.dispose = function () {
     // https://github.com/mrdoob/three.js/blob/master/src/core/Object3D.js#L397
-    this.group,remove(this.head);
-    this.group,remove(this.line);
+    this.group.remove(this.head);
+    this.group.remove(this.line);
 
+    this._map.removeSubscribeObject(this);
     this._map.scene.remove(this.group);
 
     this._map = undefined;
@@ -157,9 +160,7 @@ Vehicle.prototype.dispose = function () {
     this._rGPosition = undefined;
     this._rPosition = undefined;
     this._position = undefined;
-
-    options.map.removeSubscribeObject(this);
-}
+};
 
 Vehicle.prototype.updateTarget = function (target) {
     // Update rendering position
@@ -167,7 +168,7 @@ Vehicle.prototype.updateTarget = function (target) {
     // TODO: elevation projection instead of 0
     this._rGPosition.set(this._rPosition.x, 0, this._rPosition.z);
     this.line.geometry.verticesNeedUpdate = true;
-}
+};
 
 Object.defineProperties(Vehicle.prototype, {
     position: {
@@ -180,12 +181,12 @@ Object.defineProperties(Vehicle.prototype, {
             } else {
                 // Case position is a QtPositioning.coordiante
                 if (position.longitude) {
-                    this._position = MapUtility.CartographicToPixel(position);
+                    sphericalMercator.CartographicToPixel(position, this._position);
                 } else {
                     this._position.copy(position);
                     // Default height is 10 meters
                     this._position.y = this._position.y | MapUtility.tenMeters();
-                }   
+                }
             }
 
             // Restrict position above ground only
@@ -199,7 +200,6 @@ Object.defineProperties(Vehicle.prototype, {
 
             this.line.geometry.verticesNeedUpdate = true;
 
-            console.log(this._position)
             this._map.cameraController.update();
         }
     },
@@ -210,7 +210,8 @@ Object.defineProperties(Vehicle.prototype, {
      */
     coordinate: {
         get: function () {
-            return MapUtility.PixelToCartographic(this._position);
+            sphericalMercator.PixelToCartographic(this._position, this._coordinate);
+            return this._coordinate;
         },
     },
     height: {

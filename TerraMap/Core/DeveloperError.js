@@ -16,7 +16,7 @@
  *
  * @see RuntimeError
  */
-function DeveloperError(message) {
+function DeveloperError (message) {
     /**
      * 'DeveloperError' indicating that this exception was thrown due to a developer error.
      * @type {String}
@@ -31,7 +31,7 @@ function DeveloperError(message) {
      */
     this.message = message;
 
-    //Browsers such as IE don't have a stack property until you actually throw the error.
+    // Browsers such as IE don't have a stack property until you actually throw the error.
     var stack;
     try {
         throw new Error();
@@ -50,10 +50,10 @@ function DeveloperError(message) {
 DeveloperError.prototype = Object.create(Error.prototype);
 DeveloperError.prototype.constructor = DeveloperError;
 
-DeveloperError.prototype.toString = function() {
+DeveloperError.prototype.toString = function () {
     var str = this.name + ': ' + this.message;
 
-    if (defined(this.stack)) {
+    if (this.stack) {
         str += '\n' + this.stack.toString();
     }
 
@@ -63,6 +63,6 @@ DeveloperError.prototype.toString = function() {
 /**
  * @private
  */
-DeveloperError.throwInstantiationError = function() {
+DeveloperError.throwInstantiationError = function () {
     throw new DeveloperError('This function defines an interface and should not be called directly.');
 };

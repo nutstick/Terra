@@ -183,8 +183,6 @@ function OrbitControls (options) {
 
             if (scope._isMouseDown && now - scope._lastClick <= 500 &&
                 Math.abs(panDelta.x) + Math.abs(panDelta.y) > 10 && scope.enablePan) {
-
-                console.log('m')
                 
                 if (scope._mode === OrbitControls.MODE.GUIDE) {
                     scope.target0.set(scope.target.x, 0, scope.target.z);
@@ -611,7 +609,6 @@ OrbitControls.prototype.guide = function (vehicle) {
 
     this.constraint.target = vehicle.position;
     this.constraint.targetDistance = vehicle.height * 2;
-    console.log(this.constraint.target, vehicle._position)
     this.update();
 }
 
