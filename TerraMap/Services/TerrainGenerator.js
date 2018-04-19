@@ -83,7 +83,8 @@ TerrainGenerator.prototype.loadTile = function (tile) {
     this._loadingThisTick--;
     this._loading++;
 
-    if (tile.stringify !== '0/0/0') return;
+    // FIXME: Debugging
+    // if (tile.stringify !== '0/0/0') return;
 
     if (typeof Qt === 'object') {
         var url = this.url(tile.x, tile.y, tile.z);

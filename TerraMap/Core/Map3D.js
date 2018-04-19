@@ -80,6 +80,7 @@ function Map3D (options) {
         }));
     this.basePlane.rotation.x = -0.5 * Math.PI;
     this.basePlane.opacity = 0;
+    this.basePlane.visible = false;
     this.scene.add(this.basePlane);
 
     /**

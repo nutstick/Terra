@@ -141,7 +141,7 @@ QuadTree.prototype.update = function () {
     renderTiles(this, this._activeTiles);
 
     processTileLoadQueue(this);
-    updateTileLoadProgress(this);
+    // updateTileLoadProgress(this);
 
     this.camera.updatedLastFrame = false;
     this.updating = false;
@@ -348,7 +348,6 @@ function visitVisibleChildrenNearToFar (primitive, children) {
 
 function computeTileVisibility (primitive, tile) {
     var i;
-    // console.log(JSON.stringify(primitive.camera.culledGroundPlane))
     var corner = tile.bbox.corner;
     for (i = 0; i < 4; i++) {
         if (GeometricHelper.pointInsidePolygon(corner, primitive.camera.culledGroundPlane[i])) {

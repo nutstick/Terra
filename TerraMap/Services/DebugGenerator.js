@@ -92,7 +92,7 @@ DebugGenerator.prototype.loadTile = function (tile) {
 
 DebugGenerator.prototype.load = function () {
     // Print out debug
-    updateLoadingProgress(this);
+    // updateLoadingProgress(this);
 
     var i;
     this._loadingThisTick = this._maxLoad - this._loading;

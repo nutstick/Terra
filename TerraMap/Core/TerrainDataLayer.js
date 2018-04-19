@@ -12,9 +12,10 @@ var vertices = 256;
 var segments = vertices - 1;
 
 TerrainDataLayer.prototype.processData = function (tile, data) {
-    var elevations = [];
+    // var elevations = [];
 
-    console.log(data.length)
+    tile._geometry = new THREE.PlaneGeometry(segments, segments, segments, segments);
+    
     for (var e = 0; e < data.length; e += 4) {
         var R = data[e];
         var G = data[e + 1];
@@ -25,11 +26,13 @@ TerrainDataLayer.prototype.processData = function (tile, data) {
         var elevation = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1);
         var posZ = ((i - i % TerrainGenerator.imageSize) / TerrainGenerator.imageSize) - vertices / 2;
         // elevation *= 10;
-        elevations.push(posX, elevation, posZ);
+        tile._geometry.vertices[i].x = posX;
+        tile._geometry.vertices[i].y = elevation;
+        tile._geometry.vertices[i].z = posZ;
+        // elevations.push(posX, elevation, posZ);
     }
 
-    tile._geometry = new THREE.PlaneBufferGeometry(segments, segments, segments, segments);
-    tile._geometry.attributes.position.array = new Float32Array(elevations);
+    // tile._geometry.attributes.position.array = new Float32Array(elevations);
 
     tile.data.status[TerrainDataLayer.layerName] = DataSource.State.Loaded;
 };

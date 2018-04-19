@@ -46,12 +46,6 @@ QtObject {
             // width: 256
             // height: 256
             // antialiasing: true
-            onImageLoaded: {
-                console.log('loaded')
-            }
-            onPaint: {
-                console.log('paint')
-            }
         }
 
         Button {

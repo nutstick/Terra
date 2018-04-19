@@ -4,8 +4,8 @@ Qt.include('./require.js');
 Qt.include('./es6-collections.js');
 var Map3D = require('./TerraMap/Core/Map3D');
 var Scene3D = require('./TerraMap/SceneMode/Scene3D');
-var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
-var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
+// var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
+// var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
 
 var map, renderer;
 function initializeGL (canvas, context2d, eventSource) {
@@ -13,7 +13,7 @@ function initializeGL (canvas, context2d, eventSource) {
     renderer.setSize(canvas.width, canvas.height);
 
     map = new Map3D({
-        mode: new TerrainScene(),
+        mode: new Scene3D(),
         canvas: canvas,
         eventSource: eventSource,
         renderer: renderer,

@@ -51,26 +51,26 @@ function Camera (options) {
      * FIXME:
      * Debuging mesh
      */
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true,
-        // opacity: 0,
-        color: new THREE.Color(0xff0000)
-    });
-    this.geometry = new THREE.Geometry();
-    this.geometry.vertices = [
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3()
-    ];
-    this.geometry.faces = [
-        new THREE.Face3(0, 1, 3),
-        new THREE.Face3(1, 3, 2)
-    ];
-    this.geometry.computeFaceNormals();
-    var mesh = new THREE.Mesh(this.geometry, material);
+    // var material = new THREE.MeshBasicMaterial({
+    //     wireframe: true,
+    //     // opacity: 0,
+    //     color: new THREE.Color(0xff0000)
+    // });
+    // this.geometry = new THREE.Geometry();
+    // this.geometry.vertices = [
+    //     new THREE.Vector3(),
+    //     new THREE.Vector3(),
+    //     new THREE.Vector3(),
+    //     new THREE.Vector3()
+    // ];
+    // this.geometry.faces = [
+    //     new THREE.Face3(0, 1, 3),
+    //     new THREE.Face3(1, 3, 2)
+    // ];
+    // this.geometry.computeFaceNormals();
+    // var mesh = new THREE.Mesh(this.geometry, material);
 
-    this._map.scene.add(mesh);
+    // this._map.scene.add(mesh);
 }
 
 Camera.prototype = Object.create(THREE.PerspectiveCamera.prototype);
@@ -111,8 +111,6 @@ Camera.prototype.update = function () {
     // Calculate ray direction at 4 corners of screen
     var scale;
     for (var i = 0; i < 4; i++) {
-        t.set(corner[i][0], corner[i][1], 0.5)
-        // console.log('t', JSON.stringify(t))
         t.set(corner[i][0], corner[i][1], 0.5).unproject(this).sub(this.position).normalize();
         // Case corner of camrea to over horizontal line direction from camera y axis will be positive
         // It will not be able to project plane so will clip with -0
@@ -123,16 +121,15 @@ Camera.prototype.update = function () {
         scale = this.position.y / t.y;
 
         s.subVectors(this.position, t.multiplyScalar(scale));
-        // console.log(JSON.stringify(s))
 
         this._culledGroundPlane[i].set(s.x + this.target.x, 0, s.z + this.target.z);
 
         // FIXME: Debugging
-        this.geometry.vertices[i].set(s.x, 0, s.z);
+        // this.geometry.vertices[i].set(s.x, 0, s.z);
     }
 
     // FIXME: Debugging
-    this.geometry.verticesNeedUpdate = true;
+    // this.geometry.verticesNeedUpdate = true;
 };
 
 Object.defineProperties(Camera.prototype, {

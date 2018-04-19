@@ -283,7 +283,7 @@ Polygon.prototype.onMouseMove = function (controls, x, y) {
 
         MapUtility.rayCasterFromScreen(controls, x, y, picker);
         // TODO: Deprecated base plane
-        var markerPosition = picker.intersectObject(this._map.basePlane)[0].point;
+        var markerPosition = picker.intersectObjects(this._map.quadTree.tiles.children)[0].point;
         this.activePin.groundPosition = markerPosition.add(controls.camera.target);
 
         return true;
