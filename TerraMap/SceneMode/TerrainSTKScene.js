@@ -1,4 +1,4 @@
-var TextureGenerator = require('../Services/TextureGenerator');
+var BingMapImageryGenerator = require('../Services/BingMapImageryGenerator');
 var TerrainSTKGenerator = require('../Services/TerrainSTKGenerator');
 var TilingScheme = require('../Core/TilingScheme');
 var TerrainSTKTile = require('../Core/TerrainSTKTile');
@@ -95,7 +95,7 @@ Object.defineProperties(TerrainSTKScene.prototype, {
         },
         set: function (value) {
             this._quadTree = value;
-            this._textureGenerator = new TextureGenerator({ quadTree: value });
+            this._textureGenerator = new BingMapImageryGenerator({ quadTree: value });
             this._terrainStkGenerator = new TerrainSTKGenerator({ quadTree: value });
         }
     }
