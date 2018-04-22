@@ -11,7 +11,6 @@
         <file>require.js</file>
         <file>index.html</file>
         <file>es6-collections.js</file>
+        <file>dist/terra.iife.js</file>
     </qresource>
-    <qresource prefix="/worker"/>
-    <qresource prefix="/lib" lang="js"/>
 </RCC>

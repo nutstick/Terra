@@ -11,9 +11,10 @@
   </style>
 </head>
 <body>
-  <script src="./require.js"></script>
+  <!-- <script src="./require.js"></script> -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
-  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+  <script src="./dist/terra.iife.js"></script>
+  <!-- <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script> -->
   <!-- <script src="./OrbitControls.js"></script> -->
   <script defer="defer">
     var QtPositioning = {
@@ -25,11 +26,14 @@
         };
       }
     }
-    var Map3D = require('./TerraMap/Core/Map3D');
-    var Scene3D = require('./TerraMap/SceneMode/Scene3D');
-    var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
-    var TerrainSTKScene = require('./TerraMap/SceneMode/TerrainSTKScene');
-    var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
+    console.log(terra)
+    var Map3D = terra.Map3D;
+    // var Scene = terra.Scene2D;
+    // var Scene = terra.BingMapScene;
+    var Scene = terra.STKTerrainScene;
+    // var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
+    // var TerrainSTKScene = require('./TerraMap/SceneMode/TerrainSTKScene');
+    // var TestScene = terra.TestScene;
 
     var renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -45,7 +49,7 @@
     }, false);
 
     map = new Map3D({
-        mode: new TerrainScene(),
+        mode: new Scene(),
         canvas: { width: window.innerWidth, height: window.innerHeight },
         eventSource: {},
         renderer: renderer,

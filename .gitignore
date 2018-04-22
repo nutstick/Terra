@@ -3,3 +3,6 @@ terra.pro.user
 terra.pro.user*
 
 *.autosave
+
+dist
+*_cache

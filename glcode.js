@@ -1,5 +1,6 @@
-Qt.include('./three.js');
+Qt.include('./dist/terra.iife.js')
 
+Qt.include('./three.js');
 Qt.include('./require.js');
 Qt.include('./es6-collections.js');
 var Map3D = require('./TerraMap/Core/Map3D');
