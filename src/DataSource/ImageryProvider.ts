@@ -10,7 +10,7 @@ export class ImageryProvider extends Provider {
         super(options);
     }
 
-    url(x: number, y: number, z: number) {
+    protected url(x: number, y: number, z: number) {
         const serverIndex = 2 * (x % 2) + y % 2;
         const server = ['a', 'b', 'c', 'd'][serverIndex];
         return 'https://' + server + '.tiles.mapbox.com/v4/mapbox.satellite/' + z + '/' + x + '/' + y +
@@ -18,11 +18,7 @@ export class ImageryProvider extends Provider {
     }
 
     loadTile(tile: Tile) {
-        if (this._loading >= this._maxLoad) {
-            return;
-        }
-
-        if (tile.data.isLoading(ImageDataLayer.layerName)) {
+        if (this._loading >= this._maxLoad || tile.data.isLoading(ImageDataLayer.layerName)) {
             return;
         }
 

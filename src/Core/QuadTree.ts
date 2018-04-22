@@ -472,7 +472,7 @@ function renderTiles(primitive: QuadTree, tiles: Tile[]) {
         const tile = tiles[willRender[key]];
         center.subVectors(tile.bbox.center, target);
 
-        const mesh = pool.use(tile.stringify);
+        mesh = pool.use(tile.stringify);
         mesh.position.set(center.x, center.y, center.z);
 
         tile.applyDataToMesh(mesh);

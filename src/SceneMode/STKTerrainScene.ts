@@ -19,8 +19,8 @@ export class STKTerrainScene extends SceneMode {
         });
 
         this._tilingScheme = new TilingScheme({
-            numberOfLevelZeroTilesX: 2,
-            numberOfLevelZeroTilesY: 1,
+            numberOfLevelZeroTilesX: 1,
+            numberOfLevelZeroTilesY: 2,
         });
         this.providers = [
             new BingMapImageryProvider(),

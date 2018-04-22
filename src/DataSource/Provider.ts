@@ -15,7 +15,7 @@ export abstract class Provider {
         this._loading = 0;
     }
 
-    abstract url(x: number, y: number, z: number);
+    protected abstract url(x: number, y: number, z: number);
 
-    abstract loadTile(tile: Tile);
+    public abstract loadTile(tile: Tile);
 }

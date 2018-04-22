@@ -12,6 +12,7 @@ export class STKTerrainTile extends Tile {
     static dataLayers = DataSource.toLayers([ImageDataLayer, STKTerrainDataLayer]);
 
     public data: DataSource;
+    public _geometry: THREE.Geometry;
 
     constructor(options: STKTerrainTileOptions) {
         super(options);
@@ -27,8 +28,7 @@ export class STKTerrainTile extends Tile {
             opacity: 0,
         });
 
-        const geometry = new THREE.PlaneGeometry(1, 1);
-        geometry.rotateX(-Math.PI / 2);
+        const geometry = new THREE.PlaneBufferGeometry(1, 1, 2, 2);
 
         return new THREE.Mesh(geometry, material);
     }
@@ -36,10 +36,14 @@ export class STKTerrainTile extends Tile {
     applyDataToMesh(mesh: THREE.Mesh) {
         const tileSize = Tile.size(this.z);
 
-        mesh.scale.set(tileSize, 1, tileSize);
+        mesh.scale.set(tileSize / STKTerrainDataLayer.meshScale, 10, tileSize / STKTerrainDataLayer.meshScale);
+
+        mesh.geometry = this.geometry;
     }
 
     dispose() {
         super.dispose();
     }
+
+    get geometry() { return this._geometry; }
 }

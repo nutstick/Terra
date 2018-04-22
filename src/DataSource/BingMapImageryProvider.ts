@@ -26,11 +26,11 @@ export class BingMapImageryProvider extends ImageryProvider {
         const onMetaComplete = () => {
             const response = JSON.parse(meta.response);
 
-            const resourcs = response.resourceSets[0].resources[0];
-            this._baseUrl = resourcs.imageUrl;
-            this._subdomains = resourcs.imageUrlSubdomains;
-            this._zoomMax = resourcs.zoomMax;
-            this._zoomMin = resourcs.zoomMin - 1;
+            const resources = response.resourceSets[0].resources[0];
+            this._baseUrl = resources.imageUrl;
+            this._subdomains = resources.imageUrlSubdomains;
+            this._zoomMax = resources.zoomMax;
+            this._zoomMin = resources.zoomMin - 1;
             this._ready = true;
         };
         meta.addEventListener('load', onMetaComplete.bind(this));
@@ -56,7 +56,7 @@ export class BingMapImageryProvider extends ImageryProvider {
         return quadkey;
     }
 
-    url(x: number, y: number, z: number) {
+    protected url(x: number, y: number, z: number) {
         const subdomains = this._subdomains;
         const subdomainIndex = (x + y + z) % subdomains.length;
 
@@ -71,5 +71,14 @@ export class BingMapImageryProvider extends ImageryProvider {
         }, this._baseUrl);
 
         return url;
+    }
+
+    loadTile(tile: Tile) {
+        if (!this._ready) {
+            tile._quadTree.needUpdate = true;
+            return;
+        }
+
+        super.loadTile(tile);
     }
 }

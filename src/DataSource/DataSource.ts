@@ -81,10 +81,9 @@ export class DataSource {
         this._tile = undefined;
     }
     static toLayers(layers: DataSourceLayerConstructor[]) {
-        const _layers = {};
         return layers.reduce((prev: { [key: string]: DataSourceLayer }, Instance) => {
-            _layers[Instance.layerName] = new Instance();
-            return _layers;
+            prev[Instance.layerName] = new Instance();
+            return prev;
         }, {});
     }
 
