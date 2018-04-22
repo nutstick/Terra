@@ -8,9 +8,9 @@ export interface CartesianOptions {
 }
 
 export class Cartesian {
-    _x: number = 0;
-    _y: number = 0;
-    _z: number = 0;
+    private _x: number = 0;
+    private _y: number = 0;
+    private _z: number = 0;
 
     constructor(options?: CartesianOptions) {
         options = options || {};
@@ -35,7 +35,9 @@ export class Cartesian {
         this._z += o.z;
         return this;
     }
-    crossVectors = THREE.Vector3.prototype.crossVectors;
+    crossVectors(...args): Cartesian {
+        return THREE.Vector3.prototype.crossVectors.call(this, ...args);
+    }
     addVectors = THREE.Vector3.prototype.addVectors;
     subVectors(a, b) {
         this._x = a.x - b.x;
@@ -44,6 +46,9 @@ export class Cartesian {
         return this;
     }
     normalize = THREE.Vector3.prototype.normalize;
+    length = THREE.Vector3.prototype.length;
+    multiplyScalar = THREE.Vector3.prototype.multiplyScalar;
+    divideScalar = THREE.Vector3.prototype.divideScalar;
 
     clone() {
         return new Cartesian({

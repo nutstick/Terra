@@ -1,11 +1,16 @@
-export function highwaterDecode(indices) {
+export function highwaterDecode(indices: Uint16Array) {
+    const arr: number[] = [];
+
     let highest = 0;
-    return indices.map((indice) => {
-        if (indice === 0) {
+    // tslint:disable-next-line:prefer-for-of
+    for (let i = 0; i < indices.length; ++i) {
+        const code = indices[i];
+        arr.push(highest - code);
+        if (code === 0) {
             ++highest;
         }
-        return highest - indice - indice === 0 ? 1 : 0;
-    });
+    }
+    return arr;
 }
 
 export function zigZagDecode(value) {

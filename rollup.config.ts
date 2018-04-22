@@ -20,6 +20,7 @@ export default {
       globals: {
         three: 'THREE',
       },
+      sourcemap: true,
     },
     {
       file: pkg.module,
@@ -27,9 +28,9 @@ export default {
       globals: {
         three: 'THREE',
       },
+      sourcemap: true,
     },
   ],
-  sourcemap: true,
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
   external: ['three'],
   watch: {

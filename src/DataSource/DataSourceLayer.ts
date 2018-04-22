@@ -9,6 +9,7 @@ export interface DataSourceLayerConstructor {
 export abstract class DataSourceLayer {
     static layerName = 'none';
 
-    abstract processError(tile: Tile, error: any);
+    abstract processLoading(tile: Tile);
     abstract processData(tile: Tile, data: any);
+    abstract processError(tile: Tile, error: any);
 }

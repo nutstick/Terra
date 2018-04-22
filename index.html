@@ -30,9 +30,7 @@
     // var Scene = terra.Scene2D;
     // var Scene = terra.BingMapScene;
     var Scene = terra.STKTerrainScene;
-    // var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
-    // var TerrainSTKScene = require('./TerraMap/SceneMode/TerrainSTKScene');
-    // var TestScene = terra.TestScene;
+    // var Scene = terra.TestScene;
 
     var renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -59,7 +57,7 @@
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
 
-    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
+    // map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
 
     var animate = function () {
       requestAnimationFrame( animate );

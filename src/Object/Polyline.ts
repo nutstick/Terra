@@ -60,7 +60,7 @@ export class Polyline extends Mission {
     }
 
     updateTarget(target: Cartesian) {
-        this.lines.forEach(function(line) {
+        this.lines.forEach((line) => {
             (line.geometry as Geometry).verticesNeedUpdate = true;
         });
     }
@@ -77,7 +77,10 @@ export class Polyline extends Mission {
             const lineGeometry = new THREE.Geometry();
             lineGeometry.vertices.push(this.pins[index - 1].head.position);
             lineGeometry.vertices.push(this.pins[index].head.position);
-            const line = new THREE.LineSegments(lineGeometry, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 }));
+            const line = new THREE.LineSegments(
+                lineGeometry,
+                new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 }),
+            );
             this.lines.push(line);
             this._map.scene.add(line);
         }
@@ -98,9 +101,7 @@ export class Polyline extends Mission {
 
     clearPins() {
         // Clear all pins
-        for (let i = 0; i < this.pins.length; i++) {
-            this.pins[i].dispose();
-        }
+        this.pins.forEach((pin) => pin.dispose());
         this.pins.length = 0;
         for (let i_ = 0; i_ < this.lines.length; i_++) {
             const line = this.lines[i_];
@@ -113,7 +114,7 @@ export class Polyline extends Mission {
     }
 
     interactableObjects() {
-        return this.pins.reduce(function(prev: THREE.Mesh[], pin) {
+        return this.pins.reduce((prev: THREE.Mesh[], pin) => {
             prev.push(pin.head);
             prev.push(pin.arrow);
             return prev;
@@ -125,15 +126,15 @@ export class Polyline extends Mission {
         let intersects;
         panStart.set(x, y);
         // Doubled click => Create new PIN
-        if (controls._lastClick && now - controls._lastClick < controls.constraint.maxClickTimeInterval && this.enableMoveMarker === true) {
+        if (controls._lastClick && now - controls._lastClick < controls.constraint.maxClickTimeInterval &&
+            this.enableMoveMarker === true) {
             MapUtility.rayCasterFromScreen(controls, x, y, picker);
             intersects = picker.intersectObjects(this._map.quadTree.tiles.children);
             if (!intersects.length) {
                 console.warn('Mouse down position have no intersect with any tiles.');
                 controls._lastClick = null;
                 return true;
-            }
-            else if (intersects.length > 1) {
+            } else if (intersects.length > 1) {
                 console.warn('Mouse down on more than one tile.');
             }
             const position = intersects[0].point.add(controls.camera.target);
@@ -149,8 +150,7 @@ export class Polyline extends Mission {
             if (obj.name === 'Head') {
                 this.activePin = obj.pin;
                 controls._state = Polyline.STATE.CHANGE_PIN_HEIGHT;
-            }
-            else if (obj.name === 'Arrow') {
+            } else if (obj.name === 'Arrow') {
                 this.activePin = obj.pin;
                 controls._state = Polyline.STATE.CHANGE_PIN_POSITION;
             }
@@ -161,17 +161,18 @@ export class Polyline extends Mission {
 
     onMouseMove(controls, x, y) {
         if (controls._state === Polyline.STATE.CHANGE_PIN_HEIGHT) {
-            if (!this.enableMoveMarker)
+            if (!this.enableMoveMarker) {
                 return false;
+            }
             panEnd.set(x, y);
             panDelta.subVectors(panEnd, panStart);
             this.activePin.height += -panDelta.y * controls.camera.position.y / controls.canvas.height;
             panStart.copy(panEnd);
             return true;
-        }
-        else if (controls._state === Polyline.STATE.CHANGE_PIN_POSITION) {
-            if (!this.enableMoveMarker)
+        } else if (controls._state === Polyline.STATE.CHANGE_PIN_POSITION) {
+            if (!this.enableMoveMarker) {
                 return false;
+            }
             MapUtility.rayCasterFromScreen(controls, x, y, picker);
             // TODO: Deprecated base plane
             const markerPosition = picker.intersectObjects(this._map.quadTree.tiles.children)[0].point;
@@ -182,14 +183,12 @@ export class Polyline extends Mission {
     }
 
     get pinsCoordinate() {
-        return this.pins.map(function(pin) {
-            return pin.coordinate();
-        });
+        return this.pins.map((pin) => pin.coordinate());
     }
 
     coordinate() {
         return QtPositioning.coordinate();
     }
     getScale() { return 1; }
-    setScale(scale) {}
+    setScale(scale) { return; }
 }

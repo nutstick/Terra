@@ -29,19 +29,19 @@ export abstract class Tile {
         Removed: 4,
     };
 
-    _x: number;
-    _y: number;
-    _z: number;
-    _quadTree: QuadTree;
-    _parent: Tile;
-    _state: number;
-    _replacementPrevious: Tile;
-    _replacementNext: Tile;
-    _distance: number;
-    _bbox: AABB;
+    private _x: number;
+    private _y: number;
+    private _z: number;
+    private _quadTree: QuadTree;
+    private _parent: Tile;
+    private _state: number;
+    private _replacementPrevious: Tile;
+    private _replacementNext: Tile;
+    private _distance: number;
+    private _bbox: AABB;
     upsampledFromParent: boolean;
 
-    _children: Tile[];
+    private _children: Tile[];
 
     constructor(options: TileOptions) {
         this._x = options.x;
@@ -130,25 +130,12 @@ export abstract class Tile {
     set distance(distance) { this._distance = distance; }
     get bbox() {
         if (!this._bbox) {
-            const tileSize = Tile.size(this.z);
-            const xMin = (this.x) * tileSize - MapSettings.basePlaneDimension / 2;
-            const xMax = (this.x + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-            const zMin = (this.y) * tileSize - MapSettings.basePlaneDimension / 2;
-            const zMax = (this.y + 1) * tileSize - MapSettings.basePlaneDimension / 2;
-
-            // TODO: height as 10 meters
-            this._bbox = new AABB({
-                xMin,
-                xMax,
-                yMin: 0,
-                yMax: 0,
-                zMin,
-                zMax,
-            });
+            this._bbox = this._quadTree.mode.getAABB(this);
         }
 
         return this._bbox;
     }
+    get quadTree() { return this._quadTree; }
     /************************
      * State handling
      ***********************/

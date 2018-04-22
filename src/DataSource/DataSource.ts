@@ -50,7 +50,7 @@ export class DataSource {
         if (typeof this._layers[layer] === 'undefined') {
             throw new Error('Unknowed layer was trigger datasource.');
         }
-        this.status[layer] = DataSource.State.Loading;
+        this._layers[layer].processLoading(this._tile);
     }
     loaded(layer, data) {
         if (!this._tile) {
@@ -62,7 +62,7 @@ export class DataSource {
         }
         this._layers[layer].processData(this._tile, data);
         if (this.done) {
-            this._tile._quadTree.needUpdate = true;
+            this._tile.quadTree.needUpdate = true;
         }
     }
     failed(layer, error) {

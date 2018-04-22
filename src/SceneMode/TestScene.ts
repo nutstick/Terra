@@ -1,5 +1,6 @@
 import { QuadTree } from '../Core/QuadTree';
 import { TilingScheme } from '../Core/TilingScheme';
+import { EPSG4326MapImageryProvider } from '../DataSource/EPSG4326MapImageryProvider';
 import { TestProvider } from '../DataSource/TestProvider';
 import { Ellipsoid } from '../Math/Ellipsoid';
 import { SceneMode } from './SceneMode';
@@ -18,11 +19,12 @@ export class TestScene extends SceneMode {
         });
 
         this._tilingScheme = new TilingScheme({
-            numberOfLevelZeroTilesX: 1,
+            numberOfLevelZeroTilesX: 2,
             numberOfLevelZeroTilesY: 1,
         });
         this.providers = [
-            new TestProvider(),
+            new EPSG4326MapImageryProvider(),
+            // new TestProvider(),
         ];
 
         this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(

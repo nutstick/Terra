@@ -10,6 +10,10 @@ export class ImageDataLayer extends DataSourceLayer {
         super();
     }
 
+    processLoading(tile: Tile2D) {
+        tile.data.status[ImageDataLayer.layerName] = DataSource.State.Loading;
+    }
+
     processData(tile: Tile2D, data: THREE.Texture) {
         if (tile.material) {
             throw new Error('Material\'s already set up.');

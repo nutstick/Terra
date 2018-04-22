@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DataSource } from '../DataSource/DataSource';
-import { ImageDataLayer } from '../DataSource/ImageDataLayer';
+import { EPSG4326MapImageDataLayer } from '../DataSource/EPSG4326MapImageDataLayer';
 import { STKTerrainDataLayer } from '../DataSource/STKTerrainDataLayer';
 import { TestDataLayer } from '../DataSource/TestDataLayer';
 import { Tile, TileOptions } from '../SceneMode/Tile';
@@ -9,10 +9,14 @@ export interface STKTerrainTileOptions extends TileOptions {}
 
 const image = new Image();
 export class STKTerrainTile extends Tile {
-    static dataLayers = DataSource.toLayers([ImageDataLayer, STKTerrainDataLayer]);
+    static dataLayers = DataSource.toLayers([
+        EPSG4326MapImageDataLayer,
+        STKTerrainDataLayer,
+    ]);
 
     public data: DataSource;
-    public _geometry: THREE.Geometry;
+    private _material: THREE.Material;
+    private _geometry: THREE.Geometry;
 
     constructor(options: STKTerrainTileOptions) {
         super(options);
@@ -36,9 +40,17 @@ export class STKTerrainTile extends Tile {
     applyDataToMesh(mesh: THREE.Mesh) {
         const tileSize = Tile.size(this.z);
 
-        mesh.scale.set(tileSize / STKTerrainDataLayer.meshScale, 10, tileSize / STKTerrainDataLayer.meshScale);
+        mesh.material = this._material;
 
-        mesh.geometry = this.geometry;
+        mesh.scale.set(
+            this.bbox.width / STKTerrainDataLayer.meshScale,
+            1,
+            this.bbox.height / STKTerrainDataLayer.meshScale,
+        );
+
+        mesh.geometry = this._geometry;
+
+        mesh.position.y = this.bbox.yMin;
     }
 
     dispose() {
@@ -46,4 +58,7 @@ export class STKTerrainTile extends Tile {
     }
 
     get geometry() { return this._geometry; }
+    set geometry(g) { this._geometry = g; }
+    get material() { return this._material; }
+    set material(m) { this._material = m; }
 }

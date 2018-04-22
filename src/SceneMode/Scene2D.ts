@@ -1,8 +1,12 @@
 import { QuadTree } from '../Core/QuadTree';
 import { TilingScheme } from '../Core/TilingScheme';
 import { ImageryProvider } from '../DataSource/ImageryProvider';
+import { AABB } from '../Math/AABB';
+import { Cartesian } from '../Math/Cartesian';
 import { Ellipsoid } from '../Math/Ellipsoid';
+import { sphericalMercator } from '../Utility/SphericalMercator';
 import { SceneMode } from './SceneMode';
+import { Tile } from './Tile';
 import { Tile2D } from './Tile2D';
 
 function getEstimatedLevelZeroGeometricErrorForAHeightmap(
@@ -11,7 +15,7 @@ function getEstimatedLevelZeroGeometricErrorForAHeightmap(
 }
 
 export class Scene2D extends SceneMode {
-    _levelZeroMaximumGeometricError: number;
+    protected _levelZeroMaximumGeometricError: number;
     constructor() {
         super({
             instance: Tile2D,

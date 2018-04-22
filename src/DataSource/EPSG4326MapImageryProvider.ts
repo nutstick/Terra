@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { Tile } from '../SceneMode/Tile';
-import { ImageryProvider } from './ImageryProvider';
+import { EPSG4326MapImageDataLayer } from './EPSG4326MapImageDataLayer';
 import { Provider, ProviderOptions } from './Provider';
 
-export interface BingMapImageryProviderOptions extends ProviderOptions {
+export interface EPSG4326MapImageryProviderOptions extends ProviderOptions {
     key?: string;
 }
 
-export class BingMapImageryProvider extends ImageryProvider {
+export class EPSG4326MapImageryProvider extends Provider {
     private _ready: boolean = false;
 
     private _baseUrl: string;
@@ -15,7 +15,7 @@ export class BingMapImageryProvider extends ImageryProvider {
     private _zoomMax: number;
     private _zoomMin: number;
 
-    constructor(options?: BingMapImageryProviderOptions) {
+    constructor(options?: EPSG4326MapImageryProviderOptions) {
         super(options);
 
         options = options || {};
@@ -78,7 +78,46 @@ export class BingMapImageryProvider extends ImageryProvider {
             tile.quadTree.needUpdate = true;
             return;
         }
+        if (this._loading >= this._maxLoad || tile.data.isLoading(EPSG4326MapImageDataLayer.layerName)) {
+            return;
+        }
 
-        super.loadTile(tile);
+        // FIXME: Debugging
+        // if (tile.z >= 1) return;
+
+        let doneCount = 0;
+
+        const onComplete = (resp) => {
+            this._needUpdate = true;
+            this._loading--;
+
+            if (tile.disposed) {
+                return;
+            }
+
+            doneCount++;
+            if (doneCount === 2) {
+                tile.data.loaded(EPSG4326MapImageDataLayer.layerName, [t0, t1]);
+            }
+        };
+
+        const onError = (err) => {
+            if (err) {
+                if (tile.disposed) {
+                    return;
+                }
+                this._loading--;
+
+                console.error('Error loading texture' + tile.stringify);
+                tile.data.failed(EPSG4326MapImageDataLayer.layerName, err);
+            }
+        };
+
+        this._loading++;
+        const t0 = new THREE.TextureLoader()
+            .load(this.url(tile.x, tile.y * 2, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+        const t1 = new THREE.TextureLoader()
+            .load(this.url(tile.x, tile.y * 2 + 1, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+        tile.data.loading(EPSG4326MapImageDataLayer.layerName);
     }
 }

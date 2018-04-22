@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { STKTerrainTile } from '../SceneMode/STKTerrainTile';
 import { DataSource } from './DataSource';
 import { DataSourceLayer } from './DataSourceLayer';
-
-export type STKTerrainData = [number[], number[], number[], number[], number[]];
+import { QuantizedMesh } from './STKTerrainProvider';
+import { TileReplacementQueue } from '../Core/TileReplacementQueue';
 
 export class STKTerrainDataLayer extends DataSourceLayer {
     static layerName = 'terrain-stk';
-    static meshScale: 1024;
+    static meshScale = 1024;
 
     constructor() {
         super();
@@ -15,65 +15,76 @@ export class STKTerrainDataLayer extends DataSourceLayer {
 
     getVertices(header, uArray, vArray, heightArray, indexArray) {
         const h = header.maximumHeight - header.minimumHeight;
-        return uArray.map((u, index) => {
-            console.log(new THREE.Vector3(
-                u * STKTerrainDataLayer.meshScale / 32767 - STKTerrainDataLayer.meshScale / 2,
-                heightArray[index] / 32767 * header.minimumHeight,
+        return uArray.reduce((prev, _, index) => {
+            prev.push(new THREE.Vector3(
+                uArray[index] * STKTerrainDataLayer.meshScale / 32767 - STKTerrainDataLayer.meshScale / 2,
+                heightArray[index] / 32767 * h,
                 -vArray[index] * STKTerrainDataLayer.meshScale / 32767 + STKTerrainDataLayer.meshScale / 2,
-            ))
-            return new THREE.Vector3(
-                u * STKTerrainDataLayer.meshScale / 32767 - STKTerrainDataLayer.meshScale / 2,
-                heightArray[index] / 32767 * header.minimumHeight,
-                -vArray[index] * STKTerrainDataLayer.meshScale / 32767 + STKTerrainDataLayer.meshScale / 2,
-            );
-        });
+            ));
+            return prev;
+        }, []);
     }
 
     getFaces(header, uArray, vArray, heightArray, indexArray) {
-        return indexArray.map((_, index) =>
-            new THREE.Face3(
-                indexArray[index + 0],
-                indexArray[index + 1],
-                indexArray[index + 2],
-            ));
+        const faces = [];
+        for (let i = 0; i < indexArray.length; i += 3) {
+            faces.push(new THREE.Face3(indexArray[i + 0], indexArray[i + 1], indexArray[i + 2]));
+        }
+        return faces;
     }
 
     getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray) {
-        const verticesUv = uArray.map((u, index) =>
-            new THREE.Vector2(
-                u / 32767,
+        const verticesUv = uArray.reduce((prev, _, index) => {
+            prev.push(new THREE.Vector2(
+                uArray[index] / 32767,
                 vArray[index] / 32767,
             ));
+            return prev;
+        }, []);
 
-        return indexArray.map((_, index) => [
-            verticesUv[indexArray[index + 0]],
-            verticesUv[indexArray[index + 0]],
-            verticesUv[indexArray[index + 0]],
-        ]);
+        const faceVertexUvs = [];
+        for (let i = 0; i < indexArray.length; i += 3) {
+            faceVertexUvs.push([
+                verticesUv[indexArray[i + 0]],
+                verticesUv[indexArray[i + 1]],
+                verticesUv[indexArray[i + 2]],
+            ]);
+        }
+        return faceVertexUvs;
     }
 
-    processData(tile: STKTerrainTile, data: STKTerrainData) {
-        const header = data[0];
-        const uArray = data[1];
-        const vArray = data[2];
-        const heightArray = data[3];
-        const indexArray = data[4];
+    processLoading(tile: STKTerrainTile) {
+        tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Loading;
+    }
+
+    processData(tile: STKTerrainTile, data: QuantizedMesh) {
+        const header = data.header;
+        const uArray = data.uArray;
+        const vArray = data.vArray;
+        const heightArray = data.heightArray;
+        const indexArray = data.indexArray;
+        console.log(tile.stringify, header, tile.bbox)
 
         const vertices = this.getVertices(header, uArray, vArray, heightArray, indexArray);
         const faces = this.getFaces(header, uArray, vArray, heightArray, indexArray);
 
-        console.log('v', this.getVertices(header, uArray, vArray, heightArray, indexArray))
-        tile._geometry = new THREE.Geometry();
-        tile._geometry.vertices = vertices;
-        tile._geometry.faces = faces;
+        tile.geometry = new THREE.Geometry();
+        tile.geometry.vertices = vertices;
+        tile.geometry.faces = faces;
 
-        tile._geometry.computeFaceNormals();
-        tile._geometry.computeVertexNormals();
-        tile._geometry.faceVertexUvs[0] = this.getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray);
-        tile._geometry.uvsNeedUpdate = true;
+        tile.geometry.computeFaceNormals();
+        tile.geometry.computeVertexNormals();
+        tile.geometry.faceVertexUvs[0] = this.getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray);
+        tile.geometry.uvsNeedUpdate = true;
+
+        tile.bbox.yMin = header.minimumHeight;
+        tile.bbox.yMax = header.maximumHeight;
+        // console.log(tile.bbox.center, header.centerX, header.centerY, header.centerZ)
+
+        tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Loaded;
     }
 
     processError(tile: STKTerrainTile, error: Error) {
-        throw new Error('Debug data can\'t be error.');
+        tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Idle;
     }
 }

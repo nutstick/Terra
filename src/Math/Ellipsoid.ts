@@ -92,4 +92,6 @@ export class Ellipsoid {
     }
 
     static WGS84 = new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793);
+
+    static UNIT_SPHERE  = new Ellipsoid(1.0, 1.0, 1.0);
 }

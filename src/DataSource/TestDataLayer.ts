@@ -10,6 +10,10 @@ export class TestDataLayer extends DataSourceLayer {
         super();
     }
 
+    processLoading(tile: TestTile) {
+        tile.data.status[TestDataLayer.layerName] = DataSource.State.Loading;
+    }
+
     processData(tile: TestTile) {
         tile.data.status[TestDataLayer.layerName] = DataSource.State.Loaded;
     }

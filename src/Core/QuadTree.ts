@@ -78,7 +78,7 @@ export class QuadTree {
         this.cameraController = options.map.cameraController;
         this.camera = options.map.camera;
 
-        this._rootTile = createRootTile(this, options.mode._instance, options.mode._tilingScheme);
+        this._rootTile = options.mode.createRootTile(this);
         /**
          * Scene mode
          * @type {SceneMode}
@@ -98,7 +98,7 @@ export class QuadTree {
 
         this.tileCacheSize = options.tileCacheSize || 128;
 
-        this.maxDepth = 30;
+        this.maxDepth = 15;
 
         this._lastTileLoadQueueLength = 0;
 
@@ -125,7 +125,7 @@ export class QuadTree {
         };
 
         this._pool = new Pool({
-            instance: this.mode._instance,
+            instance: this.mode.instance,
         });
     }
 
@@ -158,31 +158,6 @@ export class QuadTree {
         this.camera.updatedLastFrame = false;
         this.updating = false;
     }
-}
-
-function createRootTile(primitive: QuadTree, Instance: TileConstructor, tilingScheme: TilingScheme): Tile[] {
-    if (!tilingScheme) {
-        throw new Error('No tiling scheme provided');
-    }
-
-    const numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-    const numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
-
-    const result: Tile[] = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-    let index = 0;
-    for (let y = 0; y < numberOfLevelZeroTilesY; ++y) {
-        for (let x = 0; x < numberOfLevelZeroTilesX; ++x) {
-            result[index++] = new Instance({
-                x,
-                y,
-                z: 0,
-                quadTree: primitive,
-            });
-        }
-    }
-
-    return result;
 }
 
 function clearTileLoadQueue(primitive: QuadTree) {
@@ -527,7 +502,7 @@ function updateTileLoadProgress(primitive) {
             debug.tilesCulled !== debug.lastTilesCulled ||
             debug.maxDepth !== debug.lastMaxDepth ||
             debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-            console.debug('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered +
+            console.info('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered +
                 ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth +
                 ', Waiting for children: ' + debug.tilesWaitingForChildren);
 

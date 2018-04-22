@@ -35,7 +35,7 @@ export class Pin extends RenderingObject {
 
     _rGPosition: THREE.Vector3;
     _rPosition: THREE.Vector3;
-    _position: THREE.Vector3;
+    _position: Cartesian;
     _coordinate: Cartographic;
 
     lastScale: number;
@@ -97,7 +97,7 @@ export class Pin extends RenderingObject {
         this._rPosition = this.head.position;
 
         // TODO: Can it be Carsetian
-        this._position = new THREE.Vector3();
+        this._position = new Cartesian();
         this._coordinate = QtPositioning.coordinate();
         // Initialize pin position
         this.position = options.position;
@@ -136,7 +136,7 @@ export class Pin extends RenderingObject {
     }
     updateTarget(target) {
         // Update rendering position
-        this._rPosition.subVectors(this._position, target);
+        this._rPosition.subVectors((this._position as any), target);
         // TODO: elevation projection instead of 0
         this._rGPosition.set(this._rPosition.x, 0, this._rPosition.z);
         (this.line.geometry as THREE.Geometry).verticesNeedUpdate = true;
@@ -149,7 +149,7 @@ export class Pin extends RenderingObject {
         } else {
             // Case position is a QtPositioning.coordiante
             if (p.longitude) {
-                sphericalMercator.CartographicToPixel(p, this._position);
+                sphericalMercator.CartographicToCartesian(p, this._position);
             } else {
                 this._position.copy(p);
                 // Default height is 10 meters
@@ -167,7 +167,7 @@ export class Pin extends RenderingObject {
         // Case position is a QtPositioning.coordiante
         if (p.longitude) {
             // TODO: Ground
-            sphericalMercator.CartographicToPixel(p, this._position);
+            sphericalMercator.CartographicToCartesian(p, this._position);
             this._position.y = 0;
         } else {
             this._position.x = p.x;
@@ -180,7 +180,7 @@ export class Pin extends RenderingObject {
     }
 
     coordinate() {
-        sphericalMercator.PixelToCartographic(this._position, this._coordinate);
+        sphericalMercator.CartesianToCartographic(this._position, this._coordinate);
         return this._coordinate;
     }
 

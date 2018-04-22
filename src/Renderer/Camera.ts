@@ -20,7 +20,7 @@ export class Camera extends THREE.PerspectiveCamera {
     updatedLastFrame: boolean;
 
     constructor(options) {
-        super(70, options.canvas.width / options.canvas.height, 1 / 99, 100000000000000);
+        super(70, options.canvas.width / options.canvas.height, 1 / 99, 1000000000000);
 
         this._map = options.map;
 
@@ -66,7 +66,7 @@ export class Camera extends THREE.PerspectiveCamera {
     }
     update() {
         // Update Cartographic position
-        sphericalMercator.PixelToCartographic(this.target, this._targetCartographic);
+        sphericalMercator.CartesianToCartographic(this.target, this._targetCartographic);
         t.addVectors((this.target as any), this.position);
         sphericalMercator.PixelToCartographic(t, this._positionCartographic);
         this.updatedLastFrame = true;

@@ -46,7 +46,7 @@ export class ImageryProvider extends Provider {
 
         this._loading++;
         const texture = new THREE.TextureLoader()
-            .load(this.url(tile._x, tile._y, tile._z), onComplete.bind(this), undefined, onError.bind(this));
+            .load(this.url(tile.x, tile.y, tile.z), onComplete.bind(this), undefined, onError.bind(this));
         tile.data.loading(ImageDataLayer.layerName);
     }
 }

@@ -1,17 +1,12 @@
-import * as THREE from 'three';
 import { Camera } from '../Renderer/Camera';
 import { Cartesian } from './Cartesian';
 
 export interface AABBOptions {
-    xMin: number;
-    yMin: number;
-    zMin: number;
-    xMax: number;
-    yMax: number;
-    zMax: number;
+    topLeftCorner: Cartesian;
+    bottomRightCorner: Cartesian;
 }
 
-const UNIT_Y = new THREE.Vector3(0.0, 1.0, 0.0);
+const UNIT_Y = new Cartesian({ x: 0.0, y: 1.0, z: 0.0 });
 const t = [[0, 0], [0, 1], [1, 1], [1, 0]];
 const cameraCartesianPosition = new Cartesian();
 
@@ -22,58 +17,54 @@ export class AABB {
     xMax: number;
     yMax: number;
     zMax: number;
-    westNormal: THREE.Vector3;
-    eastNormal: THREE.Vector3;
-    northNormal: THREE.Vector3;
-    southNormal: THREE.Vector3;
-    northwestCornnerCartesian: THREE.Vector3;
-    southeastCornnerCartesian: THREE.Vector3;
+    westNormal: Cartesian;
+    eastNormal: Cartesian;
+    northNormal: Cartesian;
+    southNormal: Cartesian;
+    northwestCornnerCartesian: Cartesian;
+    southeastCornnerCartesian: Cartesian;
     _corner: Cartesian[];
     center: Cartesian = new Cartesian();
 
     constructor(options: AABBOptions) {
-        this.xMin = options.xMin || 0;
-        this.yMin = options.yMin || 0;
-        this.zMin = options.zMin || 0;
-        this.xMax = options.xMax || 0;
-        this.yMax = options.yMax || 0;
-        this.zMax = options.zMax || 0;
-        // /**
-        //  * @type Tile
-        //  * @private
-        //  */
-        // this._tile = options.tile;
+        this.xMin = options.topLeftCorner.x || 0;
+        this.yMin = options.topLeftCorner.y || 0;
+        this.zMin = options.topLeftCorner.z || 0;
+        this.xMax = options.bottomRightCorner.x || 0;
+        this.yMax = options.bottomRightCorner.y || 0;
+        this.zMax = options.bottomRightCorner.z || 0;
+
         // Compute the normal of the plane on the western edge of the tile.
-        const midPoint = new THREE.Vector3();
+        const midPoint = new Cartesian();
         midPoint.x = (this.xMax + this.xMin) / 2;
         midPoint.z = (this.zMax + this.zMin) / 2;
-        const temp2 = new THREE.Vector3();
-        const westernMidpointCartesian = new THREE.Vector3();
+        const temp2 = new Cartesian();
+        const westernMidpointCartesian = new Cartesian();
         westernMidpointCartesian.x = (this.xMax + this.xMin) / 2;
         westernMidpointCartesian.z = this.zMin;
-        this.westNormal = new THREE.Vector3();
+        this.westNormal = new Cartesian();
         this.westNormal.crossVectors(temp2.subVectors(midPoint, westernMidpointCartesian), UNIT_Y);
         this.westNormal.normalize();
-        const easternMidpointCartesian = new THREE.Vector3();
+        const easternMidpointCartesian = new Cartesian();
         easternMidpointCartesian.x = (this.xMax + this.xMin) / 2;
         easternMidpointCartesian.z = this.zMax;
-        this.eastNormal = new THREE.Vector3();
+        this.eastNormal = new Cartesian();
         this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Y);
         this.eastNormal.normalize();
-        const northMidpointCartesian = new THREE.Vector3();
+        const northMidpointCartesian = new Cartesian();
         northMidpointCartesian.x = this.xMin;
         northMidpointCartesian.z = (this.zMax + this.zMin) / 2;
-        this.northNormal = new THREE.Vector3();
+        this.northNormal = new Cartesian();
         this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Y);
         this.northNormal.normalize();
-        const southMidpointCartesian = new THREE.Vector3();
+        const southMidpointCartesian = new Cartesian();
         southMidpointCartesian.x = this.xMax;
         southMidpointCartesian.z = (this.zMax + this.zMin) / 2;
-        this.southNormal = new THREE.Vector3();
+        this.southNormal = new Cartesian();
         this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Y);
         this.southNormal.normalize();
-        this.northwestCornnerCartesian = new THREE.Vector3(this.xMin, 0, this.zMin);
-        this.southeastCornnerCartesian = new THREE.Vector3(this.xMax, 0, this.zMax);
+        this.northwestCornnerCartesian = new Cartesian({ x: this.xMin, y: 0, z: this.zMin });
+        this.southeastCornnerCartesian = new Cartesian({ x: this.xMax, y: 0, z: this.zMax });
         this._corner = new Array(4);
         for (let i = 0; i < 4; ++i) {
             // TODO: y
@@ -146,5 +137,12 @@ export class AABB {
 
     get corner() {
         return this._corner;
+    }
+
+    get width() {
+        return this.xMax - this.xMin;
+    }
+    get height() {
+        return this.zMax - this.zMin;
     }
 }

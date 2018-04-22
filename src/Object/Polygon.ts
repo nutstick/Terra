@@ -39,36 +39,18 @@ export class Polygon extends Mission {
 
     constructor(options: MissionOptions) {
         super(options);
-        /**
-         * Pin point that define polyline direction
-         * @type {Pin[]}
-         */
+
         this.pins = [];
-        /**
-         * Array of List of coordination that is generated as grid
-         * @type {QtPositioning.coordinate[][]}
-         */
+
         this.grids = [];
-        /**
-         * Array of List of angle if generate using optimization grid
-         * @type {number[]}
-         */
+
         this.angles = [];
-        /**
-         * Three.Line
-         * @type {THREE.LineSegments}
-         */
+
         this.lines = [];
-        /**
-         * Three.Line
-         * @type {THREE.Group}
-         */
+
         this.gridMesh = undefined;
         this.gridGenerateOffset = new THREE.Vector3();
-        /**
-         * Three.Line
-         * @type {THREE.LineSegments}
-         */
+
         this._closeLine = undefined;
         this.debug = {
             updated: false,
@@ -77,10 +59,7 @@ export class Polygon extends Mission {
         /**
          * Controller
          */
-        /**
-         * Set to false to disable marker modifiered
-         * @type {bool}
-         */
+
         this.enableMoveMarker = true;
         this.activePin = undefined;
     }

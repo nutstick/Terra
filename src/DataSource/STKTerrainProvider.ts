@@ -6,6 +6,32 @@ import { STKTerrainDataLayer } from './STKTerrainDataLayer';
 
 export interface STKTerrainProviderOptions extends ProviderOptions {}
 
+export namespace QuantizedMesh {
+    export interface Header {
+        bytes: number;
+        centerX: number;
+        centerY: number;
+        centerZ: number;
+        minimumHeight: number;
+        maximumHeight: number;
+        boundingSphereCenterX: number;
+        boundingSphereCenterY: number;
+        boundingSphereCenterZ: number;
+        boundingSphereRadius: number;
+        horizonOcclusionPointX: number;
+        horizonOcclusionPointY: number;
+        horizonOcclusionPointZ: number;
+    }
+}
+
+export interface QuantizedMesh {
+    header: QuantizedMesh.Header;
+    uArray: Uint16Array;
+    vArray: Uint16Array;
+    heightArray: Uint16Array;
+    indexArray: number[];
+}
+
 export class STKTerrainProvider extends Provider {
     private _ready: boolean = false;
     private _baseUrl: string;
@@ -18,7 +44,8 @@ export class STKTerrainProvider extends Provider {
         super(options);
 
         const meta = new XMLHttpRequest();
-        meta.open('GET', 'http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/layer.json', true);
+        // meta.open('GET', 'http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/layer.json', true);
+        meta.open('GET', './layer.json', true);
 
         const onMetaComplete = () => {
             const response = JSON.parse(meta.response);
@@ -37,8 +64,8 @@ export class STKTerrainProvider extends Provider {
 
     url(x: number, y: number, z: number) {
         const replaceParameters = {
-            x: y,
-            y: x,
+            x,
+            y: (1 << z) - 1 - y,
             z,
             version: this._version,
         };
@@ -51,7 +78,7 @@ export class STKTerrainProvider extends Provider {
         return url;
     }
 
-    getHeader(data, byteCount) {
+    getHeader(data, byteCount): QuantizedMesh.Header {
         return {
             bytes: data.byteLength,
             centerX: c.getFloat64(data, byteCount),
@@ -69,7 +96,7 @@ export class STKTerrainProvider extends Provider {
         };
     }
 
-    parseTile(data) {
+    parseTile(data): QuantizedMesh {
         let byteCount = 0;
 
         const header = this.getHeader(data, byteCount);
@@ -113,12 +140,12 @@ export class STKTerrainProvider extends Provider {
         byteCount += triangleCount * 3 * 2;
 
         const indexArray = c.highwaterDecode(indices);
-        return [header, uArray, vArray, heightArray, indexArray];
+        return { header, uArray, vArray, heightArray, indexArray };
     }
 
     loadTile(tile: Tile) {
         if (!this._ready) {
-            tile._quadTree.needUpdate = true;
+            tile.quadTree.needUpdate = true;
             return;
         }
 
@@ -127,7 +154,7 @@ export class STKTerrainProvider extends Provider {
         }
 
         // FIXME: Debugging
-        if (tile.z >= 2) return;
+        // if (tile.z >= 1) return;
 
         this._loading++;
 
