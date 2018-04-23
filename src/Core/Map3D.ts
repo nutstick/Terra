@@ -4,6 +4,7 @@ import { Mission } from '../Object/Mission';
 import { Polygon } from '../Object/Polygon';
 import { Polyline } from '../Object/Polyline';
 import { RenderingObject } from '../Object/RenderingObject';
+import { Skybox } from '../Object/Skybox';
 import { Vehicle } from '../Object/Vehicle';
 import { Camera } from '../Renderer/Camera';
 import { OrbitControls } from '../Renderer/OrbitControls';
@@ -72,6 +73,10 @@ export class Map3D {
         this.missions = [];
         this.newMission();
 
+        // Add skybox
+        const skybox = new Skybox();
+        this.scene.add(skybox);
+
         /**
          * @type {Vehicle}
          */
@@ -90,6 +95,9 @@ export class Map3D {
 
     get vehiclePosition() {
         return this.vehicle.position;
+    }
+    set vehiclePosition(cartographic: Cartographic) {
+        this.vehicle.position = cartographic;
     }
 
     newMission(type?: string) {

@@ -41,20 +41,20 @@ export class STKTerrainScene extends SceneMode {
         );
     }
 
-    getAABB(tile: Tile) {
-        // FIXME: FC
-        const width = 360.0 / this._tilingScheme.getNumberOfXTilesAtLevel(tile.z);
-        const height = 180.0 / this._tilingScheme.getNumberOfYTilesAtLevel(tile.z);
-        this._topLeftCartographicCorner.longitude = tile.x * width - 180.0;
-        this._topLeftCartographicCorner.altitude = 0;
-        this._topLeftCartographicCorner.latitude = tile.y * height - 90.0;
-        sphericalMercator.CartographicToEPSG4326(this._topLeftCartographicCorner, topLeftCorner);
+    // getAABB(tile: Tile) {
+    //     // FIXME: FC
+    //     const width = 360.0 / this._tilingScheme.getNumberOfXTilesAtLevel(tile.z);
+    //     const height = 180.0 / this._tilingScheme.getNumberOfYTilesAtLevel(tile.z);
+    //     this._topLeftCartographicCorner.longitude = tile.x * width - 180.0;
+    //     this._topLeftCartographicCorner.altitude = 0;
+    //     this._topLeftCartographicCorner.latitude = tile.y * height - 90.0;
+    //     sphericalMercator.CartographicToEPSG4326(this._topLeftCartographicCorner, topLeftCorner);
 
-        this._bottomRightCartographicCorner.longitude = (tile.x + 1) * width - 180.0;
-        this._bottomRightCartographicCorner.altitude = 0;
-        this._bottomRightCartographicCorner.latitude = (tile.y + 1) * height - 90.0;
-        sphericalMercator.CartographicToEPSG4326(this._bottomRightCartographicCorner, bottomRightCorner);
+    //     this._bottomRightCartographicCorner.longitude = (tile.x + 1) * width - 180.0;
+    //     this._bottomRightCartographicCorner.altitude = 0;
+    //     this._bottomRightCartographicCorner.latitude = (tile.y + 1) * height - 90.0;
+    //     sphericalMercator.CartographicToEPSG4326(this._bottomRightCartographicCorner, bottomRightCorner);
 
-        return new AABB({ topLeftCorner, bottomRightCorner });
-    }
+    //     return new AABB({ topLeftCorner, bottomRightCorner });
+    // }
 }

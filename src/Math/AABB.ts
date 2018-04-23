@@ -8,6 +8,7 @@ export interface AABBOptions {
 
 const UNIT_Y = new Cartesian({ x: 0.0, y: 1.0, z: 0.0 });
 const t = [[0, 0], [0, 1], [1, 1], [1, 0]];
+const c = new Cartesian();
 const cameraCartesianPosition = new Cartesian();
 
 export class AABB {
@@ -24,7 +25,6 @@ export class AABB {
     northwestCornnerCartesian: Cartesian;
     southeastCornnerCartesian: Cartesian;
     _corner: Cartesian[];
-    center: Cartesian = new Cartesian();
 
     constructor(options: AABBOptions) {
         this.xMin = options.topLeftCorner.x || 0;
@@ -74,8 +74,6 @@ export class AABB {
                 z: t[i][1] ? this.zMin : this.zMax,
             });
         }
-
-        this.center.set((this.xMin + this.xMax) / 2, (this.yMin + this.yMax) / 2, (this.zMin + this.zMax) / 2);
     }
     intersects(x, y, z) {
         if (x instanceof AABB) {
@@ -139,6 +137,14 @@ export class AABB {
         return this._corner;
     }
 
+    get center() {
+        c.set(
+            (this.xMin + this.xMax) / 2,
+            (this.yMin + this.yMax) / 2,
+            (this.zMin + this.zMax) / 2,
+        );
+        return c;
+    }
     get width() {
         return this.xMax - this.xMin;
     }

@@ -26,31 +26,37 @@ export class TileReplacementQueue {
      *
      * @param {Number} maximumTiles The maximum number of tiles in the queue.
      */
-    trimTiles(maximumTiles) {
+    trimTiles(maximumTiles: number) {
         let tileToTrim = this.tail;
         let keepTrimming = true;
         while (keepTrimming &&
-            typeof this._lastBeforeStartOfFrame !== 'undefined' &&
+            this._lastBeforeStartOfFrame &&
             this.count > maximumTiles &&
-            typeof tileToTrim !== 'undefined') {
+            tileToTrim) {
             // Stop trimming after we process the last tile not used in the
             // current frame.
             keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
+
             const previous = tileToTrim.replacementPrevious;
+
             if (tileToTrim.eligibleForUnloading) {
                 remove(this, tileToTrim);
                 tileToTrim.dispose();
             }
             tileToTrim = previous;
         }
+
+        // if (this.count > maximumTiles) {
+        // let tileToTrim2 = this.tail;
+        // while(tileToTrim2) {
+        //     const previous = tileToTrim2.replacementPrevious;
+        //     console.log(tileToTrim2.stringify, tileToTrim2.quadTree._activeTiles.indexOf(tileToTrim2))
+        //     tileToTrim2 = previous;
+        // }
+        // }
     }
-    /**
-     * Marks a tile as rendered this frame and moves it before the first tile that was not rendered
-     * this frame.
-     *
-     * @param {TileReplacementQueue} item The tile that was rendered.
-     */
-    markTileRendered(item) {
+
+    markTileRendered(item: Tile) {
         const head = this.head;
         if (head === item) {
             if (item === this._lastBeforeStartOfFrame) {
@@ -59,7 +65,7 @@ export class TileReplacementQueue {
             return;
         }
         ++this.count;
-        if (typeof head === 'undefined') {
+        if (!head) {
             // no other tiles in the list
             item.replacementPrevious = undefined;
             item.replacementNext = undefined;
@@ -67,18 +73,19 @@ export class TileReplacementQueue {
             this.tail = item;
             return;
         }
-        if (typeof item.replacementPrevious !== 'undefined' || typeof item.replacementNext !== 'undefined') {
+        if (item.replacementPrevious || item.replacementNext) {
             // tile already in the list, remove from its current location
             remove(this, item);
         }
         item.replacementPrevious = undefined;
         item.replacementNext = head;
         head.replacementPrevious = item;
+
         this.head = item;
     }
 }
 
-function remove(tileReplacementQueue, item) {
+function remove(tileReplacementQueue: TileReplacementQueue, item: Tile) {
     const previous = item.replacementPrevious;
     const next = item.replacementNext;
 

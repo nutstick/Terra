@@ -43,6 +43,8 @@ export abstract class Tile {
 
     private _children: Tile[];
 
+    private _mesh: THREE.Mesh;
+
     constructor(options: TileOptions) {
         this._x = options.x;
         this._y = options.y;
@@ -58,6 +60,8 @@ export abstract class Tile {
         this._distance = undefined;
         this._bbox = undefined;
         this.upsampledFromParent = false;
+
+        this._mesh = (this.constructor as TileConstructor).createMesh();
     }
 
     static createMesh() {
@@ -147,4 +151,8 @@ export abstract class Tile {
     get stringify() { return this._x + '/' + this._y + '/' + this._z; }
 
     abstract get data(): DataSource;
+
+    get mesh(): THREE.Mesh {
+        return this._mesh;
+    }
 }

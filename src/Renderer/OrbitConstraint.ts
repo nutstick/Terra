@@ -20,7 +20,8 @@ export class OrbitConstraint {
     maxDistance: number;
 
     minPolarAngle: number = 0.0;
-    maxPolarAngle: number = 0.48 * Math.PI;
+    // maxPolarAngle: number = 0.48 * Math.PI;
+    maxPolarAngle: number = 0.3 * Math.PI;
 
     minAzimuthAngle: number = -Infinity;
     maxAzimuthAngle: number = Infinity;

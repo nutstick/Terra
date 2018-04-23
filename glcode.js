@@ -1,20 +1,14 @@
-Qt.include('./dist/terra.iife.js')
-
 Qt.include('./three.js');
-Qt.include('./require.js');
-Qt.include('./es6-collections.js');
-var Map3D = require('./TerraMap/Core/Map3D');
-var Scene3D = require('./TerraMap/SceneMode/Scene3D');
-// var TerrainScene = require('./TerraMap/SceneMode/TerrainScene');
-// var DebugScene3D = require('./TerraMap/SceneMode/DebugScene3D');
-
+Qt.include('./dist/terra.iife.js');
+var Map3D = terra.Map3D;
+var Scene2D = terra.Scene2D;
 var map, renderer;
 function initializeGL (canvas, context2d, eventSource) {
     renderer = new THREE.Canvas3DRenderer({ canvas: canvas, antialias: true, devicePixelRatio: canvas.devicePixelRatio });
     renderer.setSize(canvas.width, canvas.height);
 
     map = new Map3D({
-        mode: new Scene3D(),
+        mode: new Scene2D(),
         canvas: canvas,
         eventSource: eventSource,
         renderer: renderer,

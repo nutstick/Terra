@@ -96,9 +96,9 @@ export class QuadTree {
 
         this.maximumScreenSpaceError = options.maximumScreenSpaceError || 2;
 
-        this.tileCacheSize = options.tileCacheSize || 128;
+        this.tileCacheSize = options.tileCacheSize || 256;
 
-        this.maxDepth = 15;
+        this.maxDepth = 22;
 
         this._lastTileLoadQueueLength = 0;
 
@@ -153,7 +153,8 @@ export class QuadTree {
         renderTiles(this, this._activeTiles);
 
         processTileLoadQueue(this);
-        // updateTileLoadProgress(this);
+
+        updateTileLoadProgress(this);
 
         this.camera.updatedLastFrame = false;
         this.updating = false;
@@ -399,9 +400,6 @@ function addTileToRenderList(primitive, tile) {
     ++primitive._debug.tilesRendered;
 }
 
-const center = new Cartesian();
-let active: Tile[] = [];
-
 function renderTiles(primitive: QuadTree, tiles: Tile[]) {
     if (tiles.length === 0) {
         return;
@@ -417,42 +415,14 @@ function renderTiles(primitive: QuadTree, tiles: Tile[]) {
 
     const target = primitive.camera.target;
 
-    const willRender: { [key: string]: number } = tiles.reduce((prev, tile, index) => {
-        prev[tile.stringify] = index;
-        return prev;
-    }, {});
+    tiles.forEach((tile) => {
+        // Recalculate tile position
+        const center = tile.bbox.center;
+        const mesh = tile.mesh;
 
-    const freeThisTick = 0;
-    let mesh;
-    active = active.filter((tile, index) => {
-        if (willRender[tile.stringify]) {
-            // Remove already rendering tile from will rendering list
-            delete willRender[tile.stringify];
-
-            // Recalculate tile position
-            center.subVectors(tile.bbox.center, target);
-            mesh = pool.get(tile.stringify);
-            mesh.position.set(center.x, center.y, center.z);
-
-            primitive.tiles.add(mesh);
-            return true;
-        }
-        // Free non rendering tile
-        pool.free(tile.stringify);
-        return false;
-    });
-
-    // Remaining tile in rendering list will be a new one
-    Object.keys(willRender).forEach((key) => {
-        const tile = tiles[willRender[key]];
-        center.subVectors(tile.bbox.center, target);
-
-        mesh = pool.use(tile.stringify);
-        mesh.position.set(center.x, center.y, center.z);
-
+        mesh.position.set(center.x - target.x, center.y - target.y, center.z - target.z);
         tile.applyDataToMesh(mesh);
 
-        active.push(tile);
         primitive.tiles.add(mesh);
     });
 }

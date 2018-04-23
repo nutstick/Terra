@@ -40,12 +40,12 @@ export class STKTerrainTile extends Tile {
     applyDataToMesh(mesh: THREE.Mesh) {
         const tileSize = Tile.size(this.z);
 
-        mesh.material = this._material;
+        // mesh.material = this._material;
 
         mesh.scale.set(
-            this.bbox.width / STKTerrainDataLayer.meshScale,
+            this.bbox.width,
             1,
-            this.bbox.height / STKTerrainDataLayer.meshScale,
+            this.bbox.height,
         );
 
         mesh.geometry = this._geometry;

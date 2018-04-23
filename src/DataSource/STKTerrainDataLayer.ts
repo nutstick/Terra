@@ -1,25 +1,26 @@
 import * as THREE from 'three';
+import { TileReplacementQueue } from '../Core/TileReplacementQueue';
 import { STKTerrainTile } from '../SceneMode/STKTerrainTile';
+import { MapUtility } from '../Utility/MapUtility';
 import { DataSource } from './DataSource';
 import { DataSourceLayer } from './DataSourceLayer';
 import { QuantizedMesh } from './STKTerrainProvider';
-import { TileReplacementQueue } from '../Core/TileReplacementQueue';
+
+const maxShort = 32767;
 
 export class STKTerrainDataLayer extends DataSourceLayer {
     static layerName = 'terrain-stk';
-    static meshScale = 1024;
 
     constructor() {
         super();
     }
 
     getVertices(header, uArray, vArray, heightArray, indexArray) {
-        const h = header.maximumHeight - header.minimumHeight;
         return uArray.reduce((prev, _, index) => {
             prev.push(new THREE.Vector3(
-                uArray[index] * STKTerrainDataLayer.meshScale / 32767 - STKTerrainDataLayer.meshScale / 2,
-                heightArray[index] / 32767 * h,
-                -vArray[index] * STKTerrainDataLayer.meshScale / 32767 + STKTerrainDataLayer.meshScale / 2,
+                uArray[index] / maxShort - 0.5,
+                MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort),
+                0.5 - vArray[index] / maxShort,
             ));
             return prev;
         }, []);
@@ -63,7 +64,6 @@ export class STKTerrainDataLayer extends DataSourceLayer {
         const vArray = data.vArray;
         const heightArray = data.heightArray;
         const indexArray = data.indexArray;
-        console.log(tile.stringify, header, tile.bbox)
 
         const vertices = this.getVertices(header, uArray, vArray, heightArray, indexArray);
         const faces = this.getFaces(header, uArray, vArray, heightArray, indexArray);
@@ -77,7 +77,7 @@ export class STKTerrainDataLayer extends DataSourceLayer {
         tile.geometry.faceVertexUvs[0] = this.getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray);
         tile.geometry.uvsNeedUpdate = true;
 
-        tile.bbox.yMin = header.minimumHeight;
+        // tile.bbox.yMin = header.minimumHeight;
         tile.bbox.yMax = header.maximumHeight;
         // console.log(tile.bbox.center, header.centerX, header.centerY, header.centerZ)
 

@@ -57,6 +57,9 @@ export class DataSource {
             // TODO: Dispose;
             return;
         }
+        if (this._tile.disposed) {
+            return;
+        } 
         if (typeof this._layers[layer] === 'undefined') {
             throw new Error('Unknowed layer was trigger datasource.');
         }

@@ -21,4 +21,8 @@ export class MapUtility {
 
         return picker;
     }
+
+    static lerp(p, q, time) {
+        return ((1.0 - time) * p) + (time * q);
+    }
 }

@@ -21,7 +21,7 @@ export class Tile2D extends Tile {
     }
 
     static createMesh() {
-        const material = new THREE.MeshBasicMaterial({ map: new THREE.Texture(image) });
+        const material = null;
 
         const geometry = new THREE.PlaneGeometry(1, 1);
         geometry.rotateX(-Math.PI / 2);
@@ -44,8 +44,8 @@ export class Tile2D extends Tile {
         super.dispose();
         if (this._material) {
             this._material.dispose();
-            this._material = undefined;
         }
+        this._material = undefined;
     }
 
     get material() { return this._material; }
