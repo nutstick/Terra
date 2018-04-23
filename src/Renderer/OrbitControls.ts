@@ -103,7 +103,7 @@ export class OrbitControls extends THREE.EventDispatcher {
         // backwards compatibility.
         // Set to false to disable zooming
         this.enableZoom = true;
-        this.zoomSpeed = 50;
+        this.zoomSpeed = 10;
         // Set to false to disable rotating
         this.enableRotate = true;
         this.rotateSpeed = 1.0;

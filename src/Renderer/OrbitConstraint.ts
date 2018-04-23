@@ -119,6 +119,7 @@ export class OrbitConstraint {
     update() {
         const offset = this.camera.position;
         const target = this.camera.target;
+
         this.theta += this.thetaDelta;
         this.phi += this.phiDelta;
         this.targetDistance = this.targetDistance * this.scale;
@@ -130,6 +131,7 @@ export class OrbitConstraint {
         this.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.phi));
         // Restrict radius to be between desired limits
         this.targetDistance = Math.max(this.minDistance, Math.min(this.maxDistance, this.targetDistance));
+
         // Move target to panned location
         target.add(this.panOffset);
         offset.x = this.targetDistance * Math.sin(this.phi) * Math.sin(this.theta);

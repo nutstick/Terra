@@ -31,7 +31,7 @@ export class Scene2D extends SceneMode {
 
         this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(
             this._tilingScheme.ellipsoid,
-            45,
+            65,
             this._tilingScheme.getNumberOfXTilesAtLevel(0),
         );
     }

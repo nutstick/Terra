@@ -32,7 +32,7 @@ export abstract class SceneMode {
     fog(distanceToCamera: number, density: number) {
         const scalar = distanceToCamera * density;
         return 1.0 - Math.exp(-(scalar * scalar));
-    };
+    }
 
     screenSpaceError(quadTree: QuadTree, tile: Tile): number {
         const camera = quadTree.camera;

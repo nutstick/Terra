@@ -52,13 +52,13 @@ export class AABB {
         this.eastNormal.crossVectors(temp2.subVectors(midPoint, easternMidpointCartesian), UNIT_Y);
         this.eastNormal.normalize();
         const northMidpointCartesian = new Cartesian();
-        northMidpointCartesian.x = this.xMin;
+        northMidpointCartesian.x = this.xMax;
         northMidpointCartesian.z = (this.zMax + this.zMin) / 2;
         this.northNormal = new Cartesian();
         this.northNormal.crossVectors(temp2.subVectors(midPoint, northMidpointCartesian), UNIT_Y);
         this.northNormal.normalize();
         const southMidpointCartesian = new Cartesian();
-        southMidpointCartesian.x = this.xMax;
+        southMidpointCartesian.x = this.xMin;
         southMidpointCartesian.z = (this.zMax + this.zMin) / 2;
         this.southNormal = new Cartesian();
         this.southNormal.crossVectors(temp2.subVectors(midPoint, southMidpointCartesian), UNIT_Y);

@@ -3,7 +3,7 @@ import { Map3D } from '../Core/Map3D';
 import { Cartesian } from '../Math/Cartesian';
 import { sphericalMercator } from '../Utility/SphericalMercator';
 
-const t = new THREE.Vector3();
+const t = new Cartesian();
 const s = new THREE.Vector3();
 const corner = [[-1, -1], [-1, 1], [1, 1], [1, -1]];
 
@@ -18,9 +18,11 @@ export class Camera extends THREE.PerspectiveCamera {
     _culledGroundPlane: Cartesian[];
 
     updatedLastFrame: boolean;
+    // FIXME: Debug
+    // geometry: THREE.Geometry;
 
     constructor(options) {
-        super(70, options.canvas.width / options.canvas.height, 1 / 99, 1000000000000);
+        super(70, options.canvas.width / options.canvas.height, 1 / 99, 12000000 / Math.sin(70 * Math.PI));
 
         this._map = options.map;
 
@@ -33,24 +35,24 @@ export class Camera extends THREE.PerspectiveCamera {
          * FIXME:
          * Debuging mesh
          */
-        // var material = new THREE.MeshBasicMaterial({
+        // const material = new THREE.MeshBasicMaterial({
         //     wireframe: true,
         //     // opacity: 0,
-        //     color: new THREE.Color(0xff0000)
+        //     color: new THREE.Color(0xff0000),
         // });
         // this.geometry = new THREE.Geometry();
         // this.geometry.vertices = [
         //     new THREE.Vector3(),
         //     new THREE.Vector3(),
         //     new THREE.Vector3(),
-        //     new THREE.Vector3()
+        //     new THREE.Vector3(),
         // ];
         // this.geometry.faces = [
         //     new THREE.Face3(0, 1, 3),
-        //     new THREE.Face3(1, 3, 2)
+        //     new THREE.Face3(1, 3, 2),
         // ];
         // this.geometry.computeFaceNormals();
-        // var mesh = new THREE.Mesh(this.geometry, material);
+        // const mesh = new THREE.Mesh(this.geometry, material);
         // this._map.scene.add(mesh);
     }
     setPosition(position) {
@@ -68,7 +70,7 @@ export class Camera extends THREE.PerspectiveCamera {
         // Update Cartographic position
         sphericalMercator.CartesianToCartographic(this.target, this._targetCartographic);
         t.addVectors((this.target as any), this.position);
-        sphericalMercator.PixelToCartographic(t, this._positionCartographic);
+        sphericalMercator.CartesianToCartographic(t, this._positionCartographic);
         this.updatedLastFrame = true;
         // Calculate ray direction at 4 corners of screen
         let scale;
