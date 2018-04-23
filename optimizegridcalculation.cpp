@@ -419,16 +419,26 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     // Create set of rotated parallel lines within the expanded bounding rect. Make the lines larger than the
     // bounding box to guarantee intersection.
     QList<QLineF> lineList;
-    float x = largeBoundRect.bottomRight().x();
-    float gridSpacing = -gridSpace;
+    float xBottom = largeBoundRect.bottomRight().x();
+    float xTop = largeBoundRect.topLeft().x();
 
-    float yTop =    largeBoundRect.topLeft().y() - 100.0;
-    float yBottom = largeBoundRect.bottomRight().y() + 100.0;
+    float yLeft =    largeBoundRect.topLeft().y() - 100.0;
+    float yRight = largeBoundRect.bottomRight().y() + 100.0;
 
-    while (x > largeBoundRect.topLeft().x()) {
-        lineList += QLineF(rotatePoint(QPointF(x, yTop), center, gridAngle), rotatePoint(QPointF(x, yBottom), center, gridAngle));
-        x += gridSpacing;
-    }
+    if (qAbs(xTop - 0.0) < qAbs(xBottom - 0.0)) {
+        float gridSpacing = -gridSpace;
+        float x = xBottom;
+        while (x > xTop) {
+            lineList += QLineF(rotatePoint(QPointF(x, yLeft), center, gridAngle), rotatePoint(QPointF(x, yRight), center, gridAngle));
+            x += gridSpacing;
+        }
+    } else {
+        float gridSpacing = gridSpace;
+        float x = xTop;
+        while (x < xBottom) {
+            lineList += QLineF(rotatePoint(QPointF(x, yLeft), center, gridAngle), rotatePoint(QPointF(x, yRight), center, gridAngle));
+            x += gridSpacing;
+        }}
 
     // Now intersect the lines with the polygon
     QList<QLineF> intersectLines;
