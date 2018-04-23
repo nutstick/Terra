@@ -352,7 +352,17 @@ function visitVisibleChildrenNearToFar(primitive: QuadTree, children: Tile[]) {
     distances.forEach(({ tile }) => visitIfVisible(primitive, tile));
 }
 
-function computeTileVisibility(primitive, tile) {
+function computeTileVisibility(primitive: QuadTree, tile: Tile) {
+    if (tile.z <= 6) {
+        const camera = primitive.cameraController.camera;
+
+        const matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        const frustum = new THREE.Frustum().setFromMatrix(matrix);
+
+        // TODO: using AABB to Culling
+        return frustum.intersectsObject(tile.mesh);
+    }
+
     let i;
     const corner = tile.bbox.corner;
     for (i = 0; i < 4; i++) {

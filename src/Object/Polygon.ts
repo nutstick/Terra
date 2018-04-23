@@ -242,7 +242,8 @@ export class Polygon extends Mission {
                 optimizeGridCalculation.minute = minute;
             }
             const res = optimizeGridCalculation.genGridInsideBound(this.pinsCoordinate,
-                this._map.vehicle.coordinate, gridSpace);
+                this._map.vehicle.coordinate(), gridSpace);
+
             this.grids = res.map((x) => {
                 return x.grid;
             });
@@ -257,7 +258,7 @@ export class Polygon extends Mission {
                 gridcalculation.minute = minute;
             }
             this.grids = gridcalculation.genGridInsideBound(this.pinsCoordinate,
-                this._map.vehicle.coordinate, gridSpace, angle || 0);
+                this._map.vehicle.coordinate(), gridSpace, angle || 0);
         }
         // Redraw grid mesh
         // Remove exist mesh first
