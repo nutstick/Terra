@@ -134,7 +134,11 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
     }
 
     // Nearest line should assign
-    Q_ASSERT(nearestLineIndex != -1);
+    if (nearestLineIndex == -1) {
+        QList<QVariant> output;
+        // TODO: Throw error
+        return output;
+    }
 
     // project snap start point to closest point on rounded line
     QPointF closestPoint = projectPointToLine(polygonPoints[nearestLineIndex], polygonPoints[NEXT(nearestLineIndex, countPolygonPoints)], takeoffPoint, true);
@@ -246,6 +250,10 @@ QList<QVariant> OptimizeGridCalculation::genGridInsideBound(QVariantList bound_,
                 a << seperatePoints[j];
 
                 sortPolygonPointOrder(a);
+                if (calculateArea(a) < 0) {
+                    QList<QVariant> output;
+                    return output;
+                }
                 Q_ASSERT(calculateArea(a) >= 0);
                 a.prepend(polygonPoints[0]);
 

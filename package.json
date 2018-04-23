@@ -1,20 +1,29 @@
 {
-  "name": "Terra",
+  "name": "TerraMap",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/terra.iife.js",
+  "module": "dist/terra.es5.js",
   "repository": "git@github.com:nutstick/Terra.git",
   "author": "Nuttapat Kirawittaya <nuttapat.kirawittaya@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "eslint-config-google": "^0.9.1",
-    "eslint-config-standard": "^11.0.0",
-    "eslint-plugin-import": "^2.9.0",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "lodash.camelcase": "^4.3.0",
+    "rollup": "^0.58.1",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-json": "^2.3.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-typescript2": "^0.13.0",
+    "typescript": "^2.8.3"
   },
   "dependencies": {
-    "es6-set": "^0.1.5"
+    "@types/three": "^0.91.10",
+    "from": "^0.1.7",
+    "import": "^0.0.6",
+    "resolve": "^1.7.1"
+  },
+  "scripts": {
+    "start": "rollup -c rollup.config.ts",
+    "dev": "rollup -c rollup.config.ts -w"
   }
 }
