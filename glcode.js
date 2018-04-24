@@ -1,9 +1,15 @@
 Qt.include('./three.js');
-Qt.include('./dist/terra.iife.js');
-var Map3D = terra.Map3D;
-var Scene2D = terra.Scene2D;
+var Map3D, Scene2D, ready = false;
+
+Qt.include('https://storage.googleapis.com/terra-iife/terra.iife.js', function () {
+    Map3D = terra.Map3D;
+    Scene2D = terra.Scene2D;
+    ready = true;
+});
+
 var map, renderer;
 function initializeGL (canvas, context2d, eventSource) {
+    if (!ready) return false
     renderer = new THREE.Canvas3DRenderer({ canvas: canvas, antialias: true, devicePixelRatio: canvas.devicePixelRatio });
     renderer.setSize(canvas.width, canvas.height);
 
@@ -22,12 +28,11 @@ function initializeGL (canvas, context2d, eventSource) {
     map.setView(QtPositioning.coordinate(13.73805313416508, 100.5313363143085), 13);
 }
 
-function resizeGL (canvas, context2d) {
-    map.resizeView(canvas);
-}
-
 function paintGL (canvas, context2d) {
     map.update();
-
     renderer.render(map.scene, map.camera);
+}
+
+function resizeGL (canvas, context2d) {
+    map.resizeView(canvas);
 }

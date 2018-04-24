@@ -1,4 +1,4 @@
-import { Scene, TextureLoader, PlaneGeometry, Mesh, MeshBasicMaterial, Matrix4, Vector3, PlaneBufferGeometry, Vector2, Raycaster, Geometry, LineSegments, LineBasicMaterial, Group, CubeTexture, RGBFormat, DoubleSide, MeshFaceMaterial, CubeGeometry, Face3, PerspectiveCamera, MOUSE, EventDispatcher, Frustum, ShaderMaterial, CylinderGeometry, Quaternion } from 'three';
+import { Scene, Vector2, Raycaster, Vector3, Geometry, LineSegments, LineBasicMaterial, Group, Face3, Mesh, MeshBasicMaterial, CubeTexture, RGBFormat, TextureLoader, DoubleSide, MeshFaceMaterial, CubeGeometry, PerspectiveCamera, MOUSE, EventDispatcher, PlaneGeometry, Matrix4, Frustum, PlaneBufferGeometry, CylinderGeometry, Quaternion, ShaderMaterial } from 'three';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -29,7 +29,7 @@ function __extends(d, b) {
 var MapSettings = {
     basePlaneDimension: 20037508.342789244 * 2,
     cameraDistance: 1200000,
-    maxCameraDistance: 1200000,
+    maxCameraDistance: 1200000 * 100,
     debug: true,
     optimize: true,
 };
@@ -2660,7 +2660,6 @@ function updateTileLoadProgress(primitive) {
         }
     }
 }
-//# sourceMappingURL=QuadTree.js.map
 
 var Map3D = /** @class */ (function () {
     function Map3D(options) {
@@ -3760,7 +3759,8 @@ var STKTerrainDataLayer = /** @class */ (function (_super) {
     }
     STKTerrainDataLayer.prototype.getVertices = function (header, uArray, vArray, heightArray, indexArray) {
         return uArray.reduce(function (prev, _, index) {
-            prev.push(new Vector3(uArray[index] / maxShort - 0.5, MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort), 0.5 - vArray[index] / maxShort));
+            prev.push(new Vector3(uArray[index] / maxShort - 0.5, MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort)
+                + header.minimumHeight, 0.5 - vArray[index] / maxShort));
             return prev;
         }, []);
     };
@@ -3805,7 +3805,7 @@ var STKTerrainDataLayer = /** @class */ (function (_super) {
         tile.geometry.faceVertexUvs[0] = this.getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray);
         tile.geometry.uvsNeedUpdate = true;
         // tile.bbox.yMin = header.minimumHeight;
-        tile.bbox.yMax = header.maximumHeight;
+        // tile.bbox.yMax = header.maximumHeight;
         // console.log(tile.bbox.center, header.centerX, header.centerY, header.centerZ)
         tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Loaded;
     };
@@ -3956,7 +3956,7 @@ var STKTerrainTile = /** @class */ (function (_super) {
     };
     STKTerrainTile.prototype.applyDataToMesh = function (mesh) {
         var tileSize = Tile.size(this.z);
-        // mesh.material = this._material;
+        mesh.material = this._material;
         mesh.scale.set(this.bbox.width, 1, this.bbox.height);
         mesh.geometry = this._geometry;
         mesh.position.y = this.bbox.yMin;

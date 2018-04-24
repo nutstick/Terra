@@ -4,4 +4,9 @@ terra.pro.user*
 
 *.autosave
 
+dist
+!dist/terra.iife.js
+!dist/terra.iife.jsmap
+!dist/terra.es5.js
+!dist/terra.es5.js.map
 *_cache

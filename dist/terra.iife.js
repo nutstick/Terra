@@ -30,7 +30,7 @@ var terra = (function (exports,THREE) {
     var MapSettings = {
         basePlaneDimension: 20037508.342789244 * 2,
         cameraDistance: 1200000,
-        maxCameraDistance: 1200000,
+        maxCameraDistance: 1200000 * 100,
         debug: true,
         optimize: true,
     };
@@ -2661,7 +2661,6 @@ var terra = (function (exports,THREE) {
             }
         }
     }
-    //# sourceMappingURL=QuadTree.js.map
 
     var Map3D = /** @class */ (function () {
         function Map3D(options) {
@@ -3761,7 +3760,8 @@ var terra = (function (exports,THREE) {
         }
         STKTerrainDataLayer.prototype.getVertices = function (header, uArray, vArray, heightArray, indexArray) {
             return uArray.reduce(function (prev, _, index) {
-                prev.push(new THREE.Vector3(uArray[index] / maxShort - 0.5, MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort), 0.5 - vArray[index] / maxShort));
+                prev.push(new THREE.Vector3(uArray[index] / maxShort - 0.5, MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort)
+                    + header.minimumHeight, 0.5 - vArray[index] / maxShort));
                 return prev;
             }, []);
         };
@@ -3806,7 +3806,7 @@ var terra = (function (exports,THREE) {
             tile.geometry.faceVertexUvs[0] = this.getFaceVertexUvs(header, uArray, vArray, heightArray, indexArray);
             tile.geometry.uvsNeedUpdate = true;
             // tile.bbox.yMin = header.minimumHeight;
-            tile.bbox.yMax = header.maximumHeight;
+            // tile.bbox.yMax = header.maximumHeight;
             // console.log(tile.bbox.center, header.centerX, header.centerY, header.centerZ)
             tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Loaded;
         };
@@ -3957,7 +3957,7 @@ var terra = (function (exports,THREE) {
         };
         STKTerrainTile.prototype.applyDataToMesh = function (mesh) {
             var tileSize = Tile.size(this.z);
-            // mesh.material = this._material;
+            mesh.material = this._material;
             mesh.scale.set(this.bbox.width, 1, this.bbox.height);
             mesh.geometry = this._geometry;
             mesh.position.y = this.bbox.yMin;

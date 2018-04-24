@@ -19,7 +19,8 @@ export class STKTerrainDataLayer extends DataSourceLayer {
         return uArray.reduce((prev, _, index) => {
             prev.push(new THREE.Vector3(
                 uArray[index] / maxShort - 0.5,
-                MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort),
+                MapUtility.lerp(header.minimumHeight, header.maximumHeight, heightArray[index] / maxShort)
+                    + header.minimumHeight,
                 0.5 - vArray[index] / maxShort,
             ));
             return prev;
@@ -78,7 +79,7 @@ export class STKTerrainDataLayer extends DataSourceLayer {
         tile.geometry.uvsNeedUpdate = true;
 
         // tile.bbox.yMin = header.minimumHeight;
-        tile.bbox.yMax = header.maximumHeight;
+        // tile.bbox.yMax = header.maximumHeight;
         // console.log(tile.bbox.center, header.centerX, header.centerY, header.centerZ)
 
         tile.data.status[STKTerrainDataLayer.layerName] = DataSource.State.Loaded;
