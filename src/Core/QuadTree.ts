@@ -47,7 +47,6 @@ export class QuadTree {
     _lastTileLoadQueueLength: number;
 
     needUpdate: boolean;
-    updating: boolean;
 
     _debug: {
         enableDebugOutput: boolean;
@@ -104,8 +103,6 @@ export class QuadTree {
 
         this.needUpdate = true;
 
-        this.updating = false;
-
         this._debug = {
             enableDebugOutput: true,
 
@@ -135,11 +132,10 @@ export class QuadTree {
 
     update() {
         // If not thing need to update, do noting
-        if (!this.needUpdate || this.updating || this._debug.suspendLodUpdate) {
+        if (!this.needUpdate || this._debug.suspendLodUpdate) {
             return;
         }
         this.needUpdate = false;
-        this.updating = true;
 
         // Compute frustum of camera
         this.camera.update();
@@ -157,7 +153,6 @@ export class QuadTree {
         updateTileLoadProgress(this);
 
         this.camera.updatedLastFrame = false;
-        this.updating = false;
     }
 }
 
@@ -353,7 +348,7 @@ function visitVisibleChildrenNearToFar(primitive: QuadTree, children: Tile[]) {
 }
 
 function computeTileVisibility(primitive: QuadTree, tile: Tile) {
-    if (tile.z <= 6) {
+    if (tile.z <= 10) {
         const camera = primitive.cameraController.camera;
 
         const matrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
