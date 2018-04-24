@@ -19,7 +19,7 @@ function initializeGL (canvas, context2d, eventSource) {
 
     map.vehiclePosition = QtPositioning.coordinate(13.738306772926723, 100.53068047568856, 10);
 
-    map.setView(QtPositioning.coordinate(13.73805313416508, 100.53133631430856), 14);
+    map.setView(QtPositioning.coordinate(13.73805313416508, 100.5313363143085), 13);
 }
 
 function resizeGL (canvas, context2d) {

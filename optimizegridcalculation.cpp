@@ -454,44 +454,43 @@ void OptimizeGridCalculation::gridGenerator(const QList<QPointF> &polygonPoints,
     if (intersectLines.count() == 0) return;
 
     // Sort list of line by closest to initial point of polygon
-    float d1 = distanceFromPointToPoint(polygon[0], intersectLines[0].p1());
-    float d2 = distanceFromPointToPoint(polygon[0], intersectLines[0].p2());
-    float d3 = distanceFromPointToPoint(polygon[0], intersectLines.last().p1());
-    float d4 = distanceFromPointToPoint(polygon[0], intersectLines.last().p2());
+    float d1 = distanceFromPointToPoint(QPoint(0, 0), intersectLines[0].p1());
+    float d2 = distanceFromPointToPoint(QPoint(0, 0), intersectLines[0].p2());
+    float d3 = distanceFromPointToPoint(QPoint(0, 0), intersectLines.last().p1());
+    float d4 = distanceFromPointToPoint(QPoint(0, 0), intersectLines.last().p2());
     float minD = qMin(d1, qMin(d2, qMin(d3, d4)));
 
-    // qDebug() << "D" << d1 << d2 << d3 << d4 << minD;
-    if (minD == d2 || minD == d4) {
-        for (int i=0; i<intersectLines.count(); i++) {
-            const QLineF& line = intersectLines[i];
-            QLineF adjustedLine;
-            adjustedLine.setP1(line.p2());
-            adjustedLine.setP2(line.p1());
+    qDebug() << "D" << d1 << d2 << d3 << d4 << minD;
+    for (int i=0; i<intersectLines.count(); i++) {
+        const QLineF& line = intersectLines[i];
+        QLineF adjustedLine;
+        adjustedLine.setP1(line.p2());
+        adjustedLine.setP2(line.p1());
 
-            resultLines += adjustedLine;
-        }
-    } else {
-        resultLines = intersectLines;
+        resultLines += adjustedLine;
     }
-    // qDebug() << resultLines;
 
     // Turn into a path
-    if (minD == d1 || minD == d2 || minD == d4) {
+    if (minD == d1 || minD == d2) {
         for (int i=0; i<resultLines.count(); i++) {
             const QLineF& line = resultLines[i];
-            if (i & 1) {
-                gridPoints << line.p2() << line.p1();
+            if (minD == d1) {
+                if (i % 2 == 0) gridPoints << line.p2() << line.p1();
+                else gridPoints << line.p1() << line.p2();
             } else {
-                gridPoints << line.p1() << line.p2();
+                if (i % 2) gridPoints << line.p2() << line.p1();
+                else gridPoints << line.p1() << line.p2();
             }
         }
     } else {
-        for (int i=resultLines.count()-1; i>=0; i--) {
+        for (int i=resultLines.count()-1, j=0; i>=0; i--, j++) {
             const QLineF& line = resultLines[i];
-            if (i & 1) {
-                gridPoints << line.p2() << line.p1();
+            if (minD == d3) {
+                if (j % 2 == 0) gridPoints << line.p2() << line.p1();
+                else gridPoints << line.p1() << line.p2();
             } else {
-                gridPoints << line.p1() << line.p2();
+                if (j % 2) gridPoints << line.p2() << line.p1();
+                else gridPoints << line.p1() << line.p2();
             }
         }
     }
