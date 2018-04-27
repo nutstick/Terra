@@ -22,9 +22,10 @@ export class ImageryProvider extends Provider {
             return;
         }
 
+        const scope = this;
         const onComplete = (resp) => {
-            this._needUpdate = true;
-            this._loading--;
+            scope._needUpdate = true;
+            scope._loading--;
 
             if (tile.disposed) {
                 return;
@@ -37,7 +38,7 @@ export class ImageryProvider extends Provider {
                 if (tile.disposed) {
                     return;
                 }
-                this._loading--;
+                scope._loading--;
 
                 console.error('Error loading texture' + tile.stringify);
                 tile.data.failed(ImageDataLayer.layerName, err);
@@ -46,7 +47,7 @@ export class ImageryProvider extends Provider {
 
         this._loading++;
         const texture = new THREE.TextureLoader()
-            .load(this.url(tile.x, tile.y, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+            .load(this.url(tile.x, tile.y, tile.z), onComplete, undefined, onError);
         tile.data.loading(ImageDataLayer.layerName);
     }
 }

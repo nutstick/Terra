@@ -22,15 +22,16 @@ export class TestProvider extends Provider {
             return;
         }
 
+        const scope = this;
         if (typeof Qt === 'object') {
-            timer.setTimeout(function() {
+            timer.setTimeout(() => {
                 tile.data.loaded(TestDataLayer.layerName);
-                this._loading--;
-            }.bind(this), 10);
+                scope._loading--;
+            }, 10);
         } else {
-            setTimeout(function() {
+            setTimeout(() => {
                 tile.data.loaded(TestDataLayer.layerName);
-                this._loading--;
+                scope._loading--;
             }, 10);
         }
 

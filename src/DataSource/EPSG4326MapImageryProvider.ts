@@ -23,17 +23,20 @@ export class EPSG4326MapImageryProvider extends Provider {
         const meta = new XMLHttpRequest();
         meta.open('GET', 'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=' + key, true);
 
+        const scope = this;
         const onMetaComplete = () => {
-            const response = JSON.parse(meta.response);
+            if (meta.readyState === XMLHttpRequest.DONE) {
+                const response = JSON.parse(meta.response);
 
-            const resources = response.resourceSets[0].resources[0];
-            this._baseUrl = resources.imageUrl;
-            this._subdomains = resources.imageUrlSubdomains;
-            this._zoomMax = resources.zoomMax;
-            this._zoomMin = resources.zoomMin - 1;
-            this._ready = true;
+                const resources = response.resourceSets[0].resources[0];
+                scope._baseUrl = resources.imageUrl;
+                scope._subdomains = resources.imageUrlSubdomains;
+                scope._zoomMax = resources.zoomMax;
+                scope._zoomMin = resources.zoomMin - 1;
+                scope._ready = true;
+            }
         };
-        meta.addEventListener('load', onMetaComplete.bind(this));
+        meta.onreadystatechange = onMetaComplete;
         meta.send(null);
     }
 
@@ -87,9 +90,10 @@ export class EPSG4326MapImageryProvider extends Provider {
 
         let doneCount = 0;
 
+        const scope = this;
         const onComplete = (resp) => {
-            this._needUpdate = true;
-            this._loading--;
+            scope._needUpdate = true;
+            scope._loading--;
 
             if (tile.disposed) {
                 return;
@@ -106,7 +110,7 @@ export class EPSG4326MapImageryProvider extends Provider {
                 if (tile.disposed) {
                     return;
                 }
-                this._loading--;
+                scope._loading--;
 
                 console.error('Error loading texture' + tile.stringify);
                 tile.data.failed(EPSG4326MapImageDataLayer.layerName, err);
@@ -115,9 +119,9 @@ export class EPSG4326MapImageryProvider extends Provider {
 
         this._loading++;
         const t0 = new THREE.TextureLoader()
-            .load(this.url(tile.x, tile.y * 2, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+            .load(this.url(tile.x, tile.y * 2, tile.z), onComplete, undefined, onError);
         const t1 = new THREE.TextureLoader()
-            .load(this.url(tile.x, tile.y * 2 + 1, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+            .load(this.url(tile.x, tile.y * 2 + 1, tile.z), onComplete, undefined, onError);
         tile.data.loading(EPSG4326MapImageDataLayer.layerName);
     }
 }

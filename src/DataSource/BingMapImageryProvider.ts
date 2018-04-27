@@ -23,18 +23,21 @@ export class BingMapImageryProvider extends ImageryProvider {
         const meta = new XMLHttpRequest();
         meta.open('GET', 'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=' + key, true);
 
+        const scope = this;
         const onMetaComplete = () => {
-            const response = JSON.parse(meta.response);
+            if (meta.readyState === XMLHttpRequest.DONE) {
+                const response = JSON.parse(meta.response);
 
-            const resources = response.resourceSets[0].resources[0];
-            this._baseUrl = resources.imageUrl;
-            this._subdomains = resources.imageUrlSubdomains;
-            this._zoomMax = resources.zoomMax;
-            this._zoomMin = resources.zoomMin - 1;
-            this._ready = true;
+                const resources = response.resourceSets[0].resources[0];
+                scope._baseUrl = resources.imageUrl;
+                scope._subdomains = resources.imageUrlSubdomains;
+                scope._zoomMax = resources.zoomMax;
+                scope._zoomMin = resources.zoomMin - 1;
+                scope._ready = true;
+            }
         };
-        meta.addEventListener('load', onMetaComplete.bind(this));
-        meta.send(null);
+        meta.onreadystatechange = onMetaComplete;
+        meta.send();
     }
 
     tileXYToQuadKey(x, y, level) {

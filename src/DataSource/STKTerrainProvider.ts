@@ -45,20 +45,21 @@ export class STKTerrainProvider extends Provider {
 
         const meta = new XMLHttpRequest();
         // meta.open('GET', 'http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/layer.json', true);
-        meta.open('GET', './layer.json', true);
+        meta.open('GET', 'layer.json', true);
 
+        const scope = this;
         const onMetaComplete = () => {
             const response = JSON.parse(meta.response);
-            this._baseUrl = `http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/${response.tiles}`;
-            this._zoomMax = response.maxzoom;
-            this._zoomMin = response.minzoom;
-            this._version = response.version;
-            this._projection = response.projection;
+            scope._baseUrl = `http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/${response.tiles}`;
+            scope._zoomMax = response.maxzoom;
+            scope._zoomMin = response.minzoom;
+            scope._version = response.version;
+            scope._projection = response.projection;
 
-            this._ready = true;
+            scope._ready = true;
         };
         meta.setRequestHeader('Accept', 'application/json,*/*;q=0.01');
-        meta.addEventListener('load', onMetaComplete.bind(this));
+        meta.addEventListener('load', onMetaComplete);
         meta.send(null);
     }
 
@@ -159,13 +160,15 @@ export class STKTerrainProvider extends Provider {
         this._loading++;
 
         const onComplete = (resp) => {
-            this._needUpdate = true;
-            this._loading--;
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                this._needUpdate = true;
+                this._loading--;
 
-            if (tile.disposed) {
-                return;
+                if (tile.disposed) {
+                    return;
+                }
+                tile.data.loaded(STKTerrainDataLayer.layerName, this.parseTile(xhr.response));
             }
-            tile.data.loaded(STKTerrainDataLayer.layerName, this.parseTile(xhr.response));
         };
 
         const onError = (err) => {
@@ -184,8 +187,8 @@ export class STKTerrainProvider extends Provider {
         xhr.open('GET', this.url(tile.x, tile.y, tile.z), true);
         xhr.setRequestHeader('Accept', ' application/vnd.quantized-mesh,application/octet-stream;q=1.0');
         xhr.responseType = 'arraybuffer';
-        xhr.onload = onComplete;
-        xhr.send(null);
+        xhr.onreadystatechange = onComplete;
+        xhr.send();
 
         tile.data.loading(STKTerrainDataLayer.layerName);
     }
