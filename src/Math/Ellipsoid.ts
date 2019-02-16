@@ -1,34 +1,5 @@
 import { Cartesian } from './Cartesian';
-
-function initialize(ellipsoid, x, y, z) {
-    x = x || 0.0;
-    y = y || 0.0;
-    z = z || 0.0;
-
-    ellipsoid._radii = new Cartesian({ x, y, z });
-
-    ellipsoid._radiiSquared = new Cartesian({ x: x * x, y: y * y, z: z * z });
-
-    ellipsoid._radiiToTheFourth = new Cartesian({ x: x * x * x * x, y: y * y * y * y, z: z * z * z * z });
-
-    ellipsoid._oneOverRadii = new Cartesian({ x: x === 0.0 ? 0.0 : 1.0 / x,
-        y: y === 0.0 ? 0.0 : 1.0 / y,
-        z: z === 0.0 ? 0.0 : 1.0 / z });
-
-    ellipsoid._oneOverRadiiSquared = new Cartesian({ x: x === 0.0 ? 0.0 : 1.0 / (x * x),
-        y: y === 0.0 ? 0.0 : 1.0 / (y * y),
-        z: z === 0.0 ? 0.0 : 1.0 / (z * z) });
-
-    ellipsoid._minimumRadius = Math.min(x, y, z);
-
-    ellipsoid._maximumRadius = Math.max(x, y, z);
-
-    // ellipsoid._centerToleranceSquared = CesiumMath.EPSILON1;
-
-    if (ellipsoid._radiiSquared.z !== 0) {
-        ellipsoid._squaredXOverSquaredZ = ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
-    }
-}
+import { EPSILON1 } from './Constants';
 
 /**
  * A quadratic surface defined in Cartesian coordinates by the equation
@@ -58,11 +29,41 @@ export class Ellipsoid {
     _oneOverRadiiSquared: Cartesian;
     _minimumRadius: number;
     _maximumRadius: number;
-    _centerToleranceSquared: Cartesian;
+    _centerToleranceSquared: number;
     _squaredXOverSquaredZ: number;
 
     constructor(x, y, z) {
-        initialize(this, x, y, z);
+        x = x || 0.0;
+        y = y || 0.0;
+        z = z || 0.0;
+    
+        this._radii = new Cartesian(x, y, z);
+    
+        this._radiiSquared = new Cartesian(x * x, y * y, z * z);
+    
+        this._radiiToTheFourth = new Cartesian(x * x * x * x, y * y * y * y, z * z * z * z);
+    
+        this._oneOverRadii = new Cartesian(
+            x === 0.0 ? 0.0 : 1.0 / x,
+            y === 0.0 ? 0.0 : 1.0 / y,
+            z === 0.0 ? 0.0 : 1.0 / z,
+        );
+    
+        this._oneOverRadiiSquared = new Cartesian(
+            x === 0.0 ? 0.0 : 1.0 / (x * x),
+            y === 0.0 ? 0.0 : 1.0 / (y * y),
+            z === 0.0 ? 0.0 : 1.0 / (z * z),
+        );
+    
+        this._minimumRadius = Math.min(x, y, z);
+    
+        this._maximumRadius = Math.max(x, y, z);
+    
+        this._centerToleranceSquared = EPSILON1;
+    
+        if (this._radiiSquared.z !== 0) {
+            this._squaredXOverSquaredZ = this._radiiSquared.x / this._radiiSquared.z;
+        }
     }
 
     get radii() {

@@ -8,7 +8,9 @@ export interface Tile2DOptions extends TileOptions {}
 
 const image = new Image();
 export class TestTile extends Tile {
-    private static dataLayers = DataSource.toLayers([EPSG4326MapImageDataLayer]);
+    private static dataLayers = DataSource.toLayers([TestDataLayer]);
+    // TODO:
+    // private static dataLayers = DataSource.toLayers([EPSG4326MapImageDataLayer]);
 
     private _material: THREE.Material;
     public data: DataSource;
@@ -34,14 +36,14 @@ export class TestTile extends Tile {
     }
 
     applyDataToMesh(mesh: THREE.Mesh) {
-        // const tileSize = Tile.size(this.z);
-
-        // mesh.scale.set(tileSize / 2, 1, tileSize);
         const tileSize = Tile.size(this.z);
 
-        mesh.material = this._material;
+        mesh.scale.set(tileSize / 2, 1, tileSize);
+        // const tileSize = Tile.size(this.z);
 
-        mesh.scale.set(tileSize / 2, 10, tileSize);
+        // mesh.material = this._material;
+
+        // mesh.scale.set(tileSize / 2, 10, tileSize);
     }
 
     dispose() {

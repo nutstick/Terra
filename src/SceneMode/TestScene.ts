@@ -19,12 +19,12 @@ export class TestScene extends SceneMode {
         });
 
         this._tilingScheme = new TilingScheme({
-            numberOfLevelZeroTilesX: 2,
-            numberOfLevelZeroTilesY: 1,
+            numberOfLevelZeroTilesX: 4,
+            numberOfLevelZeroTilesY: 2,
         });
         this.providers = [
-            new EPSG4326MapImageryProvider(),
-            // new TestProvider(),
+            // new EPSG4326MapImageryProvider(),
+            new TestProvider(),
         ];
 
         this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap(

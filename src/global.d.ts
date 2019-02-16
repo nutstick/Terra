@@ -1,12 +1,12 @@
-declare interface Cartographic {
-    latitude: number;
-    longitude: number;
-    altitude: number;
-}
+// declare interface Cartographic {
+//     latitude: number;
+//     longitude: number;
+//     altitude: number;
+// }
 
-declare module QtPositioning {
-    function coordinate(x?: number, y?: number, z?: number): Cartographic;
-}
+// declare module QtPositioning {
+//     function coordinate(x?: number, y?: number, z?: number): Cartographic;
+// }
 
 declare var Qt: any;
 declare var timer: any;

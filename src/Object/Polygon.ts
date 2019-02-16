@@ -3,6 +3,7 @@ import { Geometry, Material } from 'three';
 import { Map3D } from '../Core/Map3D';
 import { MapSettings } from '../Core/MapSettings';
 import { Cartesian } from '../Math/Cartesian';
+import { Cartographic } from '../Math/Cartographic';
 import { OrbitControls } from '../Renderer/OrbitControls';
 import { MapUtility } from '../Utility/MapUtility';
 import { sphericalMercator } from '../Utility/SphericalMercator';

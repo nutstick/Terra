@@ -1,7 +1,8 @@
 Qt.include('./three.js');
 var Map3D, Scene2D, ready = false;
 
-Qt.include('https://storage.googleapis.com/terra-iife/terra.iife.js', function () {
+// Qt.include('https://storage.googleapis.com/terra-iife/terra.iife.js', function () {
+Qt.include('./dist/terra.iife.js', function () {
     Map3D = terra.Map3D;
     Scene2D = terra.Scene2D;
     ready = true;

@@ -3,6 +3,7 @@ import { Geometry, Material } from 'three';
 import { Map3D } from '../Core/Map3D';
 import { MapSettings } from '../Core/MapSettings';
 import { Cartesian } from '../Math/Cartesian';
+import { Cartographic } from '../Math/Cartographic';
 import { OrbitControls } from '../Renderer/OrbitControls';
 import { MapUtility } from '../Utility/MapUtility';
 import { sphericalMercator } from '../Utility/SphericalMercator';
@@ -82,7 +83,7 @@ export class Polyline extends Mission {
                 new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3, transparent: true, opacity: 0.6 }),
             );
             this.lines.push(line);
-            this._map.scene.add(line);
+            this._map.renderScene.add(line);
         }
         if (MapSettings.debug) {
             this.debug = { updated: true };
@@ -105,7 +106,7 @@ export class Polyline extends Mission {
         this.pins.length = 0;
         for (let i_ = 0; i_ < this.lines.length; i_++) {
             const line = this.lines[i_];
-            this._map.scene.remove(line);
+            this._map.renderScene.remove(line);
             line.geometry.dispose();
             line.material.dispose();
             this.lines[i_] = undefined;

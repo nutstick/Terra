@@ -2661,6 +2661,7 @@ var terra = (function (exports,THREE) {
             }
         }
     }
+    //# sourceMappingURL=QuadTree.js.map
 
     var Map3D = /** @class */ (function () {
         function Map3D(options) {
@@ -2949,13 +2950,13 @@ var terra = (function (exports,THREE) {
                 '@2x.png?access_token=pk.eyJ1IjoibWF0dCIsImEiOiJTUHZkajU0In0.oB-OGTMFtpkga8vC48HjIg';
         };
         ImageryProvider.prototype.loadTile = function (tile) {
-            var _this = this;
             if (this._loading >= this._maxLoad || tile.data.isLoading(ImageDataLayer.layerName)) {
                 return;
             }
+            var scope = this;
             var onComplete = function (resp) {
-                _this._needUpdate = true;
-                _this._loading--;
+                scope._needUpdate = true;
+                scope._loading--;
                 if (tile.disposed) {
                     return;
                 }
@@ -2966,14 +2967,14 @@ var terra = (function (exports,THREE) {
                     if (tile.disposed) {
                         return;
                     }
-                    _this._loading--;
+                    scope._loading--;
                     console.error('Error loading texture' + tile.stringify);
                     tile.data.failed(ImageDataLayer.layerName, err);
                 }
             };
             this._loading++;
             var texture = new THREE.TextureLoader()
-                .load(this.url(tile.x, tile.y, tile.z), onComplete.bind(this), undefined, onError.bind(this));
+                .load(this.url(tile.x, tile.y, tile.z), onComplete, undefined, onError);
             tile.data.loading(ImageDataLayer.layerName);
         };
         return ImageryProvider;
@@ -3436,132 +3437,58 @@ var terra = (function (exports,THREE) {
     }(SceneMode));
     //# sourceMappingURL=Scene2D.js.map
 
-    var EPSG4326MapImageDataLayer = /** @class */ (function (_super) {
-        __extends(EPSG4326MapImageDataLayer, _super);
-        function EPSG4326MapImageDataLayer() {
+    var TestDataLayer = /** @class */ (function (_super) {
+        __extends(TestDataLayer, _super);
+        function TestDataLayer() {
             return _super.call(this) || this;
         }
-        EPSG4326MapImageDataLayer.prototype.processLoading = function (tile) {
-            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Loading;
+        TestDataLayer.prototype.processLoading = function (tile) {
+            tile.data.status[TestDataLayer.layerName] = DataSource.State.Loading;
         };
-        EPSG4326MapImageDataLayer.prototype.processData = function (tile, data) {
-            if (tile.material) {
-                throw new Error('Material\'s already set up.');
-            }
-            var uniforms = {
-                texture: { type: 't', value: data[0] },
-                texture2: { type: 't', value: data[1] },
-            };
-            tile.material = new THREE.ShaderMaterial({
-                uniforms: uniforms,
-                vertexShader: EPSG4326MapImageDataLayer.vertexShader,
-                fragmentShader: EPSG4326MapImageDataLayer.fragmentShader,
-            });
-            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Loaded;
+        TestDataLayer.prototype.processData = function (tile) {
+            tile.data.status[TestDataLayer.layerName] = DataSource.State.Loaded;
         };
-        EPSG4326MapImageDataLayer.prototype.processError = function (tile, error) {
-            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Idle;
+        TestDataLayer.prototype.processError = function (tile, error) {
+            throw new Error('Debug data can\'t be error.');
         };
-        EPSG4326MapImageDataLayer.layerName = 'EPSG:4326';
-        EPSG4326MapImageDataLayer.vertexShader = "\n        varying vec2 vUv;\n        varying vec3 vNormal;\n        varying vec3 vViewPosition;\n\n        void main() {\n\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n            vUv = uv;\n            vNormal = normalize( normalMatrix * normal );\n            vViewPosition = -mvPosition.xyz;\n\n            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n        }\n    ";
-        EPSG4326MapImageDataLayer.fragmentShader = "\n        uniform sampler2D texture;\n        uniform sampler2D texture2;\n        uniform vec3 color;\n        varying vec2 vUv;\n        varying vec3 vNormal;\n        varying vec3 vViewPosition;\n\n        void main() {\n            if ( vUv.y < 0.5) {\n                vec2 halfvUv = vec2( vUv.x, vUv.y * 2.0 );\n                gl_FragColor = texture2D( texture2, halfvUv );\n            } else {\n                vec2 halfvUv = vec2( vUv.x, vUv.y * 2.0 - 1.0 );\n                gl_FragColor = texture2D( texture, halfvUv );\n            }\n\n            // hack in a fake pointlight at camera location, plus ambient\n            // vec3 normal = normalize( vNormal );\n            // vec3 lightDir = normalize( vViewPosition );\n\n            // float dotProduct = max( dot( normal, lightDir ), 0.0 ) + 0.2;\n\n            // //gl_FragColor = vec4( mix( tColor.rgb, tColor2.rgb, tColor2.a ), 1.0 ) * dotProduct;\n\n            // vec4 mix_c = tColor2 + tc * tColor2.a;\n            // gl_FragColor = vec4( mix( tColor.rgb, mix_c.xyz, tColor2.a ), 1.0 ) * dotProduct;\n            // gl_FragColor = vec4( vUv.x, vUv.y, 0.0, 1.0 );\n        }\n    ";
-        return EPSG4326MapImageDataLayer;
+        TestDataLayer.layerName = 'test';
+        return TestDataLayer;
     }(DataSourceLayer));
-    //# sourceMappingURL=EPSG4326MapImageDataLayer.js.map
+    //# sourceMappingURL=TestDataLayer.js.map
 
-    var EPSG4326MapImageryProvider = /** @class */ (function (_super) {
-        __extends(EPSG4326MapImageryProvider, _super);
-        function EPSG4326MapImageryProvider(options) {
-            var _this = _super.call(this, options) || this;
-            _this._ready = false;
-            options = options || {};
-            var key = options.key || 'AlIY82q0z4SlJW9J3rfNWds2dBKwqw7Rb7EJXesX56XaO4ZM1AgXcFiV8MALrHhM';
-            var meta = new XMLHttpRequest();
-            meta.open('GET', 'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=' + key, true);
-            var onMetaComplete = function () {
-                var response = JSON.parse(meta.response);
-                var resources = response.resourceSets[0].resources[0];
-                _this._baseUrl = resources.imageUrl;
-                _this._subdomains = resources.imageUrlSubdomains;
-                _this._zoomMax = resources.zoomMax;
-                _this._zoomMin = resources.zoomMin - 1;
-                _this._ready = true;
-            };
-            meta.addEventListener('load', onMetaComplete.bind(_this));
-            meta.send(null);
-            return _this;
+    var TestProvider = /** @class */ (function (_super) {
+        __extends(TestProvider, _super);
+        function TestProvider(options) {
+            return _super.call(this, options) || this;
         }
-        EPSG4326MapImageryProvider.prototype.tileXYToQuadKey = function (x, y, level) {
-            var quadkey = '';
-            for (var i = level; i >= 0; --i) {
-                var bitmask = 1 << i;
-                var digit = 0;
-                if ((x & bitmask) !== 0) {
-                    digit |= 1;
-                }
-                if ((y & bitmask) !== 0) {
-                    digit |= 2;
-                }
-                quadkey += digit;
-            }
-            return quadkey;
+        TestProvider.prototype.url = function () {
+            throw new Error('Can\'t call url of TestProvide');
         };
-        EPSG4326MapImageryProvider.prototype.url = function (x, y, z) {
-            var subdomains = this._subdomains;
-            var subdomainIndex = (x + y + z) % subdomains.length;
-            var replaceParameters = {
-                subdomain: subdomains[subdomainIndex],
-                quadkey: this.tileXYToQuadKey(x, y, z),
-            };
-            var url = Object.keys(replaceParameters).reduce(function (prev, key) {
-                var value = replaceParameters[key];
-                return prev.replace(new RegExp('{' + key + '}', 'g'), encodeURIComponent(value));
-            }, this._baseUrl);
-            return url;
-        };
-        EPSG4326MapImageryProvider.prototype.loadTile = function (tile) {
-            var _this = this;
-            if (!this._ready) {
-                tile.quadTree.needUpdate = true;
+        TestProvider.prototype.loadTile = function (tile) {
+            if (this._loading >= this._maxLoad) {
                 return;
             }
-            if (this._loading >= this._maxLoad || tile.data.isLoading(EPSG4326MapImageDataLayer.layerName)) {
+            if (tile.data.isLoading(TestDataLayer.layerName)) {
                 return;
             }
-            // FIXME: Debugging
-            // if (tile.z >= 1) return;
-            var doneCount = 0;
-            var onComplete = function (resp) {
-                _this._needUpdate = true;
-                _this._loading--;
-                if (tile.disposed) {
-                    return;
-                }
-                doneCount++;
-                if (doneCount === 2) {
-                    tile.data.loaded(EPSG4326MapImageDataLayer.layerName, [t0, t1]);
-                }
-            };
-            var onError = function (err) {
-                if (err) {
-                    if (tile.disposed) {
-                        return;
-                    }
-                    _this._loading--;
-                    console.error('Error loading texture' + tile.stringify);
-                    tile.data.failed(EPSG4326MapImageDataLayer.layerName, err);
-                }
-            };
-            this._loading++;
-            var t0 = new THREE.TextureLoader()
-                .load(this.url(tile.x, tile.y * 2, tile.z), onComplete.bind(this), undefined, onError.bind(this));
-            var t1 = new THREE.TextureLoader()
-                .load(this.url(tile.x, tile.y * 2 + 1, tile.z), onComplete.bind(this), undefined, onError.bind(this));
-            tile.data.loading(EPSG4326MapImageDataLayer.layerName);
+            var scope = this;
+            if (typeof Qt === 'object') {
+                timer.setTimeout(function () {
+                    tile.data.loaded(TestDataLayer.layerName);
+                    scope._loading--;
+                }, 10);
+            }
+            else {
+                setTimeout(function () {
+                    tile.data.loaded(TestDataLayer.layerName);
+                    scope._loading--;
+                }, 10);
+            }
+            tile.data.loading(TestDataLayer.layerName);
         };
-        return EPSG4326MapImageryProvider;
+        return TestProvider;
     }(Provider));
-    //# sourceMappingURL=EPSG4326MapImageryProvider.js.map
+    //# sourceMappingURL=TestProvider.js.map
 
     var image$1 = new Image();
     var TestTile = /** @class */ (function (_super) {
@@ -3584,11 +3511,11 @@ var terra = (function (exports,THREE) {
             return new THREE.Mesh(geometry, material);
         };
         TestTile.prototype.applyDataToMesh = function (mesh) {
-            // const tileSize = Tile.size(this.z);
-            // mesh.scale.set(tileSize / 2, 1, tileSize);
             var tileSize = Tile.size(this.z);
-            mesh.material = this._material;
-            mesh.scale.set(tileSize / 2, 10, tileSize);
+            mesh.scale.set(tileSize / 2, 1, tileSize);
+            // const tileSize = Tile.size(this.z);
+            // mesh.material = this._material;
+            // mesh.scale.set(tileSize / 2, 10, tileSize);
         };
         TestTile.prototype.dispose = function () {
             _super.prototype.dispose.call(this);
@@ -3599,10 +3526,9 @@ var terra = (function (exports,THREE) {
             enumerable: true,
             configurable: true
         });
-        TestTile.dataLayers = DataSource.toLayers([EPSG4326MapImageDataLayer]);
+        TestTile.dataLayers = DataSource.toLayers([TestDataLayer]);
         return TestTile;
     }(Tile));
-    //# sourceMappingURL=TestTile.js.map
 
     function getEstimatedLevelZeroGeometricErrorForAHeightmap$1(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
         return ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (tileImageWidth * numberOfTilesAtLevelZero);
@@ -3618,7 +3544,8 @@ var terra = (function (exports,THREE) {
                 numberOfLevelZeroTilesY: 1,
             });
             _this.providers = [
-                new EPSG4326MapImageryProvider(),
+                // new EPSG4326MapImageryProvider(),
+                new TestProvider(),
             ];
             _this._levelZeroMaximumGeometricError = getEstimatedLevelZeroGeometricErrorForAHeightmap$1(_this._tilingScheme.ellipsoid, 65, _this._tilingScheme.getNumberOfXTilesAtLevel(0));
             return _this;
@@ -3636,17 +3563,20 @@ var terra = (function (exports,THREE) {
             var key = options.key || 'AlIY82q0z4SlJW9J3rfNWds2dBKwqw7Rb7EJXesX56XaO4ZM1AgXcFiV8MALrHhM';
             var meta = new XMLHttpRequest();
             meta.open('GET', 'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=' + key, true);
+            var scope = _this;
             var onMetaComplete = function () {
-                var response = JSON.parse(meta.response);
-                var resources = response.resourceSets[0].resources[0];
-                _this._baseUrl = resources.imageUrl;
-                _this._subdomains = resources.imageUrlSubdomains;
-                _this._zoomMax = resources.zoomMax;
-                _this._zoomMin = resources.zoomMin - 1;
-                _this._ready = true;
+                if (meta.readyState === XMLHttpRequest.DONE) {
+                    var response = JSON.parse(meta.response);
+                    var resources = response.resourceSets[0].resources[0];
+                    scope._baseUrl = resources.imageUrl;
+                    scope._subdomains = resources.imageUrlSubdomains;
+                    scope._zoomMax = resources.zoomMax;
+                    scope._zoomMin = resources.zoomMin - 1;
+                    scope._ready = true;
+                }
             };
-            meta.addEventListener('load', onMetaComplete.bind(_this));
-            meta.send(null);
+            meta.onreadystatechange = onMetaComplete;
+            meta.send();
             return _this;
         }
         BingMapImageryProvider.prototype.tileXYToQuadKey = function (x, y, level) {
@@ -3710,6 +3640,136 @@ var terra = (function (exports,THREE) {
         return BingMapScene;
     }(SceneMode));
     //# sourceMappingURL=BingMapScene.js.map
+
+    var EPSG4326MapImageDataLayer = /** @class */ (function (_super) {
+        __extends(EPSG4326MapImageDataLayer, _super);
+        function EPSG4326MapImageDataLayer() {
+            return _super.call(this) || this;
+        }
+        EPSG4326MapImageDataLayer.prototype.processLoading = function (tile) {
+            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Loading;
+        };
+        EPSG4326MapImageDataLayer.prototype.processData = function (tile, data) {
+            if (tile.material) {
+                throw new Error('Material\'s already set up.');
+            }
+            var uniforms = {
+                texture: { type: 't', value: data[0] },
+                texture2: { type: 't', value: data[1] },
+            };
+            tile.material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: EPSG4326MapImageDataLayer.vertexShader,
+                fragmentShader: EPSG4326MapImageDataLayer.fragmentShader,
+            });
+            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Loaded;
+        };
+        EPSG4326MapImageDataLayer.prototype.processError = function (tile, error) {
+            tile.data.status[EPSG4326MapImageDataLayer.layerName] = DataSource.State.Idle;
+        };
+        EPSG4326MapImageDataLayer.layerName = 'EPSG:4326';
+        EPSG4326MapImageDataLayer.vertexShader = "\n        varying vec2 vUv;\n        varying vec3 vNormal;\n        varying vec3 vViewPosition;\n\n        void main() {\n\n            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n            vUv = uv;\n            vNormal = normalize( normalMatrix * normal );\n            vViewPosition = -mvPosition.xyz;\n\n            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n        }\n    ";
+        EPSG4326MapImageDataLayer.fragmentShader = "\n        uniform sampler2D texture;\n        uniform sampler2D texture2;\n        uniform vec3 color;\n        varying vec2 vUv;\n        varying vec3 vNormal;\n        varying vec3 vViewPosition;\n\n        void main() {\n            if ( vUv.y < 0.5) {\n                vec2 halfvUv = vec2( vUv.x, vUv.y * 2.0 );\n                gl_FragColor = texture2D( texture2, halfvUv );\n            } else {\n                vec2 halfvUv = vec2( vUv.x, vUv.y * 2.0 - 1.0 );\n                gl_FragColor = texture2D( texture, halfvUv );\n            }\n\n            // hack in a fake pointlight at camera location, plus ambient\n            // vec3 normal = normalize( vNormal );\n            // vec3 lightDir = normalize( vViewPosition );\n\n            // float dotProduct = max( dot( normal, lightDir ), 0.0 ) + 0.2;\n\n            // //gl_FragColor = vec4( mix( tColor.rgb, tColor2.rgb, tColor2.a ), 1.0 ) * dotProduct;\n\n            // vec4 mix_c = tColor2 + tc * tColor2.a;\n            // gl_FragColor = vec4( mix( tColor.rgb, mix_c.xyz, tColor2.a ), 1.0 ) * dotProduct;\n            // gl_FragColor = vec4( vUv.x, vUv.y, 0.0, 1.0 );\n        }\n    ";
+        return EPSG4326MapImageDataLayer;
+    }(DataSourceLayer));
+    //# sourceMappingURL=EPSG4326MapImageDataLayer.js.map
+
+    var EPSG4326MapImageryProvider = /** @class */ (function (_super) {
+        __extends(EPSG4326MapImageryProvider, _super);
+        function EPSG4326MapImageryProvider(options) {
+            var _this = _super.call(this, options) || this;
+            _this._ready = false;
+            options = options || {};
+            var key = options.key || 'AlIY82q0z4SlJW9J3rfNWds2dBKwqw7Rb7EJXesX56XaO4ZM1AgXcFiV8MALrHhM';
+            var meta = new XMLHttpRequest();
+            meta.open('GET', 'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=' + key, true);
+            var scope = _this;
+            var onMetaComplete = function () {
+                if (meta.readyState === XMLHttpRequest.DONE) {
+                    var response = JSON.parse(meta.response);
+                    var resources = response.resourceSets[0].resources[0];
+                    scope._baseUrl = resources.imageUrl;
+                    scope._subdomains = resources.imageUrlSubdomains;
+                    scope._zoomMax = resources.zoomMax;
+                    scope._zoomMin = resources.zoomMin - 1;
+                    scope._ready = true;
+                }
+            };
+            meta.onreadystatechange = onMetaComplete;
+            meta.send(null);
+            return _this;
+        }
+        EPSG4326MapImageryProvider.prototype.tileXYToQuadKey = function (x, y, level) {
+            var quadkey = '';
+            for (var i = level; i >= 0; --i) {
+                var bitmask = 1 << i;
+                var digit = 0;
+                if ((x & bitmask) !== 0) {
+                    digit |= 1;
+                }
+                if ((y & bitmask) !== 0) {
+                    digit |= 2;
+                }
+                quadkey += digit;
+            }
+            return quadkey;
+        };
+        EPSG4326MapImageryProvider.prototype.url = function (x, y, z) {
+            var subdomains = this._subdomains;
+            var subdomainIndex = (x + y + z) % subdomains.length;
+            var replaceParameters = {
+                subdomain: subdomains[subdomainIndex],
+                quadkey: this.tileXYToQuadKey(x, y, z),
+            };
+            var url = Object.keys(replaceParameters).reduce(function (prev, key) {
+                var value = replaceParameters[key];
+                return prev.replace(new RegExp('{' + key + '}', 'g'), encodeURIComponent(value));
+            }, this._baseUrl);
+            return url;
+        };
+        EPSG4326MapImageryProvider.prototype.loadTile = function (tile) {
+            if (!this._ready) {
+                tile.quadTree.needUpdate = true;
+                return;
+            }
+            if (this._loading >= this._maxLoad || tile.data.isLoading(EPSG4326MapImageDataLayer.layerName)) {
+                return;
+            }
+            // FIXME: Debugging
+            // if (tile.z >= 1) return;
+            var doneCount = 0;
+            var scope = this;
+            var onComplete = function (resp) {
+                scope._needUpdate = true;
+                scope._loading--;
+                if (tile.disposed) {
+                    return;
+                }
+                doneCount++;
+                if (doneCount === 2) {
+                    tile.data.loaded(EPSG4326MapImageDataLayer.layerName, [t0, t1]);
+                }
+            };
+            var onError = function (err) {
+                if (err) {
+                    if (tile.disposed) {
+                        return;
+                    }
+                    scope._loading--;
+                    console.error('Error loading texture' + tile.stringify);
+                    tile.data.failed(EPSG4326MapImageDataLayer.layerName, err);
+                }
+            };
+            this._loading++;
+            var t0 = new THREE.TextureLoader()
+                .load(this.url(tile.x, tile.y * 2, tile.z), onComplete, undefined, onError);
+            var t1 = new THREE.TextureLoader()
+                .load(this.url(tile.x, tile.y * 2 + 1, tile.z), onComplete, undefined, onError);
+            tile.data.loading(EPSG4326MapImageDataLayer.layerName);
+        };
+        return EPSG4326MapImageryProvider;
+    }(Provider));
+    //# sourceMappingURL=EPSG4326MapImageryProvider.js.map
 
     function highwaterDecode(indices) {
         var arr = [];
@@ -3825,18 +3885,19 @@ var terra = (function (exports,THREE) {
             _this._ready = false;
             var meta = new XMLHttpRequest();
             // meta.open('GET', 'http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/layer.json', true);
-            meta.open('GET', './layer.json', true);
+            meta.open('GET', 'layer.json', true);
+            var scope = _this;
             var onMetaComplete = function () {
                 var response = JSON.parse(meta.response);
-                _this._baseUrl = "http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/" + response.tiles;
-                _this._zoomMax = response.maxzoom;
-                _this._zoomMin = response.minzoom;
-                _this._version = response.version;
-                _this._projection = response.projection;
-                _this._ready = true;
+                scope._baseUrl = "http://assets.agi.com/stk-terrain/v1/tilesets/world/tiles/" + response.tiles;
+                scope._zoomMax = response.maxzoom;
+                scope._zoomMin = response.minzoom;
+                scope._version = response.version;
+                scope._projection = response.projection;
+                scope._ready = true;
             };
             meta.setRequestHeader('Accept', 'application/json,*/*;q=0.01');
-            meta.addEventListener('load', onMetaComplete.bind(_this));
+            meta.addEventListener('load', onMetaComplete);
             meta.send(null);
             return _this;
         }
@@ -3917,19 +3978,21 @@ var terra = (function (exports,THREE) {
             // if (tile.z >= 1) return;
             this._loading++;
             var onComplete = function (resp) {
-                _this._needUpdate = true;
-                _this._loading--;
-                if (tile.disposed) {
-                    return;
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    _this._needUpdate = true;
+                    _this._loading--;
+                    if (tile.disposed) {
+                        return;
+                    }
+                    tile.data.loaded(STKTerrainDataLayer.layerName, _this.parseTile(xhr.response));
                 }
-                tile.data.loaded(STKTerrainDataLayer.layerName, _this.parseTile(xhr.response));
             };
             var xhr = new XMLHttpRequest();
             xhr.open('GET', this.url(tile.x, tile.y, tile.z), true);
             xhr.setRequestHeader('Accept', ' application/vnd.quantized-mesh,application/octet-stream;q=1.0');
             xhr.responseType = 'arraybuffer';
-            xhr.onload = onComplete;
-            xhr.send(null);
+            xhr.onreadystatechange = onComplete;
+            xhr.send();
             tile.data.loading(STKTerrainDataLayer.layerName);
         };
         return STKTerrainProvider;

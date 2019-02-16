@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Renderer } from 'three';
+import { Cartographic } from '../Math/Cartographic';
 import { Mission } from '../Object/Mission';
 import { Polygon } from '../Object/Polygon';
 import { Polyline } from '../Object/Polyline';

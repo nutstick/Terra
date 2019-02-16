@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Cartesian } from '../Math/Cartesian';
+import { Cartographic } from '../Math/Cartographic';
 import { MapUtility } from '../Utility/MapUtility';
 import { sphericalMercator } from '../Utility/SphericalMercator';
 import { Mission } from './Mission';
@@ -98,7 +99,7 @@ export class Pin extends RenderingObject {
 
         // TODO: Can it be Carsetian
         this._position = new Cartesian();
-        this._coordinate = QtPositioning.coordinate();
+        this._coordinate = new Cartographic();
         // Initialize pin position
         this.position = options.position;
         /**

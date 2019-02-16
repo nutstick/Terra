@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Map3D } from '../Core/Map3D';
 import { Cartesian } from '../Math/Cartesian';
+import { Cartographic } from '../Math/Cartographic';
 import { MapUtility } from '../Utility/MapUtility';
 import { sphericalMercator } from '../Utility/SphericalMercator';
 import { RenderingObject } from './RenderingObject';
@@ -90,7 +91,7 @@ export class Vehicle extends RenderingObject {
         this.group.add(this.head);
         this.group.add(this.line);
         this.group.name = 'Vehicle';
-        options.map.scene.add(this.group);
+        options.map.renderScene.add(this.group);
         // var box = new THREE.BoxHelper(this.group, 0xffff00);
         // options.map.scene.add(box);
         /**
@@ -139,7 +140,7 @@ export class Vehicle extends RenderingObject {
         this.group.remove(this.head);
         this.group.remove(this.line);
         this._map.removeSubscribeObject(this);
-        this._map.scene.remove(this.group);
+        this._map.renderScene.remove(this.group);
         this._map = undefined;
         this.group = undefined;
         this.head.geometry.dispose();

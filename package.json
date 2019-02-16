@@ -1,5 +1,5 @@
 {
-  "name": "TerraMap",
+  "name": "terramap",
   "version": "1.0.0",
   "main": "dist/terra.iife.js",
   "module": "dist/terra.es5.js",
@@ -14,6 +14,8 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-sourcemaps": "^0.4.2",
     "rollup-plugin-typescript2": "^0.13.0",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
     "typescript": "^2.8.3"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
   },
   "scripts": {
     "start": "rollup -c rollup.config.ts",
-    "dev": "rollup -c rollup.config.ts -w"
+    "dev": "rollup -c rollup.config.ts -w",
+    "server": "node server.js"
   }
 }
