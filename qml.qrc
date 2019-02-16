@@ -3,9 +3,8 @@
         <file>main.qml</file>
         <file>glcode.js</file>
         <file>three.js</file>
-        <file>map.js</file>
-        <file>ParserWorkerScript.qml</file>
         <file>ControlEventSource.qml</file>
+<<<<<<< HEAD
         <file>Compass.qml</file>
         <file>MapForwardRenderer.qml</file>
         <file>WireframeMaterial.qml</file>
@@ -24,6 +23,16 @@
         <file alias="utilities.js">utilities.js</file>
         <file alias="OrbitControls.js">OrbitControls.js</file>
         <file>image.js</file>
+=======
+        <file>ControlWindow.qml</file>
+        <file>MapControlView.qml</file>
+        <file>MissionControlView.qml</file>
+        <file>PinItemView.qml</file>
+        <file>require.js</file>
+        <file>index.html</file>
+        <file>es6-collections.js</file>
+        <file>dist/terra.iife.js</file>
+>>>>>>> ThreeJS
     </qresource>
     <qresource prefix="/shaders">
         <file>robustwireframe.vert</file>

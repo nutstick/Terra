@@ -1,5 +1,7 @@
 #include "jstimer.h"
 
+#include <QDebug>
+
 #include <QTimerEvent>
 
 JSTimer::JSTimer(QObject *parent) : QObject(parent)

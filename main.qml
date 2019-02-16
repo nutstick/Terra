@@ -1,12 +1,18 @@
 import QtQuick 2.7
 import QtCanvas3D 1.1
+<<<<<<< HEAD
 import QtQuick.Controls 1.4
 import QtQuick.Window 2.2
 import QtQuick.Scene3D 2.0
+=======
+import QtQuick.Window 2.3
+import QtQuick.Controls 1.4
+>>>>>>> ThreeJS
 import QtPositioning 5.2
 
 import "glcode.js" as GLCode
 
+<<<<<<< HEAD
 Item {
     id: root
     width: 640
@@ -32,12 +38,78 @@ Item {
         text: "set view"
         onClicked: {
             sceneRoot.map.setView(QtPositioning.coordinate(13.7419073, 100.5279612, 11))
+=======
+QtObject {
+    property var mainWindow: Window {
+        id: window
+        title: qsTr("terra")
+        width: 640
+        height: 360
+        visible: true
+
+        Canvas3D {
+            id: canvas3d
+
+            anchors.fill: parent
+            focus: true
+
+            onInitializeGL: {
+                GLCode.initializeGL(canvas3d, canvas2d.getContext('2d'), eventSource);
+                // controlWindow.onMapChanged(GLCode.map);
+            }
+
+            onPaintGL: {
+                GLCode.paintGL(canvas3d, canvas2d.getContext('2d'));
+                // controlWindow.onMapUpdate();
+            }
+
+            onResizeGL: {
+                GLCode.resizeGL(canvas3d, canvas2d.getContext('2d'));
+            }
+
+            ControlEventSource {
+                anchors.fill: parent
+                focus: true
+                id: eventSource
+            }
+        }
+
+        Canvas {
+            id: canvas2d
+            // width: 256
+            // height: 256
+            // antialiasing: true
+        }
+
+        Button {
+            id: setViewButton
+            x: 0
+            y: 0
+            anchors.top: parent.top
+            anchors.right: parent.right
+
+            onClicked: {
+                GLCode.map.setView(QtPositioning.coordinate(13.738521, 100.530987), 19);
+            }
+
+            text: 'TO CU'
+        }
+        Button {
+            id: returnGridButton
+            x: 0
+            anchors.top: parent.top
+            anchors.right: parent.left
+
+            onClicked: {
+                GLCode.map.generateGrid();
+            }
+
+            text: 'Grid'
+            anchors.rightMargin: -75
+            anchors.topMargin: 0
+>>>>>>> ThreeJS
         }
     }
 
-    Text {
-        id: progress
-
-        text: qsTr("loading")
-    }
+    // property var controlWindow: ControlWindow { }
 }

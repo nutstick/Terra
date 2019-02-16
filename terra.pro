@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 QT += quick 3dcore 3drender 3dinput 3dextras positioning
+=======
+QT += quick widgets positioning
+>>>>>>> ThreeJS
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -14,6 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp \
     jstimer.cpp \
+<<<<<<< HEAD
     cameracontroller.cpp \
     tile.cpp \
     chunkloader.cpp \
@@ -35,6 +40,14 @@ SOURCES += main.cpp \
     linemesh.cpp
 
 RESOURCES += qml.qrc
+=======
+    terraindatagenerator.cpp \
+    gridcalculation.cpp \
+    optimizegridcalculation.cpp
+
+RESOURCES += qml.qrc \
+    terra.qrc
+>>>>>>> ThreeJS
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -49,6 +62,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     jstimer.h \
+<<<<<<< HEAD
     cameracontroller.h \
     tile.h \
     chunkloader.h \
@@ -70,3 +84,8 @@ HEADERS += \
     linemeshgeometry.h \
     linemesh.h \
     mapsettings.h
+=======
+    terraindatagenerator.h \
+    gridcalculation.h \
+    optimizegridcalculation.h
+>>>>>>> ThreeJS

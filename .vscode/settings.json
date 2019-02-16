@@ -1,6 +1,4 @@
 {
-  "files.associations": {
-    "*.css": "postcss",
-    "iterator": "cpp"
-  }
+  "editor.tabSize": 4,
+  "eslint.enable": true
 }
