@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "moduleResolution": "node",
+    "module": "system",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true
+  }
+}
